@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: nutrigenius-api
+    runtime: python
+    repo: https://github.com/ZoeryaXD/NutriGenius # Ganti dengan link repo kamu jika beda
+    region: singapore
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
