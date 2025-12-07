@@ -1,16 +1,15 @@
-# nutrigenius
+# 🥗 NutriGenius
 
-A new Flutter project.
+A Flutter-based mobile application that leverages Google's **Gemini 2.0 Flash** model to analyze food images and provide real-time nutritional insights.
 
-## Getting Started
+### 🚀 Tech Stack
+* **Mobile Framework:** Flutter (Dart)
+* **Backend API:** Python (FastAPI)
+* **AI Model:** Google Gemini 2.0 Flash
+* **Deployment:** Render (Backend)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### ✨ Features
+* 📸 **Snap & Scan:** Upload food images directly from the gallery.
+* 🧠 **AI Analysis:** Instant detection of food items and nutritional breakdown.
+* 📊 **Macro Tracking:** View Calories, Protein, Carbs, and Fat instantly.
+* 💡 **Smart Advice:** Get personalized health tips based on the food scanned.
