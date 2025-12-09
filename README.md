@@ -6,7 +6,6 @@ A Flutter-based mobile application that leverages Google's **Gemini 2.0 Flash** 
 * **Mobile Framework:** Flutter (Dart)
 * **Backend API:** Python (FastAPI)
 * **AI Model:** Google Gemini 2.0 Flash
-* **Deployment:** Render (Backend)
 
 ### ✨ Features
 * 📸 **Snap & Scan:** Upload food images directly from the gallery.
