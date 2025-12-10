@@ -12,23 +12,25 @@ class RegisterPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
               
               // Title
               Text(
-                'Daftar',
+                'Buat Akun Baru',
                 style: AppTextStyles.heading1.copyWith(
-                  color: AppColors.primary,
+                  color: AppColors.gray800,
                 ),
               ),
               
@@ -36,7 +38,7 @@ class RegisterPage extends StatelessWidget {
               
               // Subtitle
               Text(
-                'Buat akun NutriGenius Anda',
+                'Mulai perjalanan sehatmu hari ini!',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.gray600,
                 ),
@@ -78,41 +80,71 @@ class RegisterPage extends StatelessWidget {
                 prefixIcon: Icons.lock_outline,
               ),
               
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               
               // Register Button
               AuthButton(
-                text: 'Daftar',
+                text: 'REGISTER',
                 onPressed: () {
-                  // Navigasi ke halaman data diri atau login
-                  Navigator.pushReplacementNamed(context, '/login');
+                  // TODO: Implement register logic
+                  // Setelah register berhasil, navigasi ke dashboard atau halaman berikutnya
+                  // Navigator.pushReplacementNamed(context, '/dashboard');
                 },
               ),
               
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               
-              // Login Link
+              // Divider dengan "ATAU"
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Sudah punya akun? ',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.gray600,
+                  Expanded(
+                    child: Divider(
+                      color: AppColors.gray300,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'Login',
-                      style: AppTextStyles.bodySmallBold.copyWith(
-                        color: AppColors.primary,
+                      'ATAU',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.gray500,
                       ),
                     ),
                   ),
+                  Expanded(
+                    child: Divider(
+                      color: AppColors.gray300,
+                    ),
+                  ),
                 ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Login Link
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Sudah punya akun? ',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.gray600,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                      child: Text(
+                        'Login',
+                        style: AppTextStyles.bodySmallBold.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
