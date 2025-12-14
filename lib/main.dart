@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         ...AuthRoutes.routes,
-        // Tambahkan route lain di sini
       },
     );
   }

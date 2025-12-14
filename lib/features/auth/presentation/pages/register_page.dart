@@ -26,7 +26,6 @@ class RegisterPage extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               
-              // Title
               Text(
                 'Buat Akun Baru',
                 style: AppTextStyles.heading1.copyWith(
@@ -36,7 +35,6 @@ class RegisterPage extends StatelessWidget {
               
               const SizedBox(height: 8),
               
-              // Subtitle
               Text(
                 'Mulai perjalanan sehatmu hari ini!',
                 style: AppTextStyles.bodyMedium.copyWith(
@@ -46,7 +44,6 @@ class RegisterPage extends StatelessWidget {
               
               const SizedBox(height: 40),
               
-              // Registration Form
               AuthTextField(
                 label: 'Nama Lengkap',
                 hintText: 'Masukkan nama lengkap',
@@ -82,19 +79,14 @@ class RegisterPage extends StatelessWidget {
               
               const SizedBox(height: 32),
               
-              // Register Button
               AuthButton(
                 text: 'REGISTER',
                 onPressed: () {
-                  // TODO: Implement register logic
-                  // Setelah register berhasil, navigasi ke dashboard atau halaman berikutnya
-                  // Navigator.pushReplacementNamed(context, '/dashboard');
                 },
               ),
               
               const SizedBox(height: 24),
               
-              // Divider dengan "ATAU"
               Row(
                 children: [
                   Expanded(
@@ -121,7 +113,6 @@ class RegisterPage extends StatelessWidget {
               
               const SizedBox(height: 24),
               
-              // Login Link
               Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

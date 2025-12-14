@@ -18,15 +18,13 @@ class LoginPage extends StatelessWidget {
             children: [
               const SizedBox(height: 60),
               
-              // Logo
               Image.asset(
-                'assets/images/logo.png', // Pastikan logo ada di assets
+                'assets/images/logo.png', 
                 height: 120,
               ),
               
               const SizedBox(height: 40),
               
-              // Title
               Text(
                 'NutriGenius',
                 style: AppTextStyles.heading1.copyWith(
@@ -36,7 +34,6 @@ class LoginPage extends StatelessWidget {
               
               const SizedBox(height: 8),
               
-              // Subtitle
               Text(
                 'Cara Genius Hidup Sehat',
                 style: AppTextStyles.bodyMedium.copyWith(
@@ -46,7 +43,6 @@ class LoginPage extends StatelessWidget {
               
               const SizedBox(height: 40),
               
-              // Login Form
               AuthTextField(
                 label: 'Email',
                 hintText: 'Masukkan email',
@@ -66,18 +62,15 @@ class LoginPage extends StatelessWidget {
               
               const SizedBox(height: 24),
               
-              // Login Button
               AuthButton(
                 text: 'Login',
                 onPressed: () {
-                  // Navigasi ke dashboard
                   Navigator.pushReplacementNamed(context, '/dashboard');
                 },
               ),
               
               const SizedBox(height: 20),
               
-              // Register Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
