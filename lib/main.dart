@@ -6,6 +6,9 @@ import 'injection.dart' as di;
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/register_page.dart';
 import 'features/dashboard/presentation/pages/main_navigation_page.dart';
+import 'features/firstpage/presentation/pages/first_page.dart';
+import 'package:nutrigenius/features/firstpage/presentation/pages/second_page.dart';
+import 'package:nutrigenius/features/firstpage/presentation/pages/third_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +52,9 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/dashboard': (context) => const MainNavigationPage(),
         '/register': (context) => const RegisterPage(),
+        '/firstpage': (context) => const FirstPage(),
+        '/secondpage': (context) => const SecondPage(),
+        '/thirdpage': (context) => const ThirdPage(),
       },
     );
   }

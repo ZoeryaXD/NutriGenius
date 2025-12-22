@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nutrigenius/features/notification/presentation/pages/notification_page.dart';
+import 'package:nutrigenius/features/profile/presentation/pages/profile_page.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'home_page.dart';
 import 'placeholder_pages.dart'; // Import placeholder yang baru dibuat
