@@ -3,6 +3,7 @@ import 'package:nutrigenius/core/theme/app_colors.dart';
 import 'package:nutrigenius/core/theme/app_text_styles.dart';
 import 'package:nutrigenius/features/auth/presentation/widgets/auth_button.dart';
 import 'package:nutrigenius/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:nutrigenius/features/firstpage/presentation/pages/first_page.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
@@ -82,6 +83,12 @@ class RegisterPage extends StatelessWidget {
               AuthButton(
                 text: 'REGISTER',
                 onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FirstPage(),
+                    ),
+                  );
                 },
               ),
               
