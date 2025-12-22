@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
+import 'features/main_page.dart';
 
 void main() {
-  runApp(
-    const MaterialApp(
-      home: HelloWorldScreen(),
-      debugShowCheckedModeBanner: false,
-    ),
-  );
+  runApp(const MyApp());
 }
 
-class HelloWorldScreen extends StatelessWidget {
-  const HelloWorldScreen({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Hello World")),
-      body: const Center(
-        child: Text(
-          "Hello World",
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-        ),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'NutriGenius',
+      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      home: const MainPage(),
     );
   }
 }
