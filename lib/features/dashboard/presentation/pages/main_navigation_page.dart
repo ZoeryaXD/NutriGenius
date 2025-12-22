@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../history/presentation/history_page.dart';
 import 'home_page.dart';
 import 'placeholder_pages.dart'; // Import placeholder yang baru dibuat
 
@@ -56,7 +57,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           unselectedFontSize: 12,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.eco), // Ikon Daun/Home
+              icon: Icon(Icons.spa), // Ikon Daun/Home
               label: 'Home',
             ),
             BottomNavigationBarItem(
