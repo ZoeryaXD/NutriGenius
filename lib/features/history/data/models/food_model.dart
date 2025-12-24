@@ -4,6 +4,7 @@ class FoodModel {
   final num calories;
   final String imagePath;
   final String createdAt;
+  final int isSynced;
 
   FoodModel({
     this.id,
@@ -11,6 +12,7 @@ class FoodModel {
     required this.calories,
     required this.imagePath,
     required this.createdAt,
+    this.isSynced = 0,
   });
 
   factory FoodModel.fromMap(Map<String, dynamic> json) => FoodModel(
@@ -19,15 +21,15 @@ class FoodModel {
     calories: json['calories'],
     imagePath: json['image_path'] ?? '',
     createdAt: json['created_at'],
+    isSynced: json['is_synced'] ?? 0,
   );
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'food_name': foodName,
-      'calories': calories,
-      'image_path': imagePath,
-      'created_at': createdAt,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'food_name': foodName,
+    'calories': calories,
+    'image_path': imagePath,
+    'created_at': createdAt,
+    'is_synced': isSynced,
+  };
 }

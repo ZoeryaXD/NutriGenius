@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../../features/history/data/models/food_model.dart';
@@ -10,7 +12,7 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('nutrigenius.db');
+    _database = await _initDB('nutrigenius_hybrid.db');
     return _database!;
   }
 
@@ -26,21 +28,11 @@ class DatabaseHelper {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       food_name TEXT NOT NULL,
       calories REAL NOT NULL,
-      image_path TEXT NOT NULL,
+      image_path TEXT,
       created_at TEXT NOT NULL,
-      meal_type_id INTEGER,
-      portion_size REAL
+      is_synced INTEGER DEFAULT 0
     )
     ''');
-
-    await db.insert('journal_details', {
-      'food_name': 'Apple',
-      'calories': 95.0,
-      'image_path': 'path/to/apple_image.jpg',
-      'created_at': DateTime.now().toString(),
-      'meal_type_id': 1,
-      'portion_size': 1.0,
-    });
   }
 
   Future<int> insertFood(FoodModel food) async {
