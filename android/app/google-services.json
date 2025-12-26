@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "769082015702",
+    "project_id": "nutrigenius-logreg",
+    "storage_bucket": "nutrigenius-logreg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769082015702:android:90de8bf216e6c274eaae77",
+        "android_client_info": {
+          "package_name": "com.example.nutrigenius"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcsw68YxQrcjlV6934yzEI4s4OwiTV9KI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
