@@ -9,8 +9,12 @@ import 'features/dashboard/presentation/pages/main_navigation_page.dart';
 import 'features/firstpage/presentation/pages/first_page.dart';
 import 'package:nutrigenius/features/firstpage/presentation/pages/second_page.dart';
 import 'package:nutrigenius/features/firstpage/presentation/pages/third_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
+  await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform);
   WidgetsFlutterBinding.ensureInitialized();
   await di.init(); // Inisialisasi Dependency Injection
 
