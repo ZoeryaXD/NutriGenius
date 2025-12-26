@@ -1,25 +1,29 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
-// import 'features/scan/presentation/bloc/scan_bloc.dart'; // Nanti di-uncomment saat BLoC sudah ada
+import 'features/auth/data/datasources/auth_remote_data_source.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart'; // Akan dibuat nanti
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  //! Features - Scan
+  //! Features - Auth
   // Bloc
-  // sl.registerFactory(() => ScanBloc(sl()));
-
-  // Use cases
-  // sl.registerLazySingleton(() => ScanFoodUseCase(sl()));
+  sl.registerFactory(() => AuthBloc(sl()));
 
   // Repository
-  // sl.registerLazySingleton<ScanRepository>(() => ScanRepositoryImpl(sl()));
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
+    remoteDataSource: sl(),
+  ));
 
   // Data sources
-  // sl.registerLazySingleton<ScanRemoteDataSource>(() => ScanRemoteDataSourceImpl(client: sl()));
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(FirebaseAuth.instance),
+  );
 
   //! Core
-  // sl.registerLazySingleton(() => http.Client());
+  // (Tidak perlu client http untuk auth)
 
   //! External
-  // Disini nanti kita register SharedPreference, dll
+  // Firebase sudah diinisialisasi di main.dart
 }
