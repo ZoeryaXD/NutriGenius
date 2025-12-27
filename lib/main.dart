@@ -1,61 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'injection.dart' as di;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nutrigenius/features/dashboard/presentation/pages/main_navigation_page.dart';
+import 'firebase_options.dart'; // File otomatis dari flutterfire configure
+import 'injection_container.dart' as di; // Dependency Injection
 
-// Import Halaman-halaman yang dibutuhkan
+// Import Pages
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/register_page.dart';
-import 'features/dashboard/presentation/pages/main_navigation_page.dart';
-import 'features/firstpage/presentation/pages/first_page.dart';
-import 'package:nutrigenius/features/firstpage/presentation/pages/second_page.dart';
-import 'package:nutrigenius/features/firstpage/presentation/pages/third_page.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+
+// Import FirstPage Main Container
+import 'features/firstpage/presentation/pages/firstpage_main.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await di.init(); // Inisialisasi Dependency Injection
-
-  // Mengatur Status Bar transparan
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ),
+  
+  // 1. Init Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  runApp(const MyApp());
+  
+  // 2. Init Dependency Injection
+  await di.init();
+  
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NutriGenius',
-      debugShowCheckedModeBanner: false,
-
-      // Mengatur Tema Global
-      theme: ThemeData(
-        // Sesuaikan primaryColor dengan AppColors kamu
-        primaryColor: const Color(0xFF2E7D32), // Atau AppColors.primaryGreen
-        scaffoldBackgroundColor: Colors.white,
-        useMaterial3: true,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => di.sl<AuthBloc>()), // Inject AuthBloc
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'NutriGenius',
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+          fontFamily: 'Poppins', // Pastikan font sudah didaftarkan di pubspec.yaml
+        ),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => LoginPage(),
+          '/register': (context) => RegisterPage(),
+          '/firstpage': (context) => FirstPageMain(),
+          '/dashboard': (context) => MainNavigationPage(),
+        },
       ),
-
-      // 1. Tentukan Halaman Awal adalah Login
-      home: const LoginPage(),
-
-      // 2. Daftarkan Rute (Named Routes)
-      // Ini wajib ada karena di LoginPage temanmu memanggil:
-      // Navigator.pushReplacementNamed(context, '/dashboard');
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/dashboard': (context) => const MainNavigationPage(),
-        '/register': (context) => const RegisterPage(),
-        '/firstpage': (context) => const FirstPage(),
-        '/secondpage': (context) => const SecondPage(),
-        '/thirdpage': (context) => const ThirdPage(),
-      },
     );
   }
 }

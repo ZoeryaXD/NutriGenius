@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "176691529828",
+    "project_id": "nutrigenius-324a0",
+    "storage_bucket": "nutrigenius-324a0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176691529828:android:e8c2994842babb4ff7b771",
+        "android_client_info": {
+          "package_name": "com.example.nutrigenius"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "176691529828-i035b4g852vphcf1shfdb06g0dcm5ktg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOg0HFBJs_94ihFAbAjEawllPDNtjc_FA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "176691529828-i035b4g852vphcf1shfdb06g0dcm5ktg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
