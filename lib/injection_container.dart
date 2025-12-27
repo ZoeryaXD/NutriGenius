@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nutrigenius/core/usecases/database_helper.dart';
 import 'package:nutrigenius/features/dashboard/data/datasources/dashboard_local_data_source.dart';
+import 'package:nutrigenius/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import 'package:nutrigenius/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:nutrigenius/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:nutrigenius/features/dashboard/presentation/bloc/dashboard_bloc.dart';
@@ -49,7 +50,8 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<FirstPageRepository>(
-    () => FirstPageRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
+    () =>
+        FirstPageRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
   );
 
   // Data Source
@@ -70,17 +72,20 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<DashboardRepository>(
-    () => DashboardRepositoryImpl(localDataSource: sl()),
+    () =>
+        DashboardRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
   );
 
-  // Data Source
-  sl.registerLazySingleton<DashboardLocalDataSource>(
-    () => DashboardLocalDataSourceImpl(
-      databaseHelper: sl(),
-      firebaseAuth: sl(),
-    ),
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardRemoteDataSourceImpl(client: sl()),
   );
-  
+
+  // Data Source Lokal
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+    () =>
+        DashboardLocalDataSourceImpl(databaseHelper: sl(), firebaseAuth: sl()),
+  );
+
   // ! External
   sl.registerLazySingleton(() => http.Client());
   sl.registerLazySingleton(() => FirebaseAuth.instance);
