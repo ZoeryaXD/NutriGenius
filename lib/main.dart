@@ -9,10 +9,11 @@ import 'features/history/presentation/bloc/history_bloc.dart';
 import 'features/history/presentation/bloc/history_event.dart';
 import 'features/history/presentation/pages/history_page.dart';
 import 'features/notification/pages/notification_page.dart';
+import 'injection.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await init();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

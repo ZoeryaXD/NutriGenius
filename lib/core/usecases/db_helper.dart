@@ -8,6 +8,8 @@ class DatabaseHelper {
 
   DatabaseHelper._init();
 
+  factory DatabaseHelper() => instance;
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('nutrigenius_hybrid.db');
@@ -45,5 +47,10 @@ class DatabaseHelper {
       orderBy: 'created_at DESC',
     );
     return result.map((json) => FoodModel.fromMap(json)).toList();
+  }
+
+  Future<void> deleteFood(int id) async {
+    final db = await database;
+    await db.delete('journal_details', where: 'id = ?', whereArgs: [id]);
   }
 }
