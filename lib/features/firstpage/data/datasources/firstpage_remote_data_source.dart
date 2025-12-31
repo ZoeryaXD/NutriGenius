@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../../../core/network/api_client.dart';
 
 abstract class FirstpageRemoteDataSource {
   Future<void> submitProfile(Map<String, dynamic> data);
@@ -7,25 +8,27 @@ abstract class FirstpageRemoteDataSource {
 
 class FirstpageRemoteDataSourceImpl implements FirstpageRemoteDataSource {
   final http.Client client;
-  // Ganti 10.0.2.2 dengan IP Laptop jika pakai HP Fisik
-  static const String baseUrl = 'http://192.169.0.5:3000/api/firstpage';
 
   FirstpageRemoteDataSourceImpl({required this.client});
 
   @override
   Future<void> submitProfile(Map<String, dynamic> data) async {
+    final url = Uri.parse('${ApiClient.baseUrl}/firstpage/complete-profile');
     try {
       final response = await client.post(
-        Uri.parse('$baseUrl/complete-profile'),
-        headers: {'Content-Type': 'application/json'},
+        url,
+        headers: ApiClient.headers,
         body: jsonEncode(data),
       );
 
-      if (response.statusCode != 200) {
+      // 2. Cek Status Code (200 OK)
+      if (response.statusCode == 200) {
+        return; // Berhasil
+      } else {
         throw Exception('Gagal menyimpan profil: ${response.body}');
       }
     } catch (e) {
-      throw Exception('Server Error: $e');
+      throw Exception('Server Error (FirstPage): $e');
     }
   }
 }

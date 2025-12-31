@@ -9,7 +9,7 @@ class UserModel extends UserEntity {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      uid: json['user']['firebase_uid'] ?? '',
+      uid: json['user']['firebaseUid'] ?? '',
       email: json['user']['email'] ?? '',
       isOnboarded: json['isOnboarded'] ?? false,
     );
