@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../bloc/dashboard_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 
 class DashboardPage extends StatelessWidget {
+  
+  final ImagePicker _picker = ImagePicker();
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -68,7 +72,7 @@ class DashboardPage extends StatelessWidget {
             style: TextStyle(color: Colors.green[700], fontSize: 16),
           ),
           Text(
-            data.displayName.isNotEmpty ? data.displayName : "Rifqi Falih Ramadhan", // Fallback nama
+            data.displayName.isNotEmpty ? data.displayName : "", // Fallback nama
             style: TextStyle(
               color: Colors.green[800], 
               fontSize: 24, 
@@ -196,6 +200,35 @@ class DashboardPage extends StatelessWidget {
     }
   }
 
+// 2. LOGIKA UTAMA: Handle Buka Kamera/Galeri
+  Future<void> _handleImageSelection(BuildContext context, ImageSource source) async {
+    try {
+      // Buka Kamera/Galeri
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 50, // Kompres sedikit biar ringan
+      );
+
+      if (pickedFile != null) {
+        // Jika berhasil ambil foto
+        print("📸 Gambar didapat: ${pickedFile.path}");
+
+        // Tampilkan notifikasi kecil
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Berhasil mengambil gambar!')),
+        );
+
+        // TODO: Di sinilah nanti kita navigasi ke halaman Result/Preview
+        // Navigator.push(context, MaterialPageRoute(builder: (_) => ScanResultPage(image: File(pickedFile.path))));
+      }
+    } catch (e) {
+      print("❌ Eror: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengambil gambar/Izin ditolak')),
+      );
+    }
+  }
+
   // 2. Logika BottomSheet Kamera
   void _showScanOptions(BuildContext context) {
     showModalBottomSheet(
@@ -214,13 +247,11 @@ class DashboardPage extends StatelessWidget {
                 children: [
                   _buildOptionBtn(context, Icons.camera_alt, "Kamera", () {
                     Navigator.pop(context);
-                    // TODO: Arahkan ke Fitur Scan Page (Mode Kamera)
-                    print("Buka Kamera"); 
+                    _handleImageSelection(context, ImageSource.camera);
                   }),
                   _buildOptionBtn(context, Icons.photo_library, "Galeri", () {
                     Navigator.pop(context);
-                    // TODO: Arahkan ke Fitur Scan Page (Mode Galeri)
-                    print("Buka Galeri");
+                    _handleImageSelection(context, ImageSource.gallery);
                   }),
                 ],
               )

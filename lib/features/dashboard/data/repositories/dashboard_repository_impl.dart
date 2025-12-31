@@ -1,51 +1,33 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../domain/entities/dashboard_entity.dart';
-import '../../domain/repositories/dashboard_repository.dart';
+import '../../data/models/dashboard_model.dart';import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/dashboard_local_data_source.dart';
-import '../datasources/dashboard_remote_data_source.dart'; // Import Remote
+import '../datasources/dashboard_remote_data_source.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   final DashboardLocalDataSource localDataSource;
-  final DashboardRemoteDataSource remoteDataSource; // Tambahan
+  final DashboardRemoteDataSource remoteDataSource; 
 
   DashboardRepositoryImpl({
     required this.localDataSource,
-    required this.remoteDataSource, // Tambahan
+    required this.remoteDataSource, 
   });
 
   @override
-  Future<DashboardEntity> loadDashboardData() async {
-    // 1. Coba ambil dari SQLite (Lokal)
-    Map<String, dynamic> data = await localDataSource.getData();
-    
-    // 2. Jika data lokal tidak ditemukan (found == false), coba ambil dari Server (Remote)
-    if (data['found'] == false) {
-      try {
-        final email = FirebaseAuth.instance.currentUser?.email;
-        if (email != null) {
-          // Ambil dari API
-          final remoteData = await remoteDataSource.getDashboardData(email);
-          
-          // Simpan ke SQLite untuk penggunaan berikutnya
-          await localDataSource.cacheData(remoteData);
-          
-          // Update variabel data dengan hasil dari remote
-          data = {
-            'name': remoteData['displayName'],
-            'tdee': remoteData['tdee'],
-          };
-        }
-      } catch (e) {
-        // Jika internet mati & lokal kosong, biarkan pakai default (2000 kkal)
-        print("Gagal ambil remote: $e");
-      }
-    }
+  Future<DashboardModel> getDashboardData(String email) async {
 
-    // 3. Kembalikan Entity ke UI
-    return DashboardEntity(
-      displayName: data['name'],
-      tdee: (data['tdee'] as num).toDouble(), // Cast ke double agar aman
-      caloriesConsumed: 0,
-    );
+    await remoteDataSource.getDashboardData(email);    
+
+    try {
+      // 1. Ambil data mentah (Map) dari Remote API
+      final remoteData = await remoteDataSource.getDashboardData(email);
+      
+      // 2. DISINI KUNCINYA! 🔑
+      // Kita pakai fromJson milik Model untuk menerjemahkan data secara otomatis.
+      // (full_name -> displayName, convert angka, dll sudah diurus di sini)
+      return DashboardModel.fromJson(remoteData);
+
+    } catch (e) {
+      // Error handling sederhana
+      throw Exception("Gagal ambil data dashboard: $e");
+    }
   }
 }

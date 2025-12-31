@@ -68,7 +68,7 @@ Future<void> init() async {
   // ! 3. FITUR DASHBOARD
   // ==========================
   // BLoC
-  sl.registerFactory(() => DashboardBloc(repository: sl()));
+  sl.registerFactory(() => DashboardBloc(repository: sl(), firebaseAuth: sl()));
 
   // Repository
   sl.registerLazySingleton<DashboardRepository>(
