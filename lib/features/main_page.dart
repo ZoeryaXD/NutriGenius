@@ -26,7 +26,6 @@ class _MainPageState extends State<MainPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isWideScreen = constraints.maxWidth > 600;
-
         return Scaffold(
           body: Row(
             children: [
@@ -36,17 +35,42 @@ class _MainPageState extends State<MainPage> {
                   selectedIndex: _currentIndex,
                   onDestinationSelected: (index) =>
                       setState(() => _currentIndex = index),
-                  leading: Column(
-                    children: [
-                      const SizedBox(height: 30),
-                      const CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Color(0xFFE8F5E9),
-                        child: Icon(Icons.spa, color: Color(0xFF2E7D32)),
-                      ),
-                      const SizedBox(height: 30),
-                    ],
+                  leading: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 40),
+                        constraints.maxWidth > 900
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.spa,
+                                    color: Color(0xFF2E7D32),
+                                    size: 32,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    'NutriGenius',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2E7D32),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const Icon(
+                                Icons.spa,
+                                color: Color(0xFF2E7D32),
+                                size: 32,
+                              ),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
                   ),
+
                   labelType: constraints.maxWidth > 900
                       ? NavigationRailLabelType.none
                       : NavigationRailLabelType.all,
@@ -69,7 +93,7 @@ class _MainPageState extends State<MainPage> {
                     NavigationRailDestination(
                       icon: Icon(Icons.receipt_long_outlined),
                       selectedIcon: Icon(Icons.receipt_long),
-                      label: Text('History'),
+                      label: Text('History Log'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.notifications_none),

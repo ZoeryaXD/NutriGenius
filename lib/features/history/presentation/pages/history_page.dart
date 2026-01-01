@@ -88,53 +88,55 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Widget _buildWideLayout(HistoryLoaded state) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
-        Expanded(
-          flex: 45,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 32, 12, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 45,
+                child: const Text(
                   "Laporan Mingguan",
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2E7D32),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                AspectRatio(
-                  aspectRatio: 1.2,
-                  child: WeeklyReportCard(weeklyData: state.chartData),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        Expanded(
-          flex: 55,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(12, 40, 24, 16),
-                child: Text(
-                  "Riwayat Scan",
-                  style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2E7D32),
                   ),
                 ),
               ),
+              const SizedBox(width: 24),
               Expanded(
+                flex: 55,
+                child: const Text(
+                  "Riwayat Scan",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 45,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 12, 24),
+                  child: WeeklyReportCard(weeklyData: state.chartData),
+                ),
+              ),
+
+              Expanded(
+                flex: 55,
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 24, 32),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 24, 24),
                   itemCount: state.histories.length,
                   itemBuilder: (context, index) =>
                       HistoryListItem(food: state.histories[index]),
