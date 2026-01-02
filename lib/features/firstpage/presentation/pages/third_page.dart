@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../bloc/firstpage_bloc.dart';
 
 class ThirdPage extends StatelessWidget {
+  const ThirdPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<FirstPageBloc, FirstPageState>(
@@ -11,7 +13,7 @@ class ThirdPage extends StatelessWidget {
         if (state.status == FirstPageStatus.successSubmit) {
           Navigator.pushNamedAndRemoveUntil(
             context,
-            '/dashboard',
+            '/mainpage',
             (route) => false,
           );
         } else if (state.status == FirstPageStatus.failure) {

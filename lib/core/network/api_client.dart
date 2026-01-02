@@ -1,18 +1,15 @@
-import 'dart:io'; 
+import 'dart:io';
 
 class ApiClient {
-  // ==================================================================
-  // Cara cek: Buka CMD -> ketik ipconfig -> Cari IPv4 di "Wireless LAN"
-  // Pastikan BUKAN alamat Gateway (.1), tapi alamat IPv4 (.5, .10, dll)
-  // ==================================================================
-  static const String _laptopIp = '192.169.0.4';
-  // Logika Otomatis:
+  // Pastikan angka ini 168 (umumnya Wi-Fi lokal), bukan 169
+  static const String _laptopIp = '192.168.243.165';
+
   static String get baseUrl {
     if (Platform.isAndroid) {
-      // Jika dijalankan di HP Fisik, gunakan IP Laptop
       return 'http://$_laptopIp:3000/api';
     } else {
-      return 'http://localhost:3000/api';
+      // Untuk Emulator atau Desktop
+      return 'http://10.0.2.2:3000/api';
     }
   }
 

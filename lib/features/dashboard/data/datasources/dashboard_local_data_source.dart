@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sqflite/sqflite.dart'; // Pastikan import sqflite
-import '../../../../core/usecases/database_helper.dart'; // Sesuaikan path
+import '../../../../core/usecases/db_helper.dart'; // Sesuaikan path
 
 abstract class DashboardLocalDataSource {
   Future<Map<String, dynamic>> getData();
@@ -11,7 +11,10 @@ class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
   final DatabaseHelper databaseHelper;
   final FirebaseAuth firebaseAuth;
 
-  DashboardLocalDataSourceImpl({required this.databaseHelper, required this.firebaseAuth});
+  DashboardLocalDataSourceImpl({
+    required this.databaseHelper,
+    required this.firebaseAuth,
+  });
 
   @override
   Future<Map<String, dynamic>> getData() async {
@@ -29,7 +32,9 @@ class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
     // Jika data ada di SQLite, kembalikan
     if (maps.isNotEmpty) {
       return {
-        'name': maps.first['name'] ?? name, // Prioritas nama di DB, fallback ke Firebase
+        'name':
+            maps.first['name'] ??
+            name, // Prioritas nama di DB, fallback ke Firebase
         'tdee': maps.first['tdee'],
         'found': true, // Penanda bahwa data ditemukan di lokal
       };
@@ -48,11 +53,11 @@ class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
   Future<void> cacheData(Map<String, dynamic> data) async {
     final user = firebaseAuth.currentUser;
     final String email = user?.email ?? "";
-    
+
     if (email.isEmpty) return;
 
     final db = await databaseHelper.database;
-    
+
     // Siapkan data untuk disimpan ke tabel 'users'
     Map<String, dynamic> userRow = {
       'email': email,
@@ -66,9 +71,9 @@ class DashboardLocalDataSourceImpl implements DashboardLocalDataSource {
     };
 
     await db.insert(
-      'users', 
-      userRow, 
-      conflictAlgorithm: ConflictAlgorithm.replace
+      'users',
+      userRow,
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 }

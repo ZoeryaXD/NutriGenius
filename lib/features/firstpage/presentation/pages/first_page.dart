@@ -4,7 +4,7 @@ import '../bloc/firstpage_bloc.dart'; // Pastikan import ini benar
 
 class FirstPage extends StatefulWidget {
   final PageController pageController;
-  const FirstPage({required this.pageController});
+  const FirstPage({super.key, required this.pageController});
 
   @override
   _FirstPageState createState() => _FirstPageState();
@@ -156,10 +156,17 @@ class _FirstPageState extends State<FirstPage> {
           _buildLabel("Usia:"),
           Container(
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            decoration: BoxDecoration(color: Colors.green[700], borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(
+              color: Colors.green[700],
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Text(
-              _birthDate == null ? "- Tahun" : "$_age Tahun", 
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+              _birthDate == null ? "- Tahun" : "$_age Tahun",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
 
@@ -178,13 +185,18 @@ class _FirstPageState extends State<FirstPage> {
                 ),
               ),
               onPressed: () {
-                if (_weightCtrl.text.isEmpty || _heightCtrl.text.isEmpty || _birthDate == null) {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     SnackBar(content: Text("Harap lengkapi semua data dulu ya!"), backgroundColor: Colors.red)
-                   );
-                   return;
-                 }
-                 
+                if (_weightCtrl.text.isEmpty ||
+                    _heightCtrl.text.isEmpty ||
+                    _birthDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Harap lengkapi semua data dulu ya!"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
                 context.read<FirstPageBloc>().add(
                   UpdateStep1Data(
                     _gender,

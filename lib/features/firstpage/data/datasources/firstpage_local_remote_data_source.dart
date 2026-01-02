@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import '../../../../core/usecases/database_helper.dart';
+import '../../../../core/usecases/db_helper.dart';
 import '../models/firstpage_model.dart';
 
 abstract class FirstPageLocalDataSource {
@@ -14,7 +14,7 @@ class FirstPageLocalDataSourceImpl implements FirstPageLocalDataSource {
   @override
   Future<void> cacheProfile(FirstPageModel profile) async {
     final db = await databaseHelper.database;
-    
+
     // Simpan ke SQLite (ConflictAlgorithm.replace artinya kalau ada data lama, timpa)
     await db.insert(
       'users',

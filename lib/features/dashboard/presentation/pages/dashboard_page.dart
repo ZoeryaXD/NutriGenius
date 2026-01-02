@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../injection_container.dart';
+import 'package:nutrigenius/injection_container.dart';
 import '../bloc/dashboard_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 class DashboardPage extends StatelessWidget {
-  
   final ImagePicker _picker = ImagePicker();
+
+  DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,11 +19,15 @@ class DashboardPage extends StatelessWidget {
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
               if (state is DashboardLoading) {
-                return Center(child: CircularProgressIndicator(color: Colors.green));
+                return Center(
+                  child: CircularProgressIndicator(color: Colors.green),
+                );
               } else if (state is DashboardLoaded) {
                 return _buildDashboardContent(context, state.data);
               } else if (state is DashboardError) {
-                return Center(child: Text("Gagal memuat data: ${state.message}"));
+                return Center(
+                  child: Text("Gagal memuat data: ${state.message}"),
+                );
               }
               return Container();
             },
@@ -46,22 +51,27 @@ class DashboardPage extends StatelessWidget {
               // Ganti Icon dengan Gambar Aset
               Image.asset(
                 'assets/images/logo.png',
-                width: 32, 
+                width: 32,
                 height: 32,
-                errorBuilder: (context, error, stackTrace) => Icon(Icons.eco, color: Colors.green, size: 32), // Fallback jika gambar gagal load
+                errorBuilder:
+                    (context, error, stackTrace) => Icon(
+                      Icons.eco,
+                      color: Colors.green,
+                      size: 32,
+                    ), // Fallback jika gambar gagal load
               ),
               SizedBox(width: 10),
               Text(
-                "NutriGenius", 
+                "NutriGenius",
                 style: TextStyle(
-                  color: Colors.green[800], 
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 20
-                )
+                  color: Colors.green[800],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
               ),
             ],
           ),
-          
+
           SizedBox(height: 24),
 
           // ==============================
@@ -72,14 +82,16 @@ class DashboardPage extends StatelessWidget {
             style: TextStyle(color: Colors.green[700], fontSize: 16),
           ),
           Text(
-            data.displayName.isNotEmpty ? data.displayName : "", // Fallback nama
+            data.displayName.isNotEmpty
+                ? data.displayName
+                : "", // Fallback nama
             style: TextStyle(
-              color: Colors.green[800], 
-              fontSize: 24, 
-              fontWeight: FontWeight.bold
-            )
+              color: Colors.green[800],
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          
+
           SizedBox(height: 24),
 
           // ==============================
@@ -90,7 +102,13 @@ class DashboardPage extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.green[800],
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.3), blurRadius: 10, offset: Offset(0, 5))],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -98,16 +116,23 @@ class DashboardPage extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Sisa Kalori!", style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    Text(
+                      "Sisa Kalori!",
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
                     SizedBox(height: 4),
                     // Tampilkan Sisa Kalori
                     Text(
-                      "${data.remainingCalories}", 
-                      style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)
+                      "${data.remainingCalories}",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
-                      "dari target ${data.tdee.toInt()} kkal", 
-                      style: TextStyle(color: Colors.white70, fontSize: 12)
+                      "dari target ${data.tdee.toInt()} kkal",
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
@@ -116,7 +141,8 @@ class DashboardPage extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
-                      width: 80, height: 80,
+                      width: 80,
+                      height: 80,
                       child: CircularProgressIndicator(
                         value: 1.0, // Lingkaran Penuh (Background)
                         color: Colors.white.withOpacity(0.2),
@@ -124,7 +150,8 @@ class DashboardPage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(
-                      width: 80, height: 80,
+                      width: 80,
+                      height: 80,
                       child: CircularProgressIndicator(
                         value: data.progress, // Progress (Konsumsi / Target)
                         color: Colors.white,
@@ -132,7 +159,11 @@ class DashboardPage extends StatelessWidget {
                         strokeCap: StrokeCap.round,
                       ),
                     ),
-                    Icon(Icons.local_fire_department, color: Colors.white, size: 32),
+                    Icon(
+                      Icons.local_fire_department,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ],
                 ),
               ],
@@ -144,13 +175,24 @@ class DashboardPage extends StatelessWidget {
           // ==============================
           // 4. MAKRO NUTRISI
           // ==============================
-          Text("Makro Nutrisi", style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            "Makro Nutrisi",
+            style: TextStyle(
+              color: Colors.green[800],
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
           SizedBox(height: 12),
           Row(
             children: [
-              _buildMacroCard("Protein", "${data.proteinTarget}g", Icons.fitness_center),
+              _buildMacroCard(
+                "Protein",
+                "${data.proteinTarget}g",
+                Icons.fitness_center,
+              ),
               SizedBox(width: 12),
-              _buildMacroCard("Carbs", "${data.carbsTarget}g", Icons.grain), 
+              _buildMacroCard("Carbs", "${data.carbsTarget}g", Icons.grain),
               SizedBox(width: 12),
               _buildMacroCard("Fat", "${data.fatTarget}g", Icons.water_drop),
             ],
@@ -161,7 +203,14 @@ class DashboardPage extends StatelessWidget {
           // ==============================
           // 5. TOMBOL SCAN (Logic BottomSheet)
           // ==============================
-          Text("Scan Makananmu", style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            "Scan Makananmu",
+            style: TextStyle(
+              color: Colors.green[800],
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
           SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -169,14 +218,20 @@ class DashboardPage extends StatelessWidget {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[700],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 elevation: 4,
               ),
               onPressed: () => _showScanOptions(context), // Panggil BottomSheet
-              child: Icon(Icons.center_focus_strong, size: 40, color: Colors.white),
+              child: Icon(
+                Icons.center_focus_strong,
+                size: 40,
+                color: Colors.white,
+              ),
             ),
           ),
-          
+
           // Padding tambahan agar tidak mentok bawah scroll
           SizedBox(height: 40),
         ],
@@ -200,8 +255,11 @@ class DashboardPage extends StatelessWidget {
     }
   }
 
-// 2. LOGIKA UTAMA: Handle Buka Kamera/Galeri
-  Future<void> _handleImageSelection(BuildContext context, ImageSource source) async {
+  // 2. LOGIKA UTAMA: Handle Buka Kamera/Galeri
+  Future<void> _handleImageSelection(
+    BuildContext context,
+    ImageSource source,
+  ) async {
     try {
       // Buka Kamera/Galeri
       final XFile? pickedFile = await _picker.pickImage(
@@ -214,9 +272,9 @@ class DashboardPage extends StatelessWidget {
         print("📸 Gambar didapat: ${pickedFile.path}");
 
         // Tampilkan notifikasi kecil
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Berhasil mengambil gambar!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Berhasil mengambil gambar!')));
 
         // TODO: Di sinilah nanti kita navigasi ke halaman Result/Preview
         // Navigator.push(context, MaterialPageRoute(builder: (_) => ScanResultPage(image: File(pickedFile.path))));
@@ -233,14 +291,23 @@ class DashboardPage extends StatelessWidget {
   void _showScanOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return Container(
           padding: EdgeInsets.all(20),
           height: 180,
           child: Column(
             children: [
-              Text("Pilih Metode Scan", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[800])),
+              Text(
+                "Pilih Metode Scan",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[800],
+                ),
+              ),
               SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -254,7 +321,7 @@ class DashboardPage extends StatelessWidget {
                     _handleImageSelection(context, ImageSource.gallery);
                   }),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -262,7 +329,12 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionBtn(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+  Widget _buildOptionBtn(
+    BuildContext context,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -273,7 +345,7 @@ class DashboardPage extends StatelessWidget {
             child: Icon(icon, color: Colors.green[800], size: 30),
           ),
           SizedBox(height: 8),
-          Text(label, style: TextStyle(color: Colors.green[800]))
+          Text(label, style: TextStyle(color: Colors.green[800])),
         ],
       ),
     );
@@ -286,13 +358,26 @@ class DashboardPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5, offset: Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 5,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
             Icon(icon, color: Colors.orange, size: 24),
             SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
             Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
