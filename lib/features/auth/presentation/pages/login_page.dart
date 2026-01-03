@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
 import 'package:nutrigenius/features/auth/presentation/pages/register_page.dart';
 // Import FirstPage dan Dashboard Page
 

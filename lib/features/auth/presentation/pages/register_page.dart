@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
 // Import bloc dan common widgets lainnya
 
 class RegisterPage extends StatefulWidget {
@@ -16,7 +18,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPassController = TextEditingController();
   bool _isObscure = true;
 
-  // Regex Password: Minimal 8 char, ada angka, ada simbol
   final _passRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,}$');
 
   @override
@@ -35,22 +36,27 @@ class _RegisterPageState extends State<RegisterPage> {
           if (state is AuthEmailVerificationRequired) {
             showDialog(
               context: context,
-              builder: (_) => AlertDialog(
-                title: Text("Verifikasi Email"),
-                content: Text("Link verifikasi telah dikirim ke email Anda. Silakan cek dan klik link tersebut sebelum login."),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Tutup Dialog
-                      Navigator.pop(context); // Kembali ke Login Page
-                    },
-                    child: Text("OK"),
-                  )
-                ],
-              ),
+              builder:
+                  (_) => AlertDialog(
+                    title: Text("Verifikasi Email"),
+                    content: Text(
+                      "Link verifikasi telah dikirim ke email Anda. Silakan cek dan klik link tersebut sebelum login.",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        child: Text("OK"),
+                      ),
+                    ],
+                  ),
             );
           } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         child: SingleChildScrollView(
@@ -60,9 +66,19 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Buat Akun Baru", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green[800])),
+                Text(
+                  "Buat Akun Baru",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[800],
+                  ),
+                ),
                 SizedBox(height: 8),
-                Text("Mulai perjalanan sehatmu hari ini!", style: TextStyle(color: Colors.grey)),
+                Text(
+                  "Mulai perjalanan sehatmu hari ini!",
+                  style: TextStyle(color: Colors.grey),
+                ),
                 SizedBox(height: 30),
 
                 // Nama Lengkap
@@ -71,9 +87,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.person_outline),
                     labelText: "Nama Lengkap",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  validator: (val) => val!.isEmpty ? "Nama tidak boleh kosong" : null,
+                  validator:
+                      (val) => val!.isEmpty ? "Nama tidak boleh kosong" : null,
                 ),
                 SizedBox(height: 16),
 
@@ -83,9 +102,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.email_outlined),
                     labelText: "Email",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  validator: (val) => !val!.contains('@') ? "Email tidak valid" : null,
+                  validator:
+                      (val) => !val!.contains('@') ? "Email tidak valid" : null,
                 ),
                 SizedBox(height: 16),
 
@@ -97,13 +119,18 @@ class _RegisterPageState extends State<RegisterPage> {
                     prefixIcon: Icon(Icons.lock_outline),
                     labelText: "Password",
                     suffixIcon: IconButton(
-                      icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility),
+                      icon: Icon(
+                        _isObscure ? Icons.visibility_off : Icons.visibility,
+                      ),
                       onPressed: () => setState(() => _isObscure = !_isObscure),
                     ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   validator: (val) {
-                    if (val == null || val.isEmpty) return "Password wajib diisi";
+                    if (val == null || val.isEmpty)
+                      return "Password wajib diisi";
                     if (!_passRegex.hasMatch(val)) {
                       return "Password harus kombinasi angka & simbol (!@#\$&*~)";
                     }
@@ -112,56 +139,75 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 16),
 
-                // Konfirmasi Password
                 TextFormField(
                   controller: _confirmPassController,
                   obscureText: _isObscure,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.lock_outline),
                     labelText: "Konfirmasi Password",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  validator: (val) => val != _passController.text ? "Password tidak sama" : null,
+                  validator:
+                      (val) =>
+                          val != _passController.text
+                              ? "Password tidak sama"
+                              : null,
                 ),
                 SizedBox(height: 30),
 
-                // Tombol Register
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[700],
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        context.read<AuthBloc>().add(RegisterRequested(
-                          _nameController.text,
-                          _emailController.text,
-                          _passController.text,
-                        ));
+                        context.read<AuthBloc>().add(
+                          RegisterRequested(
+                            _nameController.text,
+                            _emailController.text,
+                            _passController.text,
+                          ),
+                        );
                       }
                     },
                     child: BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, state) {
-                        return state is AuthLoading 
-                          ? CircularProgressIndicator(color: Colors.white) 
-                          : Text("REGISTER", style: TextStyle(fontSize: 18, color: Colors.white));
+                        return state is AuthLoading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                              "REGISTER",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            );
                       },
                     ),
                   ),
                 ),
                 SizedBox(height: 20),
-                
-                // Link ke Login
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text("Sudah punya akun? "),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Text("Login", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        "Login",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),

@@ -1,16 +1,11 @@
 import '../../domain/repositories/firstpage_repository.dart';
 import '../datasources/firstpage_remote_data_source.dart';
-import '../datasources/firstpage_local_remote_data_source.dart';
 import '../models/firstpage_model.dart';
 
 class FirstPageRepositoryImpl implements FirstPageRepository {
   final FirstpageRemoteDataSource remoteDataSource;
-  final FirstPageLocalDataSource localDataSource;
-  
-  FirstPageRepositoryImpl({
-    required this.remoteDataSource,
-    required this.localDataSource});
 
+  FirstPageRepositoryImpl({required this.remoteDataSource});
   @override
   Future<void> submitProfile({
     required String email,
@@ -24,7 +19,8 @@ class FirstPageRepositoryImpl implements FirstPageRepository {
     required double tdee,
   }) async {
     // 1. Format Tanggal ke YYYY-MM-DD
-    String formattedDate = "${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}";
+    String formattedDate =
+        "${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}";
 
     // 2. Buat Model Data
     final model = FirstPageModel(
@@ -41,7 +37,5 @@ class FirstPageRepositoryImpl implements FirstPageRepository {
 
     // 3. Kirim ke Backend
     await remoteDataSource.submitProfile(model.toJson());
-
-    await localDataSource.cacheProfile(model);
   }
 }

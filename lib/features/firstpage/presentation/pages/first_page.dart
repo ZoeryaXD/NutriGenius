@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
 import '../bloc/firstpage_bloc.dart'; // Pastikan import ini benar
 
 class FirstPage extends StatefulWidget {
@@ -11,12 +12,12 @@ class FirstPage extends StatefulWidget {
 }
 
 class _FirstPageState extends State<FirstPage> {
-  // Default values
-  String _gender = 'Laki-Laki';
+
+  String? _gender;
   final _weightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
   DateTime? _birthDate;
-  // Helper Hitung Umur
+
   int get _age {
     if (_birthDate == null) return 0;
     final now = DateTime.now();
@@ -41,19 +42,18 @@ class _FirstPageState extends State<FirstPage> {
           ),
           SizedBox(height: 30),
 
-          // 1. INPUT GENDER (DROPDOWN HIJAU)
           _buildLabel("Jenis Kelamin:"),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.green[700], // Background Hijau
+              color: Colors.green[700], 
               borderRadius: BorderRadius.circular(12),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _gender,
                 isExpanded: true,
-                dropdownColor: Colors.green[700], // Menu dropdown juga hijau
+                dropdownColor: Colors.green[700],
                 icon: Icon(Icons.arrow_drop_down, color: Colors.white),
                 style: TextStyle(
                   color: Colors.white,
@@ -86,7 +86,6 @@ class _FirstPageState extends State<FirstPage> {
 
           SizedBox(height: 20),
 
-          // 2. BERAT & TINGGI
           Row(
             children: [
               Expanded(
@@ -105,7 +104,6 @@ class _FirstPageState extends State<FirstPage> {
 
           SizedBox(height: 20),
 
-          // 3. TANGGAL LAHIR
           _buildLabel("Tanggal Lahir:"),
           GestureDetector(
             onTap: () async {
@@ -152,20 +150,25 @@ class _FirstPageState extends State<FirstPage> {
 
           SizedBox(height: 20),
 
-          // 4. USIA (READ ONLY)
           _buildLabel("Usia:"),
           Container(
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            decoration: BoxDecoration(color: Colors.green[700], borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(
+              color: Colors.green[700],
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Text(
-              _birthDate == null ? "- Tahun" : "$_age Tahun", 
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+              _birthDate == null ? "- Tahun" : "$_age Tahun",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
 
           SizedBox(height: 40),
 
-          // TOMBOL LANJUT
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -178,16 +181,21 @@ class _FirstPageState extends State<FirstPage> {
                 ),
               ),
               onPressed: () {
-                if (_weightCtrl.text.isEmpty || _heightCtrl.text.isEmpty || _birthDate == null) {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     SnackBar(content: Text("Harap lengkapi semua data dulu ya!"), backgroundColor: Colors.red)
-                   );
-                   return;
-                 }
-                 
+                if (_weightCtrl.text.isEmpty ||
+                    _heightCtrl.text.isEmpty ||
+                    _birthDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Harap lengkapi semua data dulu ya!"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
                 context.read<FirstPageBloc>().add(
                   UpdateStep1Data(
-                    _gender,
+                    _gender!,
                     double.parse(_weightCtrl.text),
                     double.parse(_heightCtrl.text),
                     _birthDate!,
@@ -213,7 +221,6 @@ class _FirstPageState extends State<FirstPage> {
     );
   }
 
-  // WIDGET HELPERS
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),

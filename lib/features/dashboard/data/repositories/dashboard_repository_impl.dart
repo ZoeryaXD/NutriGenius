@@ -1,51 +1,51 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/network/api_client.dart';
+
 import '../../domain/entities/dashboard_entity.dart';
 import '../../domain/repositories/dashboard_repository.dart';
-import '../datasources/dashboard_local_data_source.dart';
-import '../datasources/dashboard_remote_data_source.dart'; // Import Remote
+import '../models/dashboard_model.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
-  final DashboardLocalDataSource localDataSource;
-  final DashboardRemoteDataSource remoteDataSource; // Tambahan
+  final http.Client client;
 
-  DashboardRepositoryImpl({
-    required this.localDataSource,
-    required this.remoteDataSource, // Tambahan
-  });
+  DashboardRepositoryImpl({required this.client});
 
   @override
   Future<DashboardEntity> loadDashboardData() async {
-    // 1. Coba ambil dari SQLite (Lokal)
-    Map<String, dynamic> data = await localDataSource.getData();
-    
-    // 2. Jika data lokal tidak ditemukan (found == false), coba ambil dari Server (Remote)
-    if (data['found'] == false) {
-      try {
-        final email = FirebaseAuth.instance.currentUser?.email;
-        if (email != null) {
-          // Ambil dari API
-          final remoteData = await remoteDataSource.getDashboardData(email);
-          
-          // Simpan ke SQLite untuk penggunaan berikutnya
-          await localDataSource.cacheData(remoteData);
-          
-          // Update variabel data dengan hasil dari remote
-          data = {
-            'name': remoteData['displayName'],
-            'tdee': remoteData['tdee'],
-          };
-        }
-      } catch (e) {
-        // Jika internet mati & lokal kosong, biarkan pakai default (2000 kkal)
-        print("Gagal ambil remote: $e");
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception("User belum login");
       }
-    }
+      
+      final url = Uri.parse('${ApiClient.baseUrl}/dashboard');
+      
+      final response = await client.post(
+        url,
+        headers: ApiClient.headers,
+        body: jsonEncode({'email': user.email}),
+      );
 
-    // 3. Kembalikan Entity ke UI
-    return DashboardEntity(
-      displayName: data['name'],
-      tdee: (data['tdee'] as num).toDouble(), // Cast ke double agar aman
-      caloriesConsumed: 0,
-    );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['success'] == true) {
+          final data = jsonResponse['data'];
+
+          return DashboardModel.fromJson(data);
+          
+        } else {
+
+          throw Exception(jsonResponse['message']);
+        }
+      } else {
+        throw Exception('Server Error: ${response.statusCode}');
+      }
+    } catch (e) {
+
+      throw Exception('Gagal memuat dashboard: $e');
+    }
   }
 }

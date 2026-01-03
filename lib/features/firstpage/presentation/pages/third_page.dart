@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
+import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_state.dart';
 import '../bloc/firstpage_bloc.dart';
 
 class ThirdPage extends StatelessWidget {
@@ -25,7 +27,6 @@ class ThirdPage extends StatelessWidget {
           padding: EdgeInsets.all(24),
           child: Column(
             children: [
-              // Navigasi Back Text
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -48,7 +49,6 @@ class ThirdPage extends StatelessWidget {
               ),
               SizedBox(height: 40),
 
-              // Lingkaran Besar
               Container(
                 width: 180,
                 height: 180,
@@ -82,7 +82,6 @@ class ThirdPage extends StatelessWidget {
               ),
               SizedBox(height: 40),
 
-              // Rincian (Bullet Points)
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(

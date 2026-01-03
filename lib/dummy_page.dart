@@ -5,7 +5,12 @@ class LogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text("Fitur Log Makanan (Segera Hadir)", style: TextStyle(color: Colors.green, fontSize: 18))),
+      body: Center(
+        child: Text(
+          "Fitur Log Makanan (Segera Hadir)",
+          style: TextStyle(color: Colors.green, fontSize: 18),
+        ),
+      ),
     );
   }
 }
@@ -15,7 +20,12 @@ class NotificationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text("Belum ada notifikasi", style: TextStyle(color: Colors.green, fontSize: 18))),
+      body: Center(
+        child: Text(
+          "Belum ada notifikasi",
+          style: TextStyle(color: Colors.green, fontSize: 18),
+        ),
+      ),
     );
   }
 }
@@ -25,7 +35,12 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text("Halaman Profil User", style: TextStyle(color: Colors.green, fontSize: 18))),
+      body: Center(
+        child: Text(
+          "Halaman Profil User",
+          style: TextStyle(color: Colors.green, fontSize: 18),
+        ),
+      ),
     );
   }
 }

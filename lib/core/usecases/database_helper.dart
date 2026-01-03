@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // Driver Windows
-import 'dart:io'; // Untuk cek apakah ini Windows atau Android
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'dart:io';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -29,7 +29,7 @@ class DatabaseHelper {
   }
 
   Future _createDB(Database db, int version) async {
-    // Tabel Users (Cache Profil)
+
     await db.execute('''
     CREATE TABLE users (
       email TEXT PRIMARY KEY,
@@ -44,6 +44,5 @@ class DatabaseHelper {
     )
     ''');
     
-    // Nanti bisa tambah tabel daily_journals disini juga
   }
 }

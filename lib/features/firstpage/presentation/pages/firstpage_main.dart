@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../injection_container.dart'; // Import Service Locator (sl)
+import '../../../../injection_container.dart';
 import '../bloc/firstpage_bloc.dart';
 
-// Import 3 Halaman Anak
 import 'first_page.dart';
 import 'second_page.dart';
 import 'third_page.dart';
@@ -27,24 +26,18 @@ class _FirstPageMainState extends State<FirstPageMain> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. INJECT BLOC DISINI
-    // Kita pasang BlocProvider di induk agar state (Data TDEE) tetap hidup
-    // saat user geser dari Page 1 -> Page 2 -> Page 3.
     return BlocProvider(
-      create: (_) => sl<FirstPageBloc>(), 
+      create: (_) => sl<FirstPageBloc>(),
       child: Scaffold(
-        backgroundColor: Colors.white, // Sesuaikan warna background desain
+        backgroundColor: Colors.white,
         body: SafeArea(
-          // 2. PageView
-          // physics: NeverScrollable... agar user TIDAK BISA swipe manual.
-          // User wajib tekan tombol "Lanjut" untuk validasi data dulu.
           child: PageView(
             controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(), 
+            physics: const NeverScrollableScrollPhysics(),
             children: [
               FirstPage(pageController: _pageController),
               SecondPage(pageController: _pageController),
-              ThirdPage(), // Halaman terakhir tidak butuh controller (karena submit & finish)
+              ThirdPage(),
             ],
           ),
         ),

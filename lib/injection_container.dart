@@ -2,12 +2,10 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nutrigenius/core/usecases/database_helper.dart';
-import 'package:nutrigenius/features/dashboard/data/datasources/dashboard_local_data_source.dart';
 import 'package:nutrigenius/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import 'package:nutrigenius/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:nutrigenius/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:nutrigenius/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:nutrigenius/features/firstpage/data/datasources/firstpage_local_remote_data_source.dart';
 
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
@@ -50,18 +48,12 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<FirstPageRepository>(
-    () =>
-        FirstPageRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
+    () => FirstPageRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Data Source
   sl.registerLazySingleton<FirstpageRemoteDataSource>(
     () => FirstpageRemoteDataSourceImpl(client: sl()),
-  );
-
-  // Local Data Source
-  sl.registerLazySingleton<FirstPageLocalDataSource>(
-    () => FirstPageLocalDataSourceImpl(databaseHelper: sl()),
   );
 
   // ==========================
@@ -73,17 +65,11 @@ Future<void> init() async {
   // Repository
   sl.registerLazySingleton<DashboardRepository>(
     () =>
-        DashboardRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
+        DashboardRepositoryImpl(client: sl()),
   );
 
   sl.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(client: sl()),
-  );
-
-  // Data Source Lokal
-  sl.registerLazySingleton<DashboardLocalDataSource>(
-    () =>
-        DashboardLocalDataSourceImpl(databaseHelper: sl(), firebaseAuth: sl()),
   );
 
   // ! External
