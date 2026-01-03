@@ -1,150 +1,183 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/profile_bloc.dart';
+import '../bloc/profile_event.dart';
+import '../bloc/profile_state.dart';
+import '../../../auth/presentation/pages/login_page.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
-
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  _SettingsPageState createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // State untuk Switch
-  bool _mealReminder = true;
-  bool _sugarWarning = true;
+  bool _notifMakan = true;
+  bool _notifGula = true;
   bool _darkMode = false;
-
-  final Color primaryGreen = const Color(0xFF2E7D32);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Background agak abu sedikit biar list menonjol
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.grey[50],
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.green),
-          onPressed: () => Navigator.pop(context),
+        title: Text(
+          "Pengaturan",
+          style: TextStyle(
+            color: Colors.green[800],
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        title: const Text("Pengaturan", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: BackButton(color: Colors.green[800]),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: BlocListener<ProfileBloc, ProfileState>(
+        listener: (context, state) {
+          if (state is LogoutSuccess) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => LoginPage()),
+              (r) => false,
+            );
+          }
+        },
+        child: ListView(
+          padding: EdgeInsets.all(20),
           children: [
-            _buildSectionHeader("AKUN"),
-            _buildListTile(Icons.lock_outline, "Ganti Password"),
-            _buildListTile(Icons.track_changes, "Target Kesehatan (TDEE)"),
-            
-            const SizedBox(height: 20),
-            _buildSectionHeader("NOTIFIKASI"),
+            _sectionHeader("AKUN"),
+            _buildListTile(Icons.lock_outline, "Ganti Password", () {}),
+            Divider(),
+
+            _sectionHeader("NOTIFIKASI"),
             _buildSwitchTile(
-              Icons.access_time, 
-              "Ingatkan Makan", 
-              "Sarapan, Siang, Malam", 
-              _mealReminder, 
-              (val) => setState(() => _mealReminder = val)
+              Icons.access_time,
+              "Ingatkan Makan",
+              _notifMakan,
+              (v) => setState(() => _notifMakan = v),
             ),
             _buildSwitchTile(
-              Icons.health_and_safety_outlined, 
-              "Peringatan Gula Tinggi", 
-              "Saat scan makanan", 
-              _sugarWarning, 
-              (val) => setState(() => _sugarWarning = val)
+              Icons.security,
+              "Peringatan Gula Tinggi",
+              _notifGula,
+              (v) => setState(() => _notifGula = v),
             ),
+            Divider(),
 
-            const SizedBox(height: 20),
-            _buildSectionHeader("TAMPILAN"),
+            _sectionHeader("TAMPILAN"),
             _buildSwitchTile(
-              Icons.dark_mode_outlined, 
-              "Mode Gelap", 
-              null, 
-              _darkMode, 
-              (val) => setState(() => _darkMode = val)
+              Icons.dark_mode_outlined,
+              "Mode Gelap",
+              _darkMode,
+              (v) => setState(() => _darkMode = v),
             ),
-            _buildListTile(Icons.language, "Bahasa / Language"),
+            _buildListTile(Icons.language, "Bahasa / Language", () {}),
+            Divider(),
 
-            const SizedBox(height: 20),
-            _buildSectionHeader("TENTANG"),
-            _buildListTile(Icons.info_outline, "Tentang NutriGenius"),
-            _buildListTile(Icons.privacy_tip_outlined, "Kebijakan Privasi"),
+            _sectionHeader("TENTANG"),
+            _buildListTile(Icons.info_outline, "Tentang NutriGenius", () {}),
+            _buildListTile(
+              Icons.privacy_tip_outlined,
+              "Kebijakan Privasi",
+              () {},
+            ),
 
-            const SizedBox(height: 40),
+            SizedBox(height: 40),
+
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  backgroundColor: Colors.white
+                  side: BorderSide(color: Colors.red),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                onPressed: () {
-                  // Aksi Hapus Akun
-                },
-                child: const Text("Hapus Akun Saya", style: TextStyle(color: Colors.red, fontSize: 16)),
+                onPressed: () => _showDeleteConfirmDialog(context),
+                child: Text(
+                  "Hapus Akun Saya",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-            
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Center(
               child: Text(
                 "Versi 1.0.0 (Beta)",
-                style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                style: TextStyle(color: Colors.grey),
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  void _showDeleteConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: Text("Hapus Akun?"),
+            content: Text(
+              "Aksi ini tidak dapat dibatalkan. Semua data Anda akan hilang.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text("Batal"),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.read<ProfileBloc>().add(DeleteAccountRequested());
+                },
+                child: Text("Ya, Hapus"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Widget _sectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10, left: 4),
+      padding: const EdgeInsets.only(top: 10, bottom: 10),
       child: Text(
         title,
-        style: const TextStyle(
-          color: Color(0xFF2E7D32),
+        style: TextStyle(
+          color: Colors.green[800],
           fontWeight: FontWeight.bold,
-          fontSize: 14,
+          fontSize: 13,
         ),
       ),
     );
   }
 
-  Widget _buildListTile(IconData icon, String title) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5, spreadRadius: 1)],
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: Colors.black87),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-        onTap: () {},
-      ),
+  Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.black87),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.w500)),
+      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      onTap: onTap,
     );
   }
 
-  Widget _buildSwitchTile(IconData icon, String title, String? subtitle, bool value, Function(bool) onChanged) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5, spreadRadius: 1)],
-      ),
-      child: SwitchListTile(
-        secondary: Icon(icon, color: Colors.black87),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        subtitle: subtitle != null ? Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)) : null,
+  Widget _buildSwitchTile(
+    IconData icon,
+    String title,
+    bool value,
+    Function(bool) onChanged,
+  ) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.black87),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.w500)),
+      trailing: Switch(
         value: value,
-        activeColor: const Color(0xFF2E7D32),
+        activeColor: Colors.green,
         onChanged: onChanged,
       ),
     );

@@ -15,7 +15,7 @@ class FirstPageMain extends StatefulWidget {
 }
 
 class _FirstPageMainState extends State<FirstPageMain> {
-  // Controller untuk mengatur perpindahan halaman
+
   final PageController _pageController = PageController();
 
   @override

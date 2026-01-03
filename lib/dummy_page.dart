@@ -29,18 +29,3 @@ class NotificationPage extends StatelessWidget {
     );
   }
 }
-
-// Halaman Profil
-class ProfilePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          "Halaman Profil User",
-          style: TextStyle(color: Colors.green, fontSize: 18),
-        ),
-      ),
-    );
-  }
-}

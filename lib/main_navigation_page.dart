@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrigenius/features/profile/presentation/pages/profile_page.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
 import 'dummy_page.dart';
 

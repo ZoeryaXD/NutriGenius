@@ -68,7 +68,7 @@ class _FirstPageState extends State<FirstPage> {
                           children: [
                             Icon(
                               value == 'Laki-Laki'
-                                  ? Icons.directions_run
+                                  ? Icons.male
                                   : Icons.female,
                               color: Colors.white,
                               size: 20,

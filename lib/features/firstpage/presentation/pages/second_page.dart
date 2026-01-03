@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
 import '../bloc/firstpage_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 class SecondPage extends StatefulWidget {
   final PageController pageController;
@@ -12,7 +14,7 @@ class SecondPage extends StatefulWidget {
 }
 
 class _SecondPageState extends State<SecondPage> {
-  int? _activityId; 
+  int? _activityId;
   int? _healthId;
 
   @override
@@ -22,7 +24,6 @@ class _SecondPageState extends State<SecondPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           GestureDetector(
             onTap:
                 () => widget.pageController.previousPage(
@@ -81,7 +82,10 @@ class _SecondPageState extends State<SecondPage> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
                 value: _healthId,
-                hint: Text("Pilih Tujuan Kesehatan", style: TextStyle(color: Colors.white70)),
+                hint: Text(
+                  "Pilih Tujuan Kesehatan",
+                  style: TextStyle(color: Colors.white70),
+                ),
                 isExpanded: true,
                 dropdownColor: Colors.green[700],
                 icon: Icon(Icons.arrow_drop_down, color: Colors.white),
@@ -101,13 +105,13 @@ class _SecondPageState extends State<SecondPage> {
                   DropdownMenuItem(
                     value: 2,
                     child: _buildHealthItem(
-                      Icons.directions_run,
+                      Icons.bloodtype,
                       "Pasien Diabetes",
                     ),
                   ),
                   DropdownMenuItem(
                     value: 3,
-                    child: _buildHealthItem(Icons.monitor_weight, "Obesitas"),
+                    child: _buildHealthItem(FontAwesomeIcons.weightScale, "Obesitas"),
                   ),
                 ],
                 onChanged: (v) => setState(() => _healthId = v!),
@@ -128,25 +132,26 @@ class _SecondPageState extends State<SecondPage> {
                 ),
               ),
               onPressed: () {
-
                 if (_activityId == null || _healthId == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("Harap pilih aktivitas dan tujuan kesehatan!"),
+                      content: Text(
+                        "Harap pilih aktivitas dan tujuan kesehatan!",
+                      ),
                       backgroundColor: Colors.red,
                     ),
                   );
-                  return; 
+                  return;
                 }
 
                 context.read<FirstPageBloc>().add(
-                  HealthGoalChanged(_healthId!)
+                  HealthGoalChanged(_healthId!),
                 );
 
                 context.read<FirstPageBloc>().add(
-                  CalculateStep2Data(_activityId!)
+                  CalculateStep2Data(_activityId!),
                 );
-                
+
                 widget.pageController.nextPage(
                   duration: Duration(milliseconds: 300),
                   curve: Curves.ease,
