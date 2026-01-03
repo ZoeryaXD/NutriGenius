@@ -6,9 +6,9 @@ class UserEntity extends Equatable {
   final bool isOnboarded;
 
   const UserEntity({
-    required this.uid, 
-    required this.email, 
-    required this.isOnboarded
+    required this.uid,
+    required this.email,
+    required this.isOnboarded,
   });
 
   @override

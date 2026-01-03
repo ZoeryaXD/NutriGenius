@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nutrigenius/injection_container.dart';
+import '../../../../injection_container.dart'; // Pastikan path ini benar untuk 'sl'
 import '../bloc/dashboard_bloc.dart';
-import 'package:image_picker/image_picker.dart';
+import '../bloc/dashboard_event.dart';
+import '../bloc/dashboard_state.dart';
+import '../../domain/entities/dashboard_entity.dart';
 
 class DashboardPage extends StatelessWidget {
-  final ImagePicker _picker = ImagePicker();
-
-  DashboardPage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -26,7 +24,32 @@ class DashboardPage extends StatelessWidget {
                 return _buildDashboardContent(context, state.data);
               } else if (state is DashboardError) {
                 return Center(
-                  child: Text("Gagal memuat data: ${state.message}"),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        SizedBox(height: 10),
+                        Text(
+                          "Gagal memuat data",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          state.message,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<DashboardBloc>().add(LoadDashboard());
+                          },
+                          child: Text("Coba Lagi"),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               }
               return Container();
@@ -37,28 +60,24 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDashboardContent(BuildContext context, dynamic data) {
+  Widget _buildDashboardContent(BuildContext context, DashboardEntity data) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ==============================
-          // 1. LOGO & JUDUL (Sesuai Request)
+          // 1. LOGO & APP NAME
           // ==============================
           Row(
             children: [
-              // Ganti Icon dengan Gambar Aset
               Image.asset(
                 'assets/images/logo.png',
                 width: 32,
                 height: 32,
                 errorBuilder:
-                    (context, error, stackTrace) => Icon(
-                      Icons.eco,
-                      color: Colors.green,
-                      size: 32,
-                    ), // Fallback jika gambar gagal load
+                    (context, error, stackTrace) =>
+                        Icon(Icons.eco, color: Colors.green, size: 32),
               ),
               SizedBox(width: 10),
               Text(
@@ -75,16 +94,15 @@ class DashboardPage extends StatelessWidget {
           SizedBox(height: 24),
 
           // ==============================
-          // 2. SAPAAN WAKTU & NAMA USER
+          // 2. SAPAAN & NAMA USER
           // ==============================
           Text(
-            _getGreeting(), // Fungsi otomatis Pagi/Siang/Sore/Malam
+            _getGreeting(),
             style: TextStyle(color: Colors.green[700], fontSize: 16),
           ),
           Text(
-            data.displayName.isNotEmpty
-                ? data.displayName
-                : "", // Fallback nama
+            // Tampilkan nama dari backend, atau default jika kosong
+            (data.displayName.isNotEmpty) ? data.displayName : "Nutri User",
             style: TextStyle(
               color: Colors.green[800],
               fontSize: 24,
@@ -95,7 +113,7 @@ class DashboardPage extends StatelessWidget {
           SizedBox(height: 24),
 
           // ==============================
-          // 3. HERO CARD (Kalori)
+          // 3. HERO CARD (PROGRESS HARIAN)
           // ==============================
           Container(
             padding: EdgeInsets.all(24),
@@ -117,26 +135,28 @@ class DashboardPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Sisa Kalori!",
+                      "Kalori Masuk",
                       style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     SizedBox(height: 4),
-                    // Tampilkan Sisa Kalori
+
                     Text(
-                      "${data.remainingCalories}",
+                      "${data.caloriesConsumed.toInt()}",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     Text(
                       "dari target ${data.tdee.toInt()} kkal",
                       style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
-                // Circular Progress
+
+                // CIRCULAR PROGRESS
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -144,21 +164,23 @@ class DashboardPage extends StatelessWidget {
                       width: 80,
                       height: 80,
                       child: CircularProgressIndicator(
-                        value: 1.0, // Lingkaran Penuh (Background)
+                        value: 1.0,
                         color: Colors.white.withOpacity(0.2),
                         strokeWidth: 8,
                       ),
                     ),
+
                     SizedBox(
                       width: 80,
                       height: 80,
                       child: CircularProgressIndicator(
-                        value: data.progress, // Progress (Konsumsi / Target)
+                        value: data.progress,
                         color: Colors.white,
                         strokeWidth: 8,
                         strokeCap: StrokeCap.round,
                       ),
                     ),
+
                     Icon(
                       Icons.local_fire_department,
                       color: Colors.white,
@@ -176,7 +198,7 @@ class DashboardPage extends StatelessWidget {
           // 4. MAKRO NUTRISI
           // ==============================
           Text(
-            "Makro Nutrisi",
+            "Makro Nutrisi (Harian)",
             style: TextStyle(
               color: Colors.green[800],
               fontWeight: FontWeight.bold,
@@ -188,20 +210,28 @@ class DashboardPage extends StatelessWidget {
             children: [
               _buildMacroCard(
                 "Protein",
-                "${data.proteinTarget}g",
+                "${data.proteinConsumed.toInt()}g",
                 Icons.fitness_center,
               ),
               SizedBox(width: 12),
-              _buildMacroCard("Carbs", "${data.carbsTarget}g", Icons.grain),
+              _buildMacroCard(
+                "Karbo",
+                "${data.carbsConsumed.toInt()}g",
+                Icons.grain,
+              ),
               SizedBox(width: 12),
-              _buildMacroCard("Fat", "${data.fatTarget}g", Icons.water_drop),
+              _buildMacroCard(
+                "Lemak",
+                "${data.fatConsumed.toInt()}g",
+                Icons.water_drop,
+              ),
             ],
           ),
 
           SizedBox(height: 24),
 
           // ==============================
-          // 5. TOMBOL SCAN (Logic BottomSheet)
+          // 5. TOMBOL SCAN
           // ==============================
           Text(
             "Scan Makananmu",
@@ -223,25 +253,35 @@ class DashboardPage extends StatelessWidget {
                 ),
                 elevation: 4,
               ),
-              onPressed: () => _showScanOptions(context), // Panggil BottomSheet
-              child: Icon(
-                Icons.center_focus_strong,
-                size: 40,
-                color: Colors.white,
+              onPressed: () => _showScanOptions(context),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.center_focus_strong,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    "Mulai Scan",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
-          // Padding tambahan agar tidak mentok bawah scroll
           SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  // --- LOGIC TAMBAHAN ---
-
-  // 1. Logika Waktu Sapaan
   String _getGreeting() {
     var hour = DateTime.now().hour;
     if (hour < 11) {
@@ -255,51 +295,28 @@ class DashboardPage extends StatelessWidget {
     }
   }
 
-  // 2. LOGIKA UTAMA: Handle Buka Kamera/Galeri
-  Future<void> _handleImageSelection(
-    BuildContext context,
-    ImageSource source,
-  ) async {
-    try {
-      // Buka Kamera/Galeri
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 50, // Kompres sedikit biar ringan
-      );
-
-      if (pickedFile != null) {
-        // Jika berhasil ambil foto
-        print("📸 Gambar didapat: ${pickedFile.path}");
-
-        // Tampilkan notifikasi kecil
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Berhasil mengambil gambar!')));
-
-        // TODO: Di sinilah nanti kita navigasi ke halaman Result/Preview
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => ScanResultPage(image: File(pickedFile.path))));
-      }
-    } catch (e) {
-      print("❌ Eror: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengambil gambar/Izin ditolak')),
-      );
-    }
-  }
-
-  // 2. Logika BottomSheet Kamera
   void _showScanOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return Container(
-          padding: EdgeInsets.all(20),
-          height: 180,
+          padding: EdgeInsets.all(24),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              SizedBox(height: 20),
               Text(
                 "Pilih Metode Scan",
                 style: TextStyle(
@@ -308,20 +325,22 @@ class DashboardPage extends StatelessWidget {
                   color: Colors.green[800],
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 30),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildOptionBtn(context, Icons.camera_alt, "Kamera", () {
                     Navigator.pop(context);
-                    _handleImageSelection(context, ImageSource.camera);
+                    print("Buka Kamera");
                   }),
                   _buildOptionBtn(context, Icons.photo_library, "Galeri", () {
                     Navigator.pop(context);
-                    _handleImageSelection(context, ImageSource.gallery);
+                    print("Buka Galeri");
                   }),
                 ],
               ),
+              SizedBox(height: 20),
             ],
           ),
         );
@@ -341,11 +360,17 @@ class DashboardPage extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: Colors.green[100],
-            child: Icon(icon, color: Colors.green[800], size: 30),
+            backgroundColor: Colors.green[50],
+            child: Icon(icon, color: Colors.green[700], size: 28),
           ),
           SizedBox(height: 8),
-          Text(label, style: TextStyle(color: Colors.green[800])),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.green[800],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -354,7 +379,7 @@ class DashboardPage extends StatelessWidget {
   Widget _buildMacroCard(String label, String value, IconData icon) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -372,12 +397,14 @@ class DashboardPage extends StatelessWidget {
             SizedBox(height: 8),
             Text(
               value,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
             ),
+            SizedBox(height: 4),
             Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),

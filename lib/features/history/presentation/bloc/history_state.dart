@@ -1,4 +1,4 @@
-import '../../../../core/models/food_model.dart';
+import 'package:nutrigenius/features/history/domain/entities/history_entity.dart';
 
 abstract class HistoryState {}
 
@@ -7,7 +7,7 @@ class HistoryInitial extends HistoryState {}
 class HistoryLoading extends HistoryState {}
 
 class HistoryLoaded extends HistoryState {
-  final List<FoodModel> histories;
+  final List<HistoryEntity> histories;
   final List<double> chartData;
 
   HistoryLoaded(this.histories, this.chartData);

@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/models/food_model.dart';
+import 'package:nutrigenius/features/history/domain/entities/history_entity.dart';
 import '../bloc/history_bloc.dart';
 import '../bloc/history_event.dart';
 
 class DetailHistoryPage extends StatelessWidget {
-  final FoodModel food;
+  final HistoryEntity food;
   const DetailHistoryPage({super.key, required this.food});
 
   @override
@@ -39,9 +39,11 @@ class DetailHistoryPage extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child:
-                  food.imagePath.isNotEmpty && File(food.imagePath).existsSync()
+                  food.imagePath != null &&
+                          food.imagePath!.isNotEmpty &&
+                          File(food.imagePath!).existsSync()
                       ? Image.file(
-                        File(food.imagePath),
+                        File(food.imagePath!),
                         width: double.infinity,
                         height: 250,
                         fit: BoxFit.cover,
@@ -92,14 +94,20 @@ class DetailHistoryPage extends StatelessWidget {
             ),
             _buildNutrientRow(
               "Protein",
-              "${food.protein.toStringAsFixed(1)} g",
+              "${(food.protein ?? 0.0).toStringAsFixed(1)} g",
             ),
             _buildNutrientRow(
               "Karbohidrat",
-              "${food.carbs.toStringAsFixed(1)} g",
+              "${(food.carbs ?? 0.0).toStringAsFixed(1)} g",
             ),
-            _buildNutrientRow("Lemak", "${food.fat.toStringAsFixed(1)} g"),
-            _buildNutrientRow("Gula", "${food.sugar.toStringAsFixed(1)} g"),
+            _buildNutrientRow(
+              "Lemak",
+              "${(food.fat ?? 0.0).toStringAsFixed(1)} g",
+            ),
+            _buildNutrientRow(
+              "Gula",
+              "${(food.sugar ?? 0.0).toStringAsFixed(1)} g",
+            ),
 
             const SizedBox(height: 40),
 

@@ -1,11 +1,11 @@
-import '../../../../core/models/food_model.dart';
+import 'package:nutrigenius/features/history/domain/entities/history_entity.dart';
 
 abstract class HistoryEvent {}
 
 class LoadHistory extends HistoryEvent {}
 
 class AddFoodScan extends HistoryEvent {
-  final FoodModel food;
+  final HistoryEntity food;
   AddFoodScan(this.food);
 }
 

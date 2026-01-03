@@ -1,5 +1,5 @@
-import 'package:nutrigenius/features/dashboard/data/models/dashboard_model.dart';
+import '../entities/dashboard_entity.dart';
 
 abstract class DashboardRepository {
-  Future<DashboardModel> getDashboardData(String email);
+  Future<DashboardEntity> loadDashboardData();
 }

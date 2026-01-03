@@ -1,74 +1,69 @@
-class DashboardModel {
-  final String displayName;
-  final int remainingCalories;
-  final double tdee;
-  final double progress;
-  final int proteinTarget;
-  final int carbsTarget;
-  final int fatTarget;
+import '../../domain/entities/dashboard_entity.dart';
 
-  DashboardModel({
-    required this.displayName,
-    required this.remainingCalories,
-    required this.tdee,
-    required this.progress,
-    required this.proteinTarget,
-    required this.carbsTarget,
-    required this.fatTarget,
-  });
+class DashboardModel extends DashboardEntity {
+  const DashboardModel({
+    required String displayName,
+    required double tdee,
+    required double caloriesConsumed,
+    required double proteinTarget,
+    required double proteinConsumed,
+    required double carbsTarget,
+    required double carbsConsumed,
+    required double fatTarget,
+    required double fatConsumed,
+  }) : super(
+         displayName: displayName,
+         tdee: tdee,
+         caloriesConsumed: caloriesConsumed,
+         proteinTarget: proteinTarget,
+         proteinConsumed: proteinConsumed,
+         carbsTarget: carbsTarget,
+         carbsConsumed: carbsConsumed,
+         fatTarget: fatTarget,
+         fatConsumed: fatConsumed,
+       );
 
   factory DashboardModel.fromJson(Map<String, dynamic> json) {
     return DashboardModel(
-      // 1. NAMA: Ambil dari 'fullName' (Backend), simpan ke 'displayName' (Flutter)
-      displayName: json['fullName'] ?? 'User', 
+      displayName: json['full_name'] ?? '',
 
-      // 2. TDEE: Ambil dari 'tdee' atau 'calculated_tdee'
-      // Kita pakai (json['x'] ?? 0).toDouble() biar aman kalau datanya null/int
-      tdee: _parseDouble(json['tdee']),
-      // 3. PROGRESS: (0.0 sampai 1.0)
-      progress: _parseDouble(json['progress']),
+      tdee: _toDouble(json['tdee']),
+      caloriesConsumed: _toDouble(json['calories_consumed']),
 
-      // 4. SISA KALORI:
-      remainingCalories: _parseInt(json['remaining_calories']),
-      // 5. MAKRO NUTRISI:
-      proteinTarget: _parseInt(json['protein_target']),
-      carbsTarget: _parseInt(json['carbs_target']),
-      fatTarget: _parseInt(json['fat_target']),
+      proteinTarget: _toDouble(json['protein_target']),
+      proteinConsumed: _toDouble(json['protein_consumed']),
+
+      carbsTarget: _toDouble(json['carbs_target']),
+      carbsConsumed: _toDouble(json['carbs_consumed']),
+
+      fatTarget: _toDouble(json['fat_target']),
+      fatConsumed: _toDouble(json['fat_consumed']),
     );
   }
 
-  static double _parseDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is num) return value.toDouble(); // Kalau sudah angka, langsung convert
-    if (value is String) {
-      // Kalau string, coba parse. Kalau gagal, return 0.0
-      return double.tryParse(value) ?? 0.0;
-    }
-    return 0.0;
-  }
-
-  // === HELPER SAKTI: UBAH APAPUN JADI INT ===
-  static int _parseInt(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) {
-      // Parse dulu jadi double (jaga-jaga kalau stringnya "2000.00"), baru ke int
-      return double.tryParse(value)?.toInt() ?? 0;
-    }
-    return 0;
-  }
-
-   Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson() {
     return {
-      'fullName': displayName,
+      'full_name': displayName,
       'tdee': tdee,
-      'progress': progress,
-      'remaining_calories': remainingCalories,
+      'calories_consumed': caloriesConsumed,
       'protein_target': proteinTarget,
+      'protein_consumed': proteinConsumed,
       'carbs_target': carbsTarget,
+      'carbs_consumed': carbsConsumed,
       'fat_target': fatTarget,
+      'fat_consumed': fatConsumed,
     };
   }
+
+  static double _toDouble(dynamic val) {
+    if (val == null) return 0.0;
+
+    if (val is num) return val.toDouble();
+
+    if (val is String) {
+      return double.tryParse(val) ?? 0.0;
+    }
+
+    return 0.0;
+  }
 }
- 

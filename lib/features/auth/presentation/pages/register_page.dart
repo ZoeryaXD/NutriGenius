@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
 // Import bloc dan common widgets lainnya
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
-
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
@@ -18,7 +18,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPassController = TextEditingController();
   bool _isObscure = true;
 
-  // Regex Password: Minimal 8 char, ada angka, ada simbol
   final _passRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,}$');
 
   @override
@@ -46,8 +45,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     actions: [
                       TextButton(
                         onPressed: () {
-                          Navigator.pop(context); // Tutup Dialog
-                          Navigator.pop(context); // Kembali ke Login Page
+                          Navigator.pop(context);
+                          Navigator.pop(context);
                         },
                         child: Text("OK"),
                       ),
@@ -140,7 +139,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 16),
 
-                // Konfirmasi Password
                 TextFormField(
                   controller: _confirmPassController,
                   obscureText: _isObscure,
@@ -159,7 +157,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 30),
 
-                // Tombol Register
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -198,7 +195,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 20),
 
-                // Link ke Login
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

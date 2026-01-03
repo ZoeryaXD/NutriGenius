@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../../../core/models/food_model.dart';
+import '../../domain/entities/history_entity.dart';
 import '../pages/detail_history_page.dart';
 
 class HistoryListItem extends StatelessWidget {
-  final FoodModel food;
+  final HistoryEntity food;
   const HistoryListItem({super.key, required this.food});
 
   @override
@@ -34,9 +34,11 @@ class HistoryListItem extends StatelessWidget {
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child:
-              food.imagePath.isNotEmpty && File(food.imagePath).existsSync()
+              food.imagePath != null &&
+                      food.imagePath!.isNotEmpty &&
+                      File(food.imagePath!).existsSync()
                   ? Image.file(
-                    File(food.imagePath),
+                    File(food.imagePath!),
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,

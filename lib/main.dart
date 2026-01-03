@@ -17,6 +17,8 @@ import 'features/firstpage/presentation/pages/firstpage_main.dart';
 import 'features/history/presentation/pages/history_page.dart';
 import 'features/main/pages/main_page.dart';
 import 'features/notification/presentation/pages/notification_page.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/profile/presentation/bloc/profile_event.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
 
 void main() async {
@@ -42,9 +44,8 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
-        BlocProvider(
-          create: (_) => di.sl<HistoryBloc>()..add(LoadHistory()),
-        ), // Inject History
+        BlocProvider(create: (_) => di.sl<HistoryBloc>()..add(LoadHistory())),
+        BlocProvider(create: (_) => di.sl<ProfileBloc>()..add(LoadProfile())),
       ],
       child: MaterialApp(
         title: 'NutriGenius',
@@ -58,16 +59,16 @@ class MyApp extends StatelessWidget {
 
         routes: {
           // Routes dari Auth & FirstPage
-          '/': (context) => const LoginPage(),
-          '/register': (context) => const RegisterPage(),
-          '/firstpage': (context) => const FirstPageMain(),
+          '/': (context) => LoginPage(),
+          '/register': (context) => RegisterPage(),
+          '/firstpage': (context) => FirstPageMain(),
 
           // Routes Fitur Utama
-          '/mainpage': (context) => const MainPage(),
+          '/mainpage': (context) => MainPage(),
           '/dashboard': (context) => DashboardPage(),
-          '/history': (context) => const HistoryPage(),
-          '/notification': (context) => const NotificationPage(),
-          '/profile': (context) => const ProfilePage(),
+          '/history': (context) => HistoryPage(),
+          '/notification': (context) => NotificationPage(),
+          '/profile': (context) => ProfilePage(),
         },
       ),
     );

@@ -31,6 +31,7 @@ class _HistoryPageState extends State<HistoryPage> {
         title: const Text(
           'History Log',
           style: TextStyle(
+            fontSize: 24,
             color: Color(0xFF2E7D32),
             fontWeight: FontWeight.bold,
           ),

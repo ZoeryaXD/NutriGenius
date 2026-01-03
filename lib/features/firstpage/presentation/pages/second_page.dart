@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
 import '../bloc/firstpage_bloc.dart';
 
 class SecondPage extends StatefulWidget {
   final PageController pageController;
-  const SecondPage({super.key, required this.pageController});
+  const SecondPage({required this.pageController});
 
   @override
   _SecondPageState createState() => _SecondPageState();
 }
 
 class _SecondPageState extends State<SecondPage> {
-  int _activityId = 1; // Default Sedentary
-  int _healthId = 2; // Default Diabetes (sesuai gambar)
+  int? _activityId;
+  int? _healthId;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,6 @@ class _SecondPageState extends State<SecondPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Navigasi Back kecil di atas
           GestureDetector(
             onTap:
                 () => widget.pageController.previousPage(
@@ -54,15 +54,13 @@ class _SecondPageState extends State<SecondPage> {
           ),
           SizedBox(height: 30),
 
-          // Pilihan Aktivitas (Tombol Besar)
-          _buildActivityButton(2, "Light Active (Olahraga 1-3x/minggu)"),
           _buildActivityButton(1, "Sedentary (Duduk seharian/Office)"),
+          _buildActivityButton(2, "Light Active (Olahraga 1-3x/minggu)"),
           _buildActivityButton(3, "Active (Olahraga 3-5x/minggu)"),
           _buildActivityButton(4, "Very Active (Fisik berat/Atlet)"),
 
           SizedBox(height: 30),
 
-          // Tujuan Kamu (Dropdown Hijau)
           Text(
             "Tujuan Kamu:",
             style: TextStyle(
@@ -72,6 +70,7 @@ class _SecondPageState extends State<SecondPage> {
             ),
           ),
           SizedBox(height: 10),
+
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
@@ -81,6 +80,10 @@ class _SecondPageState extends State<SecondPage> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
                 value: _healthId,
+                hint: Text(
+                  "Pilih Tujuan Kesehatan",
+                  style: TextStyle(color: Colors.white70),
+                ),
                 isExpanded: true,
                 dropdownColor: Colors.green[700],
                 icon: Icon(Icons.arrow_drop_down, color: Colors.white),
@@ -103,7 +106,7 @@ class _SecondPageState extends State<SecondPage> {
                       Icons.directions_run,
                       "Pasien Diabetes",
                     ),
-                  ), // Ikon lari sesuai gambar
+                  ),
                   DropdownMenuItem(
                     value: 3,
                     child: _buildHealthItem(Icons.monitor_weight, "Obesitas"),
@@ -127,9 +130,26 @@ class _SecondPageState extends State<SecondPage> {
                 ),
               ),
               onPressed: () {
+                if (_activityId == null || _healthId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Harap pilih aktivitas dan tujuan kesehatan!",
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
                 context.read<FirstPageBloc>().add(
-                  CalculateStep2Data(_activityId, _healthId),
+                  HealthGoalChanged(_healthId!),
                 );
+
+                context.read<FirstPageBloc>().add(
+                  CalculateStep2Data(_activityId!),
+                );
+
                 widget.pageController.nextPage(
                   duration: Duration(milliseconds: 300),
                   curve: Curves.ease,

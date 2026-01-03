@@ -1,33 +1,48 @@
-import '../../data/models/dashboard_model.dart';import '../../domain/repositories/dashboard_repository.dart';
-import '../datasources/dashboard_local_data_source.dart';
-import '../datasources/dashboard_remote_data_source.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/network/api_client.dart';
+
+import '../../domain/entities/dashboard_entity.dart';
+import '../../domain/repositories/dashboard_repository.dart';
+import '../models/dashboard_model.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
-  final DashboardLocalDataSource localDataSource;
-  final DashboardRemoteDataSource remoteDataSource; 
+  final http.Client client;
 
-  DashboardRepositoryImpl({
-    required this.localDataSource,
-    required this.remoteDataSource, 
-  });
+  DashboardRepositoryImpl({required this.client});
 
   @override
-  Future<DashboardModel> getDashboardData(String email) async {
-
-    await remoteDataSource.getDashboardData(email);    
-
+  Future<DashboardEntity> loadDashboardData() async {
     try {
-      // 1. Ambil data mentah (Map) dari Remote API
-      final remoteData = await remoteDataSource.getDashboardData(email);
-      
-      // 2. DISINI KUNCINYA! 🔑
-      // Kita pakai fromJson milik Model untuk menerjemahkan data secara otomatis.
-      // (full_name -> displayName, convert angka, dll sudah diurus di sini)
-      return DashboardModel.fromJson(remoteData);
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception("User belum login");
+      }
 
+      final url = Uri.parse('${ApiClient.baseUrl}/dashboard');
+
+      final response = await client.post(
+        url,
+        headers: ApiClient.headers,
+        body: jsonEncode({'email': user.email}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['success'] == true) {
+          final data = jsonResponse['data'];
+
+          return DashboardModel.fromJson(data);
+        } else {
+          throw Exception(jsonResponse['message']);
+        }
+      } else {
+        throw Exception('Server Error: ${response.statusCode}');
+      }
     } catch (e) {
-      // Error handling sederhana
-      throw Exception("Gagal ambil data dashboard: $e");
+      throw Exception('Gagal memuat dashboard: $e');
     }
   }
 }

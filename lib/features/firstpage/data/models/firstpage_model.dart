@@ -1,7 +1,7 @@
 class FirstPageModel {
   final String email;
   final String gender;
-  final String birthDate; // String karena MySQL butuh 'YYYY-MM-DD'
+  final String birthDate;
   final double weight;
   final double height;
   final int activityId;
@@ -25,7 +25,7 @@ class FirstPageModel {
     return {
       'email': email,
       'gender': gender,
-      'birthDate': birthDate, // Pastikan format YYYY-MM-DD
+      'birthDate': birthDate,
       'weight': weight,
       'height': height,
       'activityId': activityId,

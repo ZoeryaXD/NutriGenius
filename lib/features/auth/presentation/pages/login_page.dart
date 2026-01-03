@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
+import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
 import 'package:nutrigenius/features/auth/presentation/pages/register_page.dart';
 // Import FirstPage dan Dashboard Page
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -17,7 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isObscure = true;
 
   void _showForgotPasswordDialog() {
-    final resetEmailController = TextEditingController();
+    final _resetEmailController = TextEditingController();
     showDialog(
       context: context,
       builder:
@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 10),
                 TextField(
-                  controller: resetEmailController,
+                  controller: _resetEmailController,
                   decoration: InputDecoration(hintText: "Email Anda"),
                 ),
               ],
@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
               ElevatedButton(
                 onPressed: () {
                   context.read<AuthBloc>().add(
-                    ForgotPasswordRequested(resetEmailController.text),
+                    ForgotPasswordRequested(_resetEmailController.text),
                   );
                   Navigator.pop(context);
                 },

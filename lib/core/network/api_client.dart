@@ -2,7 +2,7 @@ import 'dart:io';
 
 class ApiClient {
   // Pastikan angka ini 168 (umumnya Wi-Fi lokal), bukan 169
-  static const String _laptopIp = '192.168.243.165';
+  static const String _laptopIp = '192.168.70.165';
 
   static String get baseUrl {
     if (Platform.isAndroid) {

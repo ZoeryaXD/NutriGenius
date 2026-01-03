@@ -8,11 +8,11 @@ class FirstpageEntity extends Equatable {
   final int activityId;
   final int healthId;
 
-  // Getter untuk menghitung umur secara dinamis
   int get age {
     final now = DateTime.now();
     int age = now.year - birthDate.year;
-    if (now.month < birthDate.month || (now.month == birthDate.month && now.day < birthDate.day)) {
+    if (now.month < birthDate.month ||
+        (now.month == birthDate.month && now.day < birthDate.day)) {
       age--;
     }
     return age;
@@ -28,5 +28,12 @@ class FirstpageEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [gender, weight, height, birthDate, activityId, healthId];
+  List<Object?> get props => [
+    gender,
+    weight,
+    height,
+    birthDate,
+    activityId,
+    healthId,
+  ];
 }
