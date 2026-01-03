@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
 import '../bloc/firstpage_bloc.dart';
-import '../bloc/firstpage_event.dart';
 
 class SecondPage extends StatefulWidget {
   final PageController pageController;
