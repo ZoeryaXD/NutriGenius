@@ -3,26 +3,39 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nutrigenius/core/usecases/database_helper.dart';
 
-import 'package:nutrigenius/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
-import 'package:nutrigenius/features/dashboard/data/repositories/dashboard_repository_impl.dart';
-import 'package:nutrigenius/features/dashboard/domain/repositories/dashboard_repository.dart';
-import 'package:nutrigenius/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-
-import 'package:nutrigenius/features/profile/data/datasources/profile_remote_data_source.dart';
-import 'package:nutrigenius/features/profile/data/repositories/profile_repository_impl.dart';
-import 'package:nutrigenius/features/profile/domain/repositories/profile_repository.dart';
-import 'package:nutrigenius/features/profile/presentation/bloc/profile_bloc.dart';
-
+// Import Fitur Auth
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
+// Import Fitur Firstpage
 import 'features/firstpage/data/datasources/firstpage_remote_data_source.dart';
 import 'features/firstpage/data/repositories/firstpage_repository_impl.dart';
 import 'features/firstpage/domain/repositories/firstpage_repository.dart';
 import 'features/firstpage/presentation/bloc/firstpage_bloc.dart';
 import 'features/firstpage/domain/usecase/calculate_tdee.dart';
+
+// Import Fitur Dashboard
+import 'package:nutrigenius/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
+import 'package:nutrigenius/features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'package:nutrigenius/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:nutrigenius/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+
+// Import Fitur Profile
+import 'package:nutrigenius/features/profile/data/datasources/profile_remote_data_source.dart';
+import 'package:nutrigenius/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:nutrigenius/features/profile/domain/repositories/profile_repository.dart';
+import 'package:nutrigenius/features/profile/presentation/bloc/profile_bloc.dart';
+
+// =========================================================
+// ! IMPORT FITUR SCAN (TAMBAHAN BARU)
+// =========================================================
+import 'features/scan/data/repositories/scan_repository_impl.dart';
+import 'features/scan/domain/repositories/scan_repository.dart';
+import 'features/scan/domain/usecases/analyze_food_usecase.dart';
+import 'features/scan/domain/usecases/save_scan_usecase.dart';
+import 'features/scan/presentation/bloc/scan_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -32,32 +45,27 @@ Future<void> init() async {
   // ==========================
   sl.registerFactory(() => AuthBloc(sl()));
 
-  // Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remoteDataSource: sl()),
   );
 
-  // Data Source
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(firebaseAuth: sl(), client: sl()),
   );
 
   // ==========================
-  // ! 2. FITUR FIRSTPAGE (ONBOARDING)
+  // ! 2. FITUR FIRSTPAGE
   // ==========================
   sl.registerFactory(
     () => FirstPageBloc(calculateTDEE: sl(), repository: sl()),
   );
 
-  // Use Case
   sl.registerLazySingleton(() => CalculateTDEE());
 
-  // Repository
   sl.registerLazySingleton<FirstPageRepository>(
     () => FirstPageRepositoryImpl(remoteDataSource: sl()),
   );
 
-  // Data Source
   sl.registerLazySingleton<FirstpageRemoteDataSource>(
     () => FirstpageRemoteDataSourceImpl(client: sl()),
   );
@@ -65,10 +73,8 @@ Future<void> init() async {
   // ==========================
   // ! 3. FITUR DASHBOARD
   // ==========================
-  // BLoC
   sl.registerFactory(() => DashboardBloc(repository: sl()));
 
-  // Repository
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(client: sl()),
   );
@@ -80,22 +86,35 @@ Future<void> init() async {
   // ==========================
   // ! 4. FITUR PROFILE
   // ==========================
-  // Datasource
-  sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSourceImpl(client: sl()),
-  );
+  sl.registerFactory(() => ProfileBloc(repository: sl()));
 
-  // Repository
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
 
-  // Bloc
-  sl.registerFactory(() => ProfileBloc(repository: sl()));
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(client: sl()),
+  );
 
-  // ! External
+  // =========================================================
+  // ! 5. FITUR SCAN (PERBAIKAN & PENAMBAHAN)
+  // =========================================================
+  // BLoC
+  sl.registerFactory(
+    () => ScanBloc(analyzeFoodUseCase: sl(), saveScanUseCase: sl()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => AnalyzeFoodUseCase(sl()));
+  sl.registerLazySingleton(() => SaveScanUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<ScanRepository>(() => ScanRepositoryImpl());
+
+  // ==========================
+  // ! EXTERNAL
+  // ==========================
   sl.registerLazySingleton(() => http.Client());
   sl.registerLazySingleton(() => FirebaseAuth.instance);
-
   sl.registerLazySingleton(() => DatabaseHelper.instance);
 }

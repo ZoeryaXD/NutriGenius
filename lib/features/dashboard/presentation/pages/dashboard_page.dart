@@ -5,6 +5,8 @@ import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
 import '../../domain/entities/dashboard_entity.dart';
+import '../../../scan/presentation/pages/scan_page.dart';
+import '../../../scan/presentation/pages/camera_page.dart';
 
 class DashboardPage extends StatelessWidget {
   @override
@@ -253,7 +255,9 @@ class DashboardPage extends StatelessWidget {
                 ),
                 elevation: 4,
               ),
-              onPressed: () => _showScanOptions(context),
+              onPressed: () {
+                _showScanOptions(context);
+              },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -332,15 +336,23 @@ class DashboardPage extends StatelessWidget {
                 children: [
                   _buildOptionBtn(context, Icons.camera_alt, "Kamera", () {
                     Navigator.pop(context);
-                    print("Buka Kamera");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CameraPage(),
+                      ),
+                    );
                   }),
                   _buildOptionBtn(context, Icons.photo_library, "Galeri", () {
                     Navigator.pop(context);
-                    print("Buka Galeri");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ScanPage()),
+                    );
                   }),
                 ],
               ),
-              SizedBox(height: 20,)
+              SizedBox(height: 20),
             ],
           ),
         );
