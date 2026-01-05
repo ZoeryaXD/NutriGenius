@@ -23,6 +23,14 @@ import 'features/firstpage/data/repositories/firstpage_repository_impl.dart';
 import 'features/firstpage/domain/repositories/firstpage_repository.dart';
 import 'features/firstpage/presentation/bloc/firstpage_bloc.dart';
 import 'features/firstpage/domain/usecase/calculate_tdee.dart';
+import 'features/history/data/datasources/history_local_data_source.dart';
+import 'features/history/data/datasources/history_remote_data_source.dart';
+import 'features/history/data/repositories/history_repository_impl.dart';
+import 'features/history/domain/repositories/history_repository.dart';
+import 'features/history/domain/usecases/add_food_usecase.dart';
+import 'features/history/domain/usecases/delete_history_usecase.dart';
+import 'features/history/domain/usecases/get_history_usecase.dart';
+import 'features/history/presentation/bloc/history_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -92,6 +100,33 @@ Future<void> init() async {
 
   // Bloc
   sl.registerFactory(() => ProfileBloc(repository: sl()));
+
+    // ==========================
+  // ! 4. FITUR HISTORY
+  // ==========================
+
+  // 1. Data Sources
+  sl.registerLazySingleton<HistoryLocalDataSource>(
+    () => HistoryLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<HistoryRemoteDataSource>(
+    () => HistoryRemoteDataSourceImpl(client: sl()),
+  );
+
+  // 2. Repository
+  sl.registerLazySingleton<HistoryRepository>(
+    () => HistoryRepositoryImpl(localDataSource: sl(), remoteDataSource: sl()),
+  );
+
+  // 3. Use Cases
+  sl.registerLazySingleton(() => GetHistoryUseCase(sl()));
+  sl.registerLazySingleton(() => AddFoodUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteHistoryUseCase(sl()));
+
+  // 4. Bloc
+  sl.registerFactory(
+    () => HistoryBloc(getHistory: sl(), addFood: sl(), deleteHistory: sl()),
+  );
 
   // ! External
   sl.registerLazySingleton(() => http.Client());

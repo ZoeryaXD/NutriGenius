@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/main_navigation_page.dart';
+import 'features/history/presentation/bloc/history_bloc.dart';
+import 'features/history/presentation/pages/history_page.dart';
 import 'firebase_options.dart';
 import 'injection_container.dart' as di;
 
@@ -29,6 +31,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(create: (_) => di.sl<HistoryBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -43,6 +46,7 @@ class MyApp extends StatelessWidget {
           '/register': (context) => RegisterPage(),
           '/firstpage': (context) => FirstPageMain(),
           '/dashboard': (context) => MainNavigationPage(),
+          '/history': (context) => HistoryPage(),
         },
       ),
     );
