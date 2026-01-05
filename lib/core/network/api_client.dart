@@ -1,7 +1,7 @@
 import 'dart:io';
 
 class ApiClient {
-  static const String _laptopIp = '192.169.0.6';
+  static const String _laptopIp = '192.168.31.101';
   static String get baseUrl {
     if (Platform.isAndroid) {
       return 'http://$_laptopIp:3000/api';
