@@ -2,213 +2,146 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class WeeklyReportCard extends StatelessWidget {
-  final List<double> weeklyData;
-  final bool isLandscape;
+  final List<double> weeklyCalories;
+  final double totalCalories;
+  final double dailyAverage;
 
   const WeeklyReportCard({
     super.key,
-    required this.weeklyData,
-    this.isLandscape = false,
+    required this.weeklyCalories,
+    required this.totalCalories,
+    required this.dailyAverage,
   });
 
   @override
   Widget build(BuildContext context) {
-    double total = weeklyData.fold(0, (sum, item) => sum + item);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header Teks
+        const Text(
+          "LAPORAN MINGGUAN",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Colors.green,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          "Total Kalori Minggu ini:",
+          style: TextStyle(color: Colors.grey[600]),
+        ),
+        Text(
+          "${totalCalories.toStringAsFixed(0)} kkal (Avg: ${dailyAverage.toStringAsFixed(0)}/hari)",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.black87,
+          ),
+        ),
 
-    return Container(
-      padding: EdgeInsets.all(isLandscape ? 16 : 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Statistik Kalori Mingguan",
-            style: TextStyle(
-              fontSize: isLandscape ? 14 : 18,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF2E7D32),
-            ),
-          ),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              "${total.toStringAsFixed(0)} kkal minggu ini",
-              style: TextStyle(
-                fontSize: isLandscape ? 12 : 14,
-                color: Colors.grey[600],
+        const SizedBox(height: 20),
+
+        // Grafik Chart
+        Container(
+          height: 250,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade200,
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
-            ),
+            ],
           ),
-          SizedBox(height: isLandscape ? 12 : 24),
-          AspectRatio(
-            aspectRatio: isLandscape ? 2.2 : 1.5,
-            child: LineChart(
-              LineChartData(
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (touchedSpot) => const Color(0xFF2E7D32),
-                    tooltipBorderRadius: BorderRadius.circular(8),
-                    getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                      return touchedSpots.map((LineBarSpot touchedSpot) {
-                        return LineTooltipItem(
-                          '${touchedSpot.y.toInt()} kkal',
-                          const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        );
-                      }).toList();
-                    },
-                  ),
-                  handleBuiltInTouches: true,
-                ),
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: [
-                    _buildThresholdLine(3000, const Color(0xFF6366F1)),
-                    _buildThresholdLine(2000, Colors.cyan),
-                    _buildThresholdLine(1000, Colors.blueAccent),
-                  ],
-                ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) =>
-                      FlLine(color: Colors.grey[100]!, strokeWidth: 1),
-                ),
-                titlesData: _buildTitlesData(),
-                borderData: FlBorderData(show: false),
-                minY: 0,
-                maxY: 3500,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: weeklyData
-                        .asMap()
-                        .entries
-                        .map((e) => FlSpot(e.key.toDouble(), e.value))
-                        .toList(),
-                    isCurved: true,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2E7D32), Color(0xFF6366F1)],
-                    ),
-                    barWidth: 4,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF6366F1).withOpacity(0.2),
-                          const Color(0xFF6366F1).withOpacity(0.0),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildLegend(),
-        ],
-      ),
+          child: LineChart(_mainData()),
+        ),
+      ],
     );
   }
 
-  HorizontalLine _buildThresholdLine(double y, Color color) {
-    return HorizontalLine(
-      y: y,
-      color: color.withOpacity(0.3),
-      strokeWidth: 1,
-      dashArray: [5, 5],
-    );
-  }
-
-  FlTitlesData _buildTitlesData() {
-    return FlTitlesData(
-      show: true,
-      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      bottomTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 30,
-          getTitlesWidget: (value, meta) {
-            const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-            if (value.toInt() >= 0 && value.toInt() < days.length) {
-              return Text(
-                days[value.toInt()],
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
+  LineChartData _mainData() {
+    return LineChartData(
+      gridData: const FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: 500,
+        verticalInterval: 1,
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 30,
+            interval: 1,
+            getTitlesWidget: (value, meta) {
+              const style = TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.grey,
               );
-            }
-            return const SizedBox();
-          },
-        ),
-      ),
-      leftTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: 1000,
-          reservedSize: 35,
-          getTitlesWidget: (value, meta) => Text(
-            value.toInt().toString(),
-            style: const TextStyle(fontSize: 9, color: Colors.grey),
+              Widget text;
+              switch (value.toInt()) {
+                case 0:
+                  text = const Text('Sen', style: style);
+                  break;
+                case 1:
+                  text = const Text('Sel', style: style);
+                  break;
+                case 2:
+                  text = const Text('Rab', style: style);
+                  break;
+                case 3:
+                  text = const Text('Kam', style: style);
+                  break;
+                case 4:
+                  text = const Text('Jum', style: style);
+                  break;
+                case 5:
+                  text = const Text('Sab', style: style);
+                  break;
+                case 6:
+                  text = const Text('Min', style: style);
+                  break;
+                default:
+                  text = const Text('', style: style);
+              }
+              // Gunakan meta.axisSide sesuai versi terbaru
+              return SideTitleWidget(axisSide: meta.axisSide, child: text);
+            },
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLegend() {
-    final legendItems = [
-      {'val': '3000', 'color': const Color(0xFF6366F1)},
-      {'val': '2000', 'color': Colors.cyan},
-      {'val': '1000', 'color': Colors.blueAccent},
-    ];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: legendItems
-          .map(
-            (item) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: item['color'] as Color,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    item['val'] as String,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-          .toList(),
+      borderData: FlBorderData(show: false),
+      minX: 0,
+      maxX: 6,
+      minY: 0,
+      maxY: 3000,
+      lineBarsData: [
+        LineChartBarData(
+          spots: List.generate(weeklyCalories.length, (index) {
+            return FlSpot(index.toDouble(), weeklyCalories[index]);
+          }),
+          isCurved: true,
+          color: Colors.green,
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: const FlDotData(show: true),
+          belowBarData: BarAreaData(
+            show: true,
+            color: Colors.green.withOpacity(0.2),
+          ),
+        ),
+      ],
     );
   }
 }

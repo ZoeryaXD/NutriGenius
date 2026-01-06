@@ -1,95 +1,67 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/history_entity.dart';
-import '../../domain/usecases/add_food_usecase.dart';
 import '../../domain/usecases/delete_history_usecase.dart';
 import '../../domain/usecases/get_history_usecase.dart';
 import 'history_event.dart';
 import 'history_state.dart';
+import '../../domain/entities/history_entity.dart';
 
 class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   final GetHistoryUseCase getHistory;
-  final AddFoodUseCase addFood;
   final DeleteHistoryUseCase deleteHistory;
 
-  HistoryBloc({
-    required this.getHistory,
-    required this.addFood,
-    required this.deleteHistory,
-  }) : super(HistoryInitial()) {
-    on<LoadHistory>((event, emit) async {
+  HistoryBloc({required this.getHistory, required this.deleteHistory})
+    : super(HistoryInitial()) {
+    on<LoadHistoryEvent>((event, emit) async {
       emit(HistoryLoading());
-      try {
-        List<HistoryEntity> data = await getHistory();
 
-        if (data.isEmpty) {
-          data = _generateDummyData();
-        }
+      final result = await getHistory(event.email);
 
-        final weeklyData = _calculateWeeklyData(data);
-        emit(HistoryLoaded(data, weeklyData));
-      } catch (e) {
-        emit(HistoryError("Gagal memuat: $e"));
-      }
+      result.fold((failure) => emit(HistoryFailure(failure.message)), (data) {
+        final stats = _calculateWeeklyStats(data);
+
+        emit(
+          HistoryLoaded(
+            histories: data,
+            weeklyCalories: stats['weeklyChart'] as List<double>,
+            totalCaloriesThisWeek: stats['total'] as double,
+            dailyAverage: stats['average'] as double,
+          ),
+        );
+      });
     });
 
-    on<AddFoodScan>((event, emit) async {
-      try {
-        await addFood(event.food);
-        add(LoadHistory());
-      } catch (e) {
-        emit(HistoryError("Gagal menyimpan: $e"));
-      }
-    });
+    on<DeleteHistoryEvent>((event, emit) async {
+      final result = await deleteHistory(event.id);
 
-    on<DeleteHistory>((event, emit) async {
-      try {
-        await deleteHistory(event.id);
-        add(LoadHistory());
-      } catch (e) {
-        emit(HistoryError("Gagal menghapus: $e"));
-      }
+      result.fold((failure) => emit(HistoryFailure(failure.message)), (_) {
+        add(LoadHistoryEvent(event.email));
+      });
     });
   }
 
-  List<double> _calculateWeeklyData(List<HistoryEntity> histories) {
-    List<double> weekCalories = List.filled(7, 0.0);
-    DateTime now = DateTime.now();
-    DateTime startOfWeek = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: now.weekday - 1));
+  Map<String, dynamic> _calculateWeeklyStats(List<HistoryEntity> data) {
+    List<double> weeklyChart = [0, 0, 0, 0, 0, 0, 0];
+    double total = 0;
 
-    for (var food in histories) {
-      try {
-        DateTime date = DateTime.parse(food.createdAt);
-        if (date.isAfter(startOfWeek.subtract(const Duration(seconds: 1)))) {
-          int dayIndex = date.weekday - 1;
-          if (dayIndex >= 0 && dayIndex < 7) {
-            weekCalories[dayIndex] += food.calories;
-          }
-        }
-      } catch (e) {
-        print("Error parsing date: $e");
+    final now = DateTime.now();
+
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 7));
+
+    for (var item in data) {
+      final itemDate = item.createdAt;
+
+      if (itemDate.isAfter(startOfWeek.subtract(const Duration(seconds: 1))) &&
+          itemDate.isBefore(endOfWeek)) {
+        int dayIndex = itemDate.weekday - 1;
+        weeklyChart[dayIndex] += item.calories;
+
+        total += item.calories;
       }
     }
-    return weekCalories;
-  }
 
-  List<HistoryEntity> _generateDummyData() {
-    DateTime now = DateTime.now();
-    return [
-      HistoryEntity(
-        id: 1,
-        foodName: "Nasi Goreng",
-        calories: 550,
-        protein: 15,
-        carbs: 60,
-        fat: 20,
-        sugar: 5,
-        imagePath: "",
-        createdAt: now.toIso8601String(),
-      ),
-    ];
+    double average = total / 7;
+
+    return {'weeklyChart': weeklyChart, 'total': total, 'average': average};
   }
 }

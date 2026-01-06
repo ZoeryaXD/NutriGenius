@@ -1,15 +1,26 @@
-import 'package:nutrigenius/features/history/domain/entities/history_entity.dart';
+import 'package:equatable/equatable.dart';
 
-abstract class HistoryEvent {}
+abstract class HistoryEvent extends Equatable {
+  const HistoryEvent();
 
-class LoadHistory extends HistoryEvent {}
-
-class AddFoodScan extends HistoryEvent {
-  final HistoryEntity food;
-  AddFoodScan(this.food);
+  @override
+  List<Object> get props => [];
 }
 
-class DeleteHistory extends HistoryEvent {
+class LoadHistoryEvent extends HistoryEvent {
+  final String email;
+  const LoadHistoryEvent(this.email);
+
+  @override
+  List<Object> get props => [email];
+}
+
+class DeleteHistoryEvent extends HistoryEvent {
   final int id;
-  DeleteHistory(this.id);
+  final String email;
+
+  const DeleteHistoryEvent({required this.id, required this.email});
+
+  @override
+  List<Object> get props => [id, email];
 }

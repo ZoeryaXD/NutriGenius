@@ -1,10 +1,10 @@
-import 'package:nutrigenius/core/usecases/database_helper.dart';
-import 'package:nutrigenius/features/history/data/models/history_model.dart';
+import '../../../../core/usecases/database_helper.dart';
+import '../models/history_model.dart';
 
 abstract class HistoryLocalDataSource {
-  Future<List<HistoryModel>> getHistory();
-  Future<void> saveFood(HistoryModel food);
-  Future<void> deleteFood(int id);
+  Future<List<HistoryModel>> getLastHistory();
+  Future<void> cacheHistory(List<HistoryModel> historyList);
+  Future<void> deleteHistory(int id);
 }
 
 class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
@@ -13,20 +13,21 @@ class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
   HistoryLocalDataSourceImpl({required this.databaseHelper});
 
   @override
-  Future<List<HistoryModel>> getHistory() async {
-    final List<Map<String, dynamic>> rawData =
-        await databaseHelper.getHistory();
-
-    return rawData.map((map) => HistoryModel.fromMap(map)).toList();
+  Future<List<HistoryModel>> getLastHistory() async {
+    final result = await databaseHelper.getHistory();
+    return result.map((e) => HistoryModel.fromMap(e)).toList();
   }
 
   @override
-  Future<void> saveFood(HistoryModel food) async {
-    await databaseHelper.insertFood(food.toMap());
+  Future<void> cacheHistory(List<HistoryModel> historyList) async {
+    await databaseHelper.clearHistory();
+    for (var item in historyList) {
+      await databaseHelper.insertFood(item.toMap());
+    }
   }
 
   @override
-  Future<void> deleteFood(int id) async {
+  Future<void> deleteHistory(int id) async {
     await databaseHelper.deleteFood(id);
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// Halaman Notifikasi
 class NotificationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

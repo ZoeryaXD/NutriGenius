@@ -16,12 +16,11 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
-    
+
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
@@ -29,7 +28,6 @@ class DatabaseHelper {
   }
 
   Future _createDB(Database db, int version) async {
-
     await db.execute('''
     CREATE TABLE users (
       email TEXT PRIMARY KEY,
@@ -64,10 +62,9 @@ class DatabaseHelper {
       image_path TEXT
     )
     ''');
-    
   }
 
-    Future<List<Map<String, dynamic>>> getHistory() async {
+  Future<List<Map<String, dynamic>>> getHistory() async {
     final db = await database;
     return await db.query('history', orderBy: 'date DESC');
   }
@@ -80,5 +77,10 @@ class DatabaseHelper {
   Future<int> deleteFood(int id) async {
     final db = await database;
     return await db.delete('history', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> clearHistory() async {
+    final db = await database;
+    await db.delete('scan_history'); 
   }
 }

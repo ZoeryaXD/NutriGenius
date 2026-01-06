@@ -1,7 +1,8 @@
-import 'package:nutrigenius/features/history/domain/entities/history_entity.dart';
+import 'package:dartz/dartz.dart';
+import '../../../../core/error/failures.dart';
+import '../entities/history_entity.dart';
 
 abstract class HistoryRepository {
-  Future<List<HistoryEntity>> getHistory();
-  Future<void> addFood(HistoryEntity food);
-  Future<void> deleteHistory(int id);
+  Future<Either<Failure, List<HistoryEntity>>> getHistory(String email);
+  Future<Either<Failure, void>> deleteHistory(int id);
 }

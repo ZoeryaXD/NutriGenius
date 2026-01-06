@@ -1,64 +1,71 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/network/api_client.dart';
 import '../../domain/entities/history_entity.dart';
 import '../pages/detail_history_page.dart';
 
 class HistoryListItem extends StatelessWidget {
-  final HistoryEntity food;
-  const HistoryListItem({super.key, required this.food});
+  final HistoryEntity item;
+  final String userEmail;
+
+  const HistoryListItem({
+    super.key,
+    required this.item,
+    required this.userEmail,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    final imageUrl =
+        "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${item.imagePath}";
+    final dateStr = DateFormat('HH:mm').format(item.createdAt);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 15),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 2,
       child: ListTile(
-        onTap:
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetailHistoryPage(food: food),
-              ),
-            ),
-        contentPadding: const EdgeInsets.all(12),
+        contentPadding: const EdgeInsets.all(10),
         leading: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child:
-              food.imagePath != null &&
-                      food.imagePath!.isNotEmpty &&
-                      File(food.imagePath!).existsSync()
-                  ? Image.file(
-                    File(food.imagePath!),
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                  )
-                  : Container(
-                    width: 60,
-                    height: 60,
-                    color: Colors.green[50],
-                    child: const Icon(Icons.fastfood, color: Colors.green),
+          borderRadius: BorderRadius.circular(10),
+          child: Image.network(
+            imageUrl,
+            width: 60,
+            height: 60,
+            fit: BoxFit.cover,
+            errorBuilder:
+                (ctx, err, stack) => Container(
+                  width: 60,
+                  height: 60,
+                  color: Colors.grey[200],
+                  child: const Icon(
+                    Icons.broken_image,
+                    size: 30,
+                    color: Colors.grey,
                   ),
+                ),
+          ),
         ),
         title: Text(
-          food.foodName,
+          item.foodName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          "${food.calories.toStringAsFixed(0)} kkal",
-          style: const TextStyle(color: Color(0xFF2E7D32)),
+        subtitle: Text("${item.calories} kkal • $dateStr"),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey,
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      DetailHistoryPage(history: item, email: userEmail),
+            ),
+          );
+        },
       ),
     );
   }
