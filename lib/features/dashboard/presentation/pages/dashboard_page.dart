@@ -5,7 +5,6 @@ import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
 import '../../domain/entities/dashboard_entity.dart';
-import '../../../scan/presentation/pages/scan_page.dart';
 import '../../../scan/presentation/pages/camera_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
