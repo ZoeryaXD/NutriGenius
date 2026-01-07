@@ -49,7 +49,8 @@ class ScanRemoteDataSourceImpl implements ScanRemoteDataSource {
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         final data = jsonResponse['data'];
-        return ScanResultModel.fromJson(data);
+        String serverImagePath = data['image_path'] ?? data['fileName'] ?? "";
+        return ScanResultModel.fromJson(data, serverImagePath);
       } else {
         throw Exception('Gagal Scan: ${response.body}');
       }
@@ -82,8 +83,9 @@ class ScanRemoteDataSourceImpl implements ScanRemoteDataSource {
         final jsonResponse = json.decode(response.body);
         final List data = jsonResponse['data'];
 
-        // Mapping List JSON ke List Model
-        return data.map((e) => ScanResultModel.fromJson(e)).toList();
+        return data.map((e) {
+          return ScanResultModel.fromJson(e, e['image_path'] ?? "");
+        }).toList();
       } else {
         throw Exception('Gagal ambil history: ${response.body}');
       }
@@ -92,9 +94,6 @@ class ScanRemoteDataSourceImpl implements ScanRemoteDataSource {
     }
   }
 
-  // ==========================================
-  // 3. SAVE SCAN (Simpan ke Database)
-  // ==========================================
   @override
   Future<void> saveScan(ScanResultModel data, String email) async {
     final uri = Uri.parse('${ApiClient.baseUrl}/scan/save');
@@ -107,7 +106,6 @@ class ScanRemoteDataSourceImpl implements ScanRemoteDataSource {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      // Kirim Data JSON sesuai field yang diminta Backend
       final body = json.encode({
         "email": email,
         "food_name": data.foodName,
@@ -117,7 +115,7 @@ class ScanRemoteDataSourceImpl implements ScanRemoteDataSource {
         "fat": data.fat.toString(),
         "sugar": data.sugar.toString(),
         "ai_suggestion": data.aiSuggestion,
-        "image_path": data.imagePath, // Nama file hasil upload di tahap analyze
+        "image_path": data.imagePath,
       });
 
       print("💾 Mengirim Request Simpan: $body");

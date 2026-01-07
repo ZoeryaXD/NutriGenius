@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../scan/data/models/scan_result_model.dart'; 
+import '../../../scan/data/models/scan_result_model.dart';
 
 abstract class HistoryRemoteDataSource {
   Future<List<ScanResultModel>> getHistory(String email);
@@ -24,7 +24,9 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
       final List data = jsonResponse['data'];
-      return data.map((e) => ScanResultModel.fromJson(e)).toList();
+      return data.map((e) {
+        return ScanResultModel.fromJson(e, e['image_path'] ?? "");
+      }).toList();
     } else {
       throw Exception('Server Error: ${response.body}');
     }
@@ -34,9 +36,9 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
   Future<void> deleteHistory(int id) async {
     final uri = Uri.parse('${ApiClient.baseUrl}/scan/history/$id');
     final headers = await _getHeaders();
-    
+
     final response = await client.delete(uri, headers: headers);
-    
+
     if (response.statusCode != 200) {
       throw Exception('Gagal delete data');
     }

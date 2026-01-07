@@ -4,6 +4,7 @@ import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
 import 'package:nutrigenius/features/auth/presentation/pages/register_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // Import FirstPage dan Dashboard Page
 
 class LoginPage extends StatefulWidget {
@@ -20,30 +21,38 @@ class _LoginPageState extends State<LoginPage> {
     final _resetEmailController = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Lupa Password"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("Masukkan email Anda, kami akan mengirimkan link reset password."),
-            SizedBox(height: 10),
-            TextField(
-              controller: _resetEmailController,
-              decoration: InputDecoration(hintText: "Email Anda"),
+      builder:
+          (context) => AlertDialog(
+            title: Text("Lupa Password"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Masukkan email Anda, kami akan mengirimkan link reset password.",
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  controller: _resetEmailController,
+                  decoration: InputDecoration(hintText: "Email Anda"),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("Batal")),
-          ElevatedButton(
-            onPressed: () {
-              context.read<AuthBloc>().add(ForgotPasswordRequested(_resetEmailController.text));
-              Navigator.pop(context);
-            },
-            child: Text("Kirim"),
-          )
-        ],
-      ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Batal"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(
+                    ForgotPasswordRequested(_resetEmailController.text),
+                  );
+                  Navigator.pop(context);
+                },
+                child: Text("Kirim"),
+              ),
+            ],
+          ),
     );
   }
 
@@ -51,18 +60,41 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is AuthSuccess) {
-            // Navigasi Logic
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('email', _emailController.text.trim());
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Login Berhasil!"),
+                backgroundColor: Colors.green,
+              ),
+            );
             if (state.isOnboarded) {
               Navigator.pushReplacementNamed(context, '/dashboard');
             } else {
               Navigator.pushReplacementNamed(context, '/firstpage');
             }
           } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message, style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.message,
+                  style: TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
           } else if (state is AuthResetEmailSent) {
-             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Link reset password telah dikirim ke email Anda."), backgroundColor: Colors.green));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  "Link reset password telah dikirim ke email Anda.",
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
           }
         },
         child: SingleChildScrollView(
@@ -73,8 +105,18 @@ class _LoginPageState extends State<LoginPage> {
               // Logo
               Image.asset('assets/images/logo.png', height: 100),
               SizedBox(height: 20),
-              Text("NutriGenius", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.green[800])),
-              Text("Cara Genius Hidup Sehat", style: TextStyle(fontSize: 16, color: Colors.green[600])),
+              Text(
+                "NutriGenius",
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[800],
+                ),
+              ),
+              Text(
+                "Cara Genius Hidup Sehat",
+                style: TextStyle(fontSize: 16, color: Colors.green[600]),
+              ),
               SizedBox(height: 50),
 
               // Form Login
@@ -85,7 +127,10 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: "Email",
                   fillColor: Colors.grey[200],
                   filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
               SizedBox(height: 16),
@@ -97,20 +142,28 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: "Password",
                   fillColor: Colors.grey[200],
                   filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                   suffixIcon: IconButton(
-                    icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(
+                      _isObscure ? Icons.visibility_off : Icons.visibility,
+                    ),
                     onPressed: () => setState(() => _isObscure = !_isObscure),
                   ),
                 ),
               ),
-              
+
               // Lupa Password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: _showForgotPasswordDialog,
-                  child: Text("Lupa Password?", style: TextStyle(color: Colors.grey[600])),
+                  child: Text(
+                    "Lupa Password?",
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ),
               ),
               SizedBox(height: 20),
@@ -122,19 +175,26 @@ class _LoginPageState extends State<LoginPage> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[700],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: () {
-                    context.read<AuthBloc>().add(LoginRequested(
-                      _emailController.text,
-                      _passController.text,
-                    ));
+                    context.read<AuthBloc>().add(
+                      LoginRequested(
+                        _emailController.text,
+                        _passController.text,
+                      ),
+                    );
                   },
                   child: BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
-                      return state is AuthLoading 
-                        ? CircularProgressIndicator(color: Colors.white) 
-                        : Text("LOGIN", style: TextStyle(fontSize: 18, color: Colors.white));
+                      return state is AuthLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                            "LOGIN",
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          );
                     },
                   ),
                 ),
@@ -144,7 +204,10 @@ class _LoginPageState extends State<LoginPage> {
               Row(
                 children: [
                   Expanded(child: Divider()),
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text("ATAU")),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Text("ATAU"),
+                  ),
                   Expanded(child: Divider()),
                 ],
               ),
@@ -156,9 +219,18 @@ class _LoginPageState extends State<LoginPage> {
                   Text("Belum punya akun? "),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterPage()),
+                      );
                     },
-                    child: Text("Daftar Sekarang", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      "Daftar Sekarang",
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),

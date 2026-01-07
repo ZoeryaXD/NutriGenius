@@ -44,11 +44,16 @@ class _CameraPageState extends State<CameraPage> {
       body: BlocConsumer<ScanBloc, ScanState>(
         listener: (context, state) {
           if (state is ScanSuccess) {
-            // Jika berhasil, pindah ke halaman hasil membawa data dari AI
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ScanResultPage(scanResult: state.result),
+                builder:
+                    (context) => ScanResultPage(
+                      data: state.result,
+                      onScanGallery: () {
+                        Navigator.pop(context);
+                      },
+                    ),
               ),
             );
           } else if (state is ScanFailure) {
@@ -63,7 +68,6 @@ class _CameraPageState extends State<CameraPage> {
         builder: (context, state) {
           return Stack(
             children: [
-              // 1. Preview Kamera
               FutureBuilder<void>(
                 future: _initializeControllerFuture,
                 builder: (context, snapshot) {
@@ -76,7 +80,6 @@ class _CameraPageState extends State<CameraPage> {
                 },
               ),
 
-              // 2. Overlay Kotak (Reticle)
               Center(
                 child: Container(
                   height: 280,
@@ -99,7 +102,6 @@ class _CameraPageState extends State<CameraPage> {
                 ),
               ),
 
-              // 3. Tombol Shutter & Loading State
               Positioned(
                 bottom: 50,
                 left: 0,
@@ -117,9 +119,19 @@ class _CameraPageState extends State<CameraPage> {
                           try {
                             final image = await _controller!.takePicture();
                             final prefs = await SharedPreferences.getInstance();
-                            final email =
-                                prefs.getString('email') ?? 'user@example.com';
+                            final email = prefs.getString('email');
                             if (!mounted) return;
+
+                            if (email == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Sesi habis, silakan login ulang",
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
 
                             context.read<ScanBloc>().add(
                               AnalyzeImageEvent(

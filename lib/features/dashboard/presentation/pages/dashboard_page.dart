@@ -7,6 +7,9 @@ import '../bloc/dashboard_state.dart';
 import '../../domain/entities/dashboard_entity.dart';
 import '../../../scan/presentation/pages/scan_page.dart';
 import '../../../scan/presentation/pages/camera_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../scan/presentation/bloc/scan_bloc.dart';
 
 class DashboardPage extends StatelessWidget {
   @override
@@ -339,16 +342,14 @@ class DashboardPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CameraPage(),
+                        builder:
+                            (context) =>
+                                const CameraPage(),
                       ),
                     );
                   }),
                   _buildOptionBtn(context, Icons.photo_library, "Galeri", () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ScanPage()),
-                    );
+                    _handleScan(context, ImageSource.gallery);
                   }),
                 ],
               ),
@@ -422,5 +423,36 @@ class DashboardPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleScan(BuildContext context, ImageSource source) async {
+    try {
+      Navigator.pop(context);
+
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: source);
+
+      if (image != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final email = prefs.getString('email');
+
+        if (email == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Sesi habis, silakan login ulang")),
+          );
+          return;
+        }
+
+        print("📸 Dashboard: Mengirim foto dengan email: $email");
+
+        context.read<ScanBloc>().add(
+          AnalyzeImageEvent(imagePath: image.path, email: email),
+        );
+
+        Navigator.pushNamed(context, '/scan');
+      }
+    } catch (e) {
+      print("Error saat scan dashboard: $e");
+    }
   }
 }
