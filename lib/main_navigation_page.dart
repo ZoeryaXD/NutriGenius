@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:nutrigenius/features/profile/presentation/pages/profile_page.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
-import 'dummy_page.dart';
+import 'dummy_page.dart' hide NotificationPage; 
+
+// === TAMBAHAN PENTING (SOLUSI ERROR MERAH) ===
+// Pastikan path ini sesuai dengan tempat Mas menyimpan file notifikasi tadi
+import 'features/notification/presentation/pages/notification_page.dart'; 
 
 class MainNavigationPage extends StatefulWidget {
   @override
@@ -14,7 +18,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   final List<Widget> _pages = [
     DashboardPage(),
     LogPage(), 
-    NotificationPage(), 
+    NotificationPage(), // Sekarang ini tidak akan merah lagi
     ProfilePage(), 
   ];
 
@@ -27,7 +31,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
+      // Menampilkan halaman sesuai urutan index
       body: _pages[_selectedIndex],
 
       bottomNavigationBar: Container(
@@ -51,8 +55,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               icon: Icon(Icons.book), 
               label: 'Log',
             ),
+            // Menu Notifikasi
             BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
+              icon: Icon(Icons.notifications_outlined), // Pakai outlined biar lebih estetik saat tidak aktif
+              activeIcon: Icon(Icons.notifications),    // Icon full saat aktif
               label: 'Notif',
             ),
             BottomNavigationBarItem(
