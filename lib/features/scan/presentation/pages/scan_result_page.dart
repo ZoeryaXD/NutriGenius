@@ -13,8 +13,7 @@ class ScanResultPage extends StatelessWidget {
     required this.onScanGallery,
   });
 
-void _handleSaveAction(BuildContext context) {
-  
+  void _handleSaveAction(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Menyimpan ke Jurnal Makanan...'),
@@ -184,21 +183,31 @@ void _handleSaveAction(BuildContext context) {
 
             const SizedBox(height: 12),
 
-          Row(
+            Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/dashboard',
+                        (route) => false,
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.red),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text(
                       "Batal",
-                      style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -208,22 +217,28 @@ void _handleSaveAction(BuildContext context) {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                       _handleSaveAction(context);
+                      _handleSaveAction(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 2,
                     ),
                     child: const Text(
                       "Simpan",
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ],
-            ), 
+            ),
             const SizedBox(height: 20),
           ],
         ),

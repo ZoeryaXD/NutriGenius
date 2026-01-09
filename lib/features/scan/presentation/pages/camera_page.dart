@@ -12,27 +12,67 @@ class CameraPage extends StatefulWidget {
   State<CameraPage> createState() => _CameraPageState();
 }
 
-class _CameraPageState extends State<CameraPage> {
+class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   CameraController? _controller;
-  Future<void>? _initializeControllerFuture;
+  bool _isCameraInitialized = false; // Flag manual biar lebih stabil
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initCamera();
   }
 
-  Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) return;
+  // Menangani Minimize/Resume Aplikasi
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final CameraController? cameraController = _controller;
 
-    _controller = CameraController(cameras.first, ResolutionPreset.high);
-    _initializeControllerFuture = _controller!.initialize();
-    if (mounted) setState(() {});
+    // Jika controller belum ada/mati, abaikan
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      // Aplikasi diminimize -> Stop kamera biar gak crash BufferQueue
+      cameraController.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      // Aplikasi dibuka lagi -> Nyalakan ulang
+      _initCamera();
+    }
+  }
+
+  Future<void> _initCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) return;
+
+      // 👇 UBAH JADI MEDIUM (PENTING!)
+      // 'high' sering bikin crash BufferQueue di banyak HP Android.
+      // 'medium' (720p/480p) sudah SANGAT CUKUP untuk AI NutriGenius.
+      _controller = CameraController(
+        cameras.first, 
+        ResolutionPreset.high, 
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg, // Paksa format JPG biar aman
+      );
+
+      await _controller!.initialize();
+      
+      if (!mounted) return;
+      
+      setState(() {
+        _isCameraInitialized = true;
+      });
+    } catch (e) {
+      debugPrint("Error Init Camera: $e");
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Hancurkan controller
     _controller?.dispose();
     super.dispose();
   }
@@ -44,16 +84,17 @@ class _CameraPageState extends State<CameraPage> {
       body: BlocConsumer<ScanBloc, ScanState>(
         listener: (context, state) {
           if (state is ScanSuccess) {
-            Navigator.push(
+            // Gunakan pushReplacement agar halaman kamera dimatikan total saat pindah
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) => ScanResultPage(
-                      data: state.result,
-                      onScanGallery: () {
-                        Navigator.pop(context);
-                      },
-                    ),
+                builder: (context) => ScanResultPage(
+                  data: state.result,
+                  // Karena CameraPage sudah di-kill (replacement), 
+                  // kalau mau scan lagi user harus buka menu scan dari awal.
+                  // Ini lebih aman buat memori.
+                  onScanGallery: () => Navigator.pop(context), 
+                ),
               ),
             );
           } else if (state is ScanFailure) {
@@ -68,18 +109,14 @@ class _CameraPageState extends State<CameraPage> {
         builder: (context, state) {
           return Stack(
             children: [
-              FutureBuilder<void>(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return SizedBox.expand(child: CameraPreview(_controller!));
-                  }
-                  return const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  );
-                },
-              ),
+              // 1. KAMERA PREVIEW
+              // Kita cek manual flag-nya, jangan pakai FutureBuilder biar gak flicker
+              if (_isCameraInitialized && _controller != null)
+                SizedBox.expand(child: CameraPreview(_controller!))
+              else
+                const Center(child: CircularProgressIndicator(color: Colors.green)),
 
+              // 2. FRAME KOTAK
               Center(
                 child: Container(
                   height: 280,
@@ -102,6 +139,7 @@ class _CameraPageState extends State<CameraPage> {
                 ),
               ),
 
+              // 3. TOMBOL & INSTRUKSI
               Positioned(
                 bottom: 50,
                 left: 0,
@@ -113,39 +151,46 @@ class _CameraPageState extends State<CameraPage> {
                     else
                       GestureDetector(
                         onTap: () async {
-                          if (_controller == null ||
-                              !_controller!.value.isInitialized)
-                            return;
+                          // Cek apakah controller siap
+                          if (_controller == null || !_controller!.value.isInitialized) return;
+                          
+                          // Cek apakah sedang memproses (biar gak double tap)
+                          if (_controller!.value.isTakingPicture) return;
+
+                          // SNAPSHOT VARIABEL
+                          final scanBloc = context.read<ScanBloc>();
+                          final messenger = ScaffoldMessenger.of(context);
+
                           try {
+                            // Ambil Foto
                             final image = await _controller!.takePicture();
+                            
+                            if (!mounted) return;
+
                             final prefs = await SharedPreferences.getInstance();
                             final email = prefs.getString('email');
+                            
                             if (!mounted) return;
 
                             if (email == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Sesi habis, silakan login ulang",
-                                  ),
-                                ),
+                              messenger.showSnackBar(
+                                const SnackBar(content: Text("Sesi habis, silakan login ulang")),
                               );
                               return;
                             }
 
-                            context.read<ScanBloc>().add(
-                              AnalyzeImageEvent(
-                                imagePath: image.path,
-                                email: email,
-                              ),
+                            // Kirim ke Bloc
+                            scanBloc.add(
+                              AnalyzeImageEvent(imagePath: image.path, email: email),
                             );
+
                           } catch (e) {
                             debugPrint("Error capture: $e");
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Gagal mengambil gambar"),
-                              ),
-                            );
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                const SnackBar(content: Text("Gagal mengambil gambar")),
+                              );
+                            }
                           }
                         },
                         child: _buildShutterButton(),
@@ -162,7 +207,7 @@ class _CameraPageState extends State<CameraPage> {
                 ),
               ),
 
-              // Tombol Back
+              // 4. TOMBOL BACK
               Positioned(
                 top: 50,
                 left: 20,
