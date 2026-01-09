@@ -18,11 +18,9 @@ class FirstPageRepositoryImpl implements FirstPageRepository {
     required double bmr,
     required double tdee,
   }) async {
-    // 1. Format Tanggal ke YYYY-MM-DD
     String formattedDate =
         "${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}";
 
-    // 2. Buat Model Data
     final model = FirstPageModel(
       email: email,
       gender: gender,
@@ -35,7 +33,6 @@ class FirstPageRepositoryImpl implements FirstPageRepository {
       tdee: tdee,
     );
 
-    // 3. Kirim ke Backend
     await remoteDataSource.submitProfile(model.toJson());
   }
 }

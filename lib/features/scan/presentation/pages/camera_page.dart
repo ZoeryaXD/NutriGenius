@@ -12,27 +12,59 @@ class CameraPage extends StatefulWidget {
   State<CameraPage> createState() => _CameraPageState();
 }
 
-class _CameraPageState extends State<CameraPage> {
+class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   CameraController? _controller;
-  Future<void>? _initializeControllerFuture;
+  bool _isCameraInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initCamera();
   }
 
-  Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) return;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final CameraController? cameraController = _controller;
 
-    _controller = CameraController(cameras.first, ResolutionPreset.high);
-    _initializeControllerFuture = _controller!.initialize();
-    if (mounted) setState(() {});
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      cameraController.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initCamera();
+    }
+  }
+
+  Future<void> _initCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) return;
+
+      _controller = CameraController(
+        cameras.first, 
+        ResolutionPreset.high, 
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
+
+      await _controller!.initialize();
+      
+      if (!mounted) return;
+      
+      setState(() {
+        _isCameraInitialized = true;
+      });
+    } catch (e) {
+      debugPrint("Error Init Camera: $e");
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     super.dispose();
   }
@@ -44,16 +76,13 @@ class _CameraPageState extends State<CameraPage> {
       body: BlocConsumer<ScanBloc, ScanState>(
         listener: (context, state) {
           if (state is ScanSuccess) {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) => ScanResultPage(
-                      data: state.result,
-                      onScanGallery: () {
-                        Navigator.pop(context);
-                      },
-                    ),
+                builder: (context) => ScanResultPage(
+                  data: state.result,
+                  onScanGallery: () => Navigator.pop(context), 
+                ),
               ),
             );
           } else if (state is ScanFailure) {
@@ -68,17 +97,10 @@ class _CameraPageState extends State<CameraPage> {
         builder: (context, state) {
           return Stack(
             children: [
-              FutureBuilder<void>(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return SizedBox.expand(child: CameraPreview(_controller!));
-                  }
-                  return const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  );
-                },
-              ),
+              if (_isCameraInitialized && _controller != null)
+                SizedBox.expand(child: CameraPreview(_controller!))
+              else
+                const Center(child: CircularProgressIndicator(color: Colors.green)),
 
               Center(
                 child: Container(
@@ -113,39 +135,41 @@ class _CameraPageState extends State<CameraPage> {
                     else
                       GestureDetector(
                         onTap: () async {
-                          if (_controller == null ||
-                              !_controller!.value.isInitialized)
-                            return;
+                          if (_controller == null || !_controller!.value.isInitialized) return;
+                          
+                          if (_controller!.value.isTakingPicture) return;
+
+                          final scanBloc = context.read<ScanBloc>();
+                          final messenger = ScaffoldMessenger.of(context);
+
                           try {
                             final image = await _controller!.takePicture();
+                            
+                            if (!mounted) return;
+
                             final prefs = await SharedPreferences.getInstance();
                             final email = prefs.getString('email');
+                            
                             if (!mounted) return;
 
                             if (email == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Sesi habis, silakan login ulang",
-                                  ),
-                                ),
+                              messenger.showSnackBar(
+                                const SnackBar(content: Text("Sesi habis, silakan login ulang")),
                               );
                               return;
                             }
 
-                            context.read<ScanBloc>().add(
-                              AnalyzeImageEvent(
-                                imagePath: image.path,
-                                email: email,
-                              ),
+                            scanBloc.add(
+                              AnalyzeImageEvent(imagePath: image.path, email: email),
                             );
+
                           } catch (e) {
                             debugPrint("Error capture: $e");
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Gagal mengambil gambar"),
-                              ),
-                            );
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                const SnackBar(content: Text("Gagal mengambil gambar")),
+                              );
+                            }
                           }
                         },
                         child: _buildShutterButton(),
@@ -162,7 +186,6 @@ class _CameraPageState extends State<CameraPage> {
                 ),
               ),
 
-              // Tombol Back
               Positioned(
                 top: 50,
                 left: 20,

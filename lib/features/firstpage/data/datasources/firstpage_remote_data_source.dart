@@ -21,9 +21,8 @@ class FirstpageRemoteDataSourceImpl implements FirstpageRemoteDataSource {
         body: jsonEncode(data),
       );
 
-      // 2. Cek Status Code (200 OK)
       if (response.statusCode == 200) {
-        return; // Berhasil
+        return;
       } else {
         throw Exception('Gagal menyimpan profil: ${response.body}');
       }
