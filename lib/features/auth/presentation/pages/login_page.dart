@@ -5,7 +5,6 @@ import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
 import 'package:nutrigenius/features/auth/presentation/pages/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// Import FirstPage dan Dashboard Page
 
 class LoginPage extends StatefulWidget {
   @override
@@ -56,6 +55,78 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _showResetPasswordSuccessDialog() {
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: false,
+    barrierLabel: "ResetPasswordSuccess",
+    transitionDuration: Duration(milliseconds: 400),
+    pageBuilder: (_, __, ___) {
+      return Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(24),
+            margin: EdgeInsets.symmetric(horizontal: 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.mark_email_read_rounded,
+                  color: Colors.green,
+                  size: 80,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "Email Terkirim 📩",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  "Link reset password telah dikirim ke email kamu.\nSilakan cek inbox atau spam.",
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("OK"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (_, anim, __, child) {
+      return ScaleTransition(
+        scale: CurvedAnimation(
+          parent: anim,
+          curve: Curves.easeOutBack,
+        ),
+        child: FadeTransition(
+          opacity: anim,
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,14 +158,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             );
           } else if (state is AuthResetEmailSent) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  "Link reset password telah dikirim ke email Anda.",
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
+            _showResetPasswordSuccessDialog();
           }
         },
         child: SingleChildScrollView(
@@ -102,7 +166,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             children: [
               SizedBox(height: 40),
-              // Logo
               Image.asset('assets/images/logo.png', height: 100),
               SizedBox(height: 20),
               Text(
@@ -119,7 +182,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 50),
 
-              // Form Login
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -155,7 +217,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              // Lupa Password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -168,7 +229,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 20),
 
-              // Tombol Login
               SizedBox(
                 width: double.infinity,
                 height: 50,

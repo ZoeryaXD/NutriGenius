@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
-// Import bloc dan common widgets lainnya
+
+enum PasswordStrength { weak, medium, strong }
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -14,11 +15,36 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
   bool _isObscure = true;
 
-  final _passRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,}$');
+  PasswordStrength _passwordStrength = PasswordStrength.weak;
+
+  PasswordStrength _checkPasswordStrength(String password) {
+    if (password.length < 6) {
+      return PasswordStrength.weak;
+    }
+
+    final hasUpper = password.contains(RegExp(r'[A-Z]'));
+    final hasLower = password.contains(RegExp(r'[a-z]'));
+    final hasNumber = password.contains(RegExp(r'[0-9]'));
+    final hasSymbol = password.contains(RegExp(r'[!@#\$&*~]'));
+
+    if (password.length >= 8 &&
+        hasUpper &&
+        hasLower &&
+        hasNumber &&
+        hasSymbol) {
+      return PasswordStrength.strong;
+    }
+
+    if (hasLower && hasNumber) {
+      return PasswordStrength.medium;
+    }
+
+    return PasswordStrength.weak;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,24 +60,72 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthEmailVerificationRequired) {
-            showDialog(
+            showGeneralDialog(
               context: context,
-              builder:
-                  (_) => AlertDialog(
-                    title: Text("Verifikasi Email"),
-                    content: Text(
-                      "Link verifikasi telah dikirim ke email Anda. Silakan cek dan klik link tersebut sebelum login.",
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                        },
-                        child: Text("OK"),
+              barrierDismissible: false,
+              barrierLabel: "RegisterSuccess",
+              transitionDuration: Duration(milliseconds: 400),
+              pageBuilder: (_, __, ___) {
+                return Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      padding: EdgeInsets.all(24),
+                      margin: EdgeInsets.symmetric(horizontal: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 80,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            "Registrasi Berhasil 🎉",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            "Link verifikasi telah dikirim ke email kamu.\nSilakan cek sebelum login.",
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              Navigator.pop(context);
+                            },
+                            child: Text("OK"),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                );
+              },
+              transitionBuilder: (_, anim, __, child) {
+                return ScaleTransition(
+                  scale: CurvedAnimation(
+                    parent: anim,
+                    curve: Curves.easeOutBack,
+                  ),
+                  child: FadeTransition(opacity: anim, child: child),
+                );
+              },
             );
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(
@@ -81,7 +155,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 30),
 
-                // Nama Lengkap
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
@@ -96,7 +169,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 16),
 
-                // Email
                 TextFormField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -111,10 +183,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 16),
 
-                // Password
                 TextFormField(
-                  controller: _passController,
+                  controller: _passwordController,
                   obscureText: _isObscure,
+                  onChanged: (value) {
+                    setState(() {
+                      _passwordStrength = _checkPasswordStrength(value);
+                    });
+                  },
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.lock_outline),
                     labelText: "Password",
@@ -129,14 +205,57 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   validator: (val) {
-                    if (val == null || val.isEmpty)
+                    if (val == null || val.isEmpty) {
                       return "Password wajib diisi";
-                    if (!_passRegex.hasMatch(val)) {
-                      return "Password harus kombinasi angka & simbol (!@#\$&*~)";
+                    }
+                    if (val.length < 6) {
+                      return "Password minimal 6 karakter";
                     }
                     return null;
                   },
                 ),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value:
+                            _passwordStrength == PasswordStrength.weak
+                                ? 0.33
+                                : _passwordStrength == PasswordStrength.medium
+                                ? 0.66
+                                : 1.0,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _passwordStrength == PasswordStrength.weak
+                              ? Colors.red
+                              : _passwordStrength == PasswordStrength.medium
+                              ? Colors.orange
+                              : Colors.green,
+                        ),
+                        minHeight: 6,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      _passwordStrength == PasswordStrength.weak
+                          ? "Lemah"
+                          : _passwordStrength == PasswordStrength.medium
+                          ? "Sedang"
+                          : "Kuat",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color:
+                            _passwordStrength == PasswordStrength.weak
+                                ? Colors.red
+                                : _passwordStrength == PasswordStrength.medium
+                                ? Colors.orange
+                                : Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+
                 SizedBox(height: 16),
 
                 TextFormField(
@@ -151,7 +270,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator:
                       (val) =>
-                          val != _passController.text
+                          val != _passwordController.text
                               ? "Password tidak sama"
                               : null,
                 ),
@@ -173,7 +292,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           RegisterRequested(
                             _nameController.text,
                             _emailController.text,
-                            _passController.text,
+                            _passwordController.text,
                           ),
                         );
                       }
