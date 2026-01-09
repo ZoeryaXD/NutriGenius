@@ -16,12 +16,11 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
-    
+
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
@@ -29,7 +28,6 @@ class DatabaseHelper {
   }
 
   Future _createDB(Database db, int version) async {
-
     await db.execute('''
     CREATE TABLE users (
       email TEXT PRIMARY KEY,
@@ -43,6 +41,46 @@ class DatabaseHelper {
       tdee REAL
     )
     ''');
-    
+
+    await db.execute('''
+    CREATE TABLE journal_details (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      food_name TEXT NOT NULL,
+      calories REAL NOT NULL,
+      image_path TEXT,
+      created_at TEXT NOT NULL,
+      is_synced INTEGER DEFAULT 0
+    )
+    ''');
+
+    await db.execute('''
+    CREATE TABLE history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      food_name TEXT NOT NULL,
+      calories REAL NOT NULL,
+      date TEXT NOT NULL, 
+      image_path TEXT
+    )
+    ''');
+  }
+
+  Future<List<Map<String, dynamic>>> getHistory() async {
+    final db = await database;
+    return await db.query('history', orderBy: 'date DESC');
+  }
+
+  Future<int> insertFood(Map<String, dynamic> row) async {
+    final db = await database;
+    return await db.insert('history', row);
+  }
+
+  Future<int> deleteFood(int id) async {
+    final db = await database;
+    return await db.delete('history', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> clearHistory() async {
+    final db = await database;
+    await db.delete('scan_history'); 
   }
 }
