@@ -101,19 +101,25 @@ class ScanPage extends StatelessWidget {
 
                 const SizedBox(height: 15),
 
-                ElevatedButton.icon(
-                  onPressed: () => _pickImage(context, ImageSource.gallery),
-                  icon: const Icon(Icons.photo_library),
-                  label: const Text("Pilih dari Galeri"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade400,
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
-                    ),
-                  ),
+                // ElevatedButton.icon(
+                //   onPressed: () => _pickImage(context, ImageSource.gallery),
+                //   icon: const Icon(Icons.photo_library),
+                //   label: const Text("Pilih dari Galeri"),
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: Colors.green.shade400,
+                //     shape: const StadiumBorder(),
+                //     padding: const EdgeInsets.symmetric(
+                //       horizontal: 30,
+                //       vertical: 15,
+                //     ),
+                //   ),
+                // ),
+
+                const Text(
+                   "Fitur Galeri Segera Hadir",
+                   style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
                 ),
+                
               ],
             ),
           );
@@ -123,26 +129,36 @@ class ScanPage extends StatelessWidget {
   }
 
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
+    final scanBloc = context.read<ScanBloc>();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     final picker = ImagePicker();
     try {
-      final image = await picker.pickImage(source: source);
+      final image = await picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+
       if (image != null) {
         final prefs = await SharedPreferences.getInstance();
         final email = prefs.getString('email');
 
         if (email == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             const SnackBar(content: Text("Sesi habis. Silakan Login ulang.")),
           );
           return;
         }
 
-        context.read<ScanBloc>().add(
-          AnalyzeImageEvent(imagePath: image.path, email: email),
-        );
+        scanBloc.add(AnalyzeImageEvent(imagePath: image.path, email: email));
       }
     } catch (e) {
       debugPrint("Error Pick Image: $e");
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text("Gagal mengambil gambar: $e")),
+      );
     }
   }
 }
