@@ -16,6 +16,13 @@ class UploadProfilePhoto extends ProfileEvent {
   UploadProfilePhoto(this.photo);
 }
 
+class ChangePasswordRequested extends ProfileEvent {
+  final String email;
+  ChangePasswordRequested(this.email);
+
+  List<Object> get props => [email];
+}
+
 class DeleteProfilePhoto extends ProfileEvent {}
 
 class DeleteAccountRequested extends ProfileEvent {}

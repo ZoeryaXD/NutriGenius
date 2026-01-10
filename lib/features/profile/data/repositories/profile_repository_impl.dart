@@ -42,6 +42,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+  }
+
+  @override
   Future<void> deleteAccount() async {
     await remoteDataSource.deleteAccount(_email);
     await FirebaseAuth.instance.currentUser?.delete();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/profile/presentation/pages/about_page.dart';
+import 'package:nutrigenius/features/profile/presentation/pages/change_password_page.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -45,8 +46,21 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             _sectionHeader("AKUN"),
             _buildListTile(Icons.lock_outline, "Ganti Password", () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Fitur Ganti Password belum tersedia")),
+              final state = context.read<ProfileBloc>().state;
+              String currentEmail = "";
+              
+              if (state is ProfileLoaded) {
+                currentEmail = state.profile.email;
+              }
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<ProfileBloc>(),
+                    child: ChangePasswordPage(currentEmail: currentEmail),
+                  ),
+                ),
               );
             }),
             Divider(),

@@ -73,6 +73,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       }
     });
 
+    on<ChangePasswordRequested>((event, emit) async {
+      emit(ProfileLoading());
+      try {
+        await repository.sendPasswordResetEmail(event.email);
+        emit(ProfileActionSuccess("Link ubah password telah dikirim ke email Anda."));
+        add(LoadProfile());
+      } catch (e) {
+        emit(ProfileError("Gagal mengirim email: $e"));
+      }
+    });
+
     on<DeleteAccountRequested>((event, emit) async {
       emit(ProfileLoading());
       try {

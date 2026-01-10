@@ -11,4 +11,5 @@ abstract class ProfileRepository {
 
   Future<List<ActivityLevel>> getActivityLevels();
   Future<List<HealthCondition>> getHealthConditions();
+  Future<void> sendPasswordResetEmail(String email);
 }
