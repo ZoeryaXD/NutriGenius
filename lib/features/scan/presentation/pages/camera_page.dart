@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nutrigenius/features/scan/domain/entities/scan_result.dart';
 import '../bloc/scan_bloc.dart';
 import 'scan_result_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,11 +26,10 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final CameraController? cameraController = _controller;
+    final cameraController = _controller;
 
-    if (cameraController == null || !cameraController.value.isInitialized) {
+    if (cameraController == null || !cameraController.value.isInitialized)
       return;
-    }
 
     if (state == AppLifecycleState.inactive) {
       cameraController.dispose();
@@ -43,22 +43,22 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
       final cameras = await availableCameras();
       if (cameras.isEmpty) return;
 
-      _controller = CameraController(
-        cameras.first, 
-        ResolutionPreset.high, 
+      final controller = CameraController(
+        cameras.first,
+        ResolutionPreset.high,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
-      await _controller!.initialize();
-      
+      await controller.initialize();
       if (!mounted) return;
-      
+
       setState(() {
+        _controller = controller;
         _isCameraInitialized = true;
       });
     } catch (e) {
-      debugPrint("Error Init Camera: $e");
+      debugPrint("❌ Error Init Camera: $e");
     }
   }
 
@@ -75,17 +75,18 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
       backgroundColor: Colors.black,
       body: BlocConsumer<ScanBloc, ScanState>(
         listener: (context, state) {
+          if (!mounted) return;
+
           if (state is ScanSuccess) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => ScanResultPage(
-                  data: state.result,
-                  onScanGallery: () => Navigator.pop(context), 
-                ),
+                builder: (_) => ScanResultPage(data: state.result, source: ScanSource.camera,),
               ),
             );
-          } else if (state is ScanFailure) {
+          }
+
+          if (state is ScanFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -100,91 +101,13 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
               if (_isCameraInitialized && _controller != null)
                 SizedBox.expand(child: CameraPreview(_controller!))
               else
-                const Center(child: CircularProgressIndicator(color: Colors.green)),
-
-              Center(
-                child: Container(
-                  height: 280,
-                  width: 280,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.5),
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(top: 0, left: 0, child: _cornerIcon(0)),
-                      Positioned(top: 0, right: 0, child: _cornerIcon(1)),
-                      Positioned(bottom: 0, right: 0, child: _cornerIcon(2)),
-                      Positioned(bottom: 0, left: 0, child: _cornerIcon(3)),
-                    ],
-                  ),
+                const Center(
+                  child: CircularProgressIndicator(color: Colors.green),
                 ),
-              ),
 
-              Positioned(
-                bottom: 50,
-                left: 0,
-                right: 0,
-                child: Column(
-                  children: [
-                    if (state is ScanLoading)
-                      const CircularProgressIndicator(color: Colors.green)
-                    else
-                      GestureDetector(
-                        onTap: () async {
-                          if (_controller == null || !_controller!.value.isInitialized) return;
-                          
-                          if (_controller!.value.isTakingPicture) return;
+              Center(child: _scanFrame()),
 
-                          final scanBloc = context.read<ScanBloc>();
-                          final messenger = ScaffoldMessenger.of(context);
-
-                          try {
-                            final image = await _controller!.takePicture();
-                            
-                            if (!mounted) return;
-
-                            final prefs = await SharedPreferences.getInstance();
-                            final email = prefs.getString('email');
-                            
-                            if (!mounted) return;
-
-                            if (email == null) {
-                              messenger.showSnackBar(
-                                const SnackBar(content: Text("Sesi habis, silakan login ulang")),
-                              );
-                              return;
-                            }
-
-                            scanBloc.add(
-                              AnalyzeImageEvent(imagePath: image.path, email: email),
-                            );
-
-                          } catch (e) {
-                            debugPrint("Error capture: $e");
-                            if (mounted) {
-                              messenger.showSnackBar(
-                                const SnackBar(content: Text("Gagal mengambil gambar")),
-                              );
-                            }
-                          }
-                        },
-                        child: _buildShutterButton(),
-                      ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Arahkan kamera ke makanan",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildBottomControls(state),
 
               Positioned(
                 top: 50,
@@ -201,6 +124,87 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildBottomControls(ScanState state) {
+    return Positioned(
+      bottom: 50,
+      left: 0,
+      right: 0,
+      child: Column(
+        children: [
+          if (state is ScanLoading)
+            const CircularProgressIndicator(color: Colors.green)
+          else
+            GestureDetector(
+              onTap: _captureAndScan,
+              child: _buildShutterButton(),
+            ),
+          const SizedBox(height: 20),
+          const Text(
+            "Arahkan kamera ke makanan",
+            style: TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _captureAndScan() async {
+    if (_controller == null ||
+        !_controller!.value.isInitialized ||
+        _controller!.value.isTakingPicture)
+      return;
+
+    try {
+      final image = await _controller!.takePicture();
+      if (!mounted) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+
+      final email = prefs.getString('email');
+      if (email == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Sesi habis, silakan login ulang")),
+        );
+        return;
+      }
+
+      context.read<ScanBloc>().add(
+        AnalyzeImageEvent(imagePath: image.path, email: email, source: ScanSource.camera,),
+      );
+    } catch (e) {
+      debugPrint("❌ Error capture: $e");
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Gagal mengambil gambar")));
+    }
+  }
+
+  Widget _scanFrame() {
+    return Container(
+      height: 280,
+      width: 280,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white54),
+      ),
+      child: Stack(
+        children: List.generate(
+          4,
+          (i) => Positioned(
+            top: i < 2 ? 0 : null,
+            bottom: i >= 2 ? 0 : null,
+            left: i == 0 || i == 3 ? 0 : null,
+            right: i == 1 || i == 2 ? 0 : null,
+            child: _cornerIcon(i),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildShutterButton() {
     return Container(
       height: 80,
@@ -209,15 +213,8 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 4),
       ),
-      child: Center(
-        child: Container(
-          height: 60,
-          width: 60,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-          ),
-        ),
+      child: const Center(
+        child: CircleAvatar(radius: 30, backgroundColor: Colors.white),
       ),
     );
   }
