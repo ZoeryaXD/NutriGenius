@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
@@ -9,8 +11,33 @@ import '../../../scan/presentation/pages/camera_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../scan/presentation/bloc/scan_bloc.dart';
+import '../../../scan/presentation/pages/scan_result_page.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  late Timer _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-refresh dashboard every 5 seconds
+    _refreshTimer = Timer.periodic(Duration(seconds: 5), (_) {
+      if (mounted) {
+        context.read<DashboardBloc>().add(RefreshDashboard());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -65,225 +92,234 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildDashboardContent(BuildContext context, DashboardEntity data) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ==============================
-          // 1. LOGO & APP NAME
-          // ==============================
-          Row(
-            children: [
-              Image.asset(
-                'assets/images/logo.png',
-                width: 32,
-                height: 32,
-                errorBuilder:
-                    (context, error, stackTrace) =>
-                        Icon(Icons.eco, color: Colors.green, size: 32),
-              ),
-              SizedBox(width: 10),
-              Text(
-                "NutriGenius",
-                style: TextStyle(
-                  color: Colors.green[800],
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 24),
-
-          // ==============================
-          // 2. SAPAAN & NAMA USER
-          // ==============================
-          Text(
-            _getGreeting(),
-            style: TextStyle(color: Colors.green[700], fontSize: 16),
-          ),
-          Text(
-            // Tampilkan nama dari backend, atau default jika kosong
-            (data.displayName.isNotEmpty) ? data.displayName : "Nutri User",
-            style: TextStyle(
-              color: Colors.green[800],
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // ==============================
-          // 3. HERO CARD (PROGRESS HARIAN)
-          // ==============================
-          Container(
-            padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.green[800],
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<DashboardBloc>().add(RefreshDashboard());
+        // Wait a bit for the refresh to complete
+        await Future.delayed(Duration(milliseconds: 500));
+      },
+      color: Colors.green,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24),
+        physics: AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ==============================
+            // 1. LOGO & APP NAME
+            // ==============================
+            Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Kalori Masuk",
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                    SizedBox(height: 4),
-
-                    Text(
-                      "${data.caloriesConsumed.toInt()}",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    Text(
-                      "dari target ${data.tdee.toInt()} kkal",
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
-                  ],
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 32,
+                  height: 32,
+                  errorBuilder:
+                      (context, error, stackTrace) =>
+                          Icon(Icons.eco, color: Colors.green, size: 32),
                 ),
-
-                // CIRCULAR PROGRESS
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: CircularProgressIndicator(
-                        value: 1.0,
-                        color: Colors.white.withOpacity(0.2),
-                        strokeWidth: 8,
-                      ),
-                    ),
-
-                    SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: CircularProgressIndicator(
-                        value: data.progress,
-                        color: Colors.white,
-                        strokeWidth: 8,
-                        strokeCap: StrokeCap.round,
-                      ),
-                    ),
-
-                    Icon(
-                      Icons.local_fire_department,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ],
+                SizedBox(width: 10),
+                Text(
+                  "NutriGenius",
+                  style: TextStyle(
+                    color: Colors.green[800],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
               ],
             ),
-          ),
 
-          SizedBox(height: 24),
+            SizedBox(height: 24),
 
-          // ==============================
-          // 4. MAKRO NUTRISI
-          // ==============================
-          Text(
-            "Makro Nutrisi (Harian)",
-            style: TextStyle(
-              color: Colors.green[800],
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+            // ==============================
+            // 2. SAPAAN & NAMA USER
+            // ==============================
+            Text(
+              _getGreeting(),
+              style: TextStyle(color: Colors.green[700], fontSize: 16),
             ),
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              _buildMacroCard(
-                "Protein",
-                "${data.proteinConsumed.toInt()}g",
-                Icons.fitness_center,
+            Text(
+              // Tampilkan nama dari backend, atau default jika kosong
+              (data.displayName.isNotEmpty) ? data.displayName : "Nutri User",
+              style: TextStyle(
+                color: Colors.green[800],
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
-              SizedBox(width: 12),
-              _buildMacroCard(
-                "Karbo",
-                "${data.carbsConsumed.toInt()}g",
-                Icons.grain,
-              ),
-              SizedBox(width: 12),
-              _buildMacroCard(
-                "Lemak",
-                "${data.fatConsumed.toInt()}g",
-                Icons.water_drop,
-              ),
-            ],
-          ),
-
-          SizedBox(height: 24),
-
-          // ==============================
-          // 5. TOMBOL SCAN
-          // ==============================
-          Text(
-            "Scan Makananmu",
-            style: TextStyle(
-              color: Colors.green[800],
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
             ),
-          ),
-          SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 80,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 4,
-              ),
-              onPressed: () {
-                _showScanOptions(context);
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.center_focus_strong,
-                    size: 40,
-                    color: Colors.white,
+
+            SizedBox(height: 24),
+
+            // ==============================
+            // 3. HERO CARD (PROGRESS HARIAN)
+            // ==============================
+            Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.green[800],
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
                   ),
-                  SizedBox(width: 12),
-                  Text(
-                    "Mulai Scan",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Kalori Masuk",
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                      SizedBox(height: 4),
+
+                      Text(
+                        "${data.caloriesConsumed.toInt()}",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      Text(
+                        "dari target ${data.tdee.toInt()} kkal",
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+
+                  // CIRCULAR PROGRESS
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: CircularProgressIndicator(
+                          value: 1.0,
+                          color: Colors.white.withOpacity(0.2),
+                          strokeWidth: 8,
+                        ),
+                      ),
+
+                      SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: CircularProgressIndicator(
+                          value: data.progress,
+                          color: Colors.white,
+                          strokeWidth: 8,
+                          strokeCap: StrokeCap.round,
+                        ),
+                      ),
+
+                      Icon(
+                        Icons.local_fire_department,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ),
 
-          SizedBox(height: 40),
-        ],
+            SizedBox(height: 24),
+
+            // ==============================
+            // 4. MAKRO NUTRISI
+            // ==============================
+            Text(
+              "Makro Nutrisi (Harian)",
+              style: TextStyle(
+                color: Colors.green[800],
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                _buildMacroCard(
+                  "Protein",
+                  "${data.proteinConsumed.toInt()}g",
+                  Icons.fitness_center,
+                ),
+                SizedBox(width: 12),
+                _buildMacroCard(
+                  "Karbo",
+                  "${data.carbsConsumed.toInt()}g",
+                  Icons.grain,
+                ),
+                SizedBox(width: 12),
+                _buildMacroCard(
+                  "Lemak",
+                  "${data.fatConsumed.toInt()}g",
+                  Icons.water_drop,
+                ),
+              ],
+            ),
+
+            SizedBox(height: 24),
+
+            // ==============================
+            // 5. TOMBOL SCAN
+            // ==============================
+            Text(
+              "Scan Makananmu",
+              style: TextStyle(
+                color: Colors.green[800],
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 80,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
+                ),
+                onPressed: () {
+                  _showScanOptions(context);
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.center_focus_strong,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "Mulai Scan",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
@@ -301,14 +337,14 @@ class DashboardPage extends StatelessWidget {
     }
   }
 
-  void _showScanOptions(BuildContext context) {
+  void _showScanOptions(BuildContext rootContext) {
     showModalBottomSheet(
-      context: context,
+      context: rootContext,
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return Container(
           padding: EdgeInsets.all(24),
           child: Column(
@@ -336,20 +372,26 @@ class DashboardPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildOptionBtn(context, Icons.camera_alt, "Kamera", () {
-                    Navigator.pop(context);
+                  _buildOptionBtn(sheetContext, Icons.camera_alt, "Kamera", () {
+                    Navigator.pop(sheetContext);
                     Navigator.push(
-                      context,
+                      rootContext,
                       MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                const CameraPage(),
+                        builder: (context) => const CameraPage(),
                       ),
                     );
                   }),
-                  _buildOptionBtn(context, Icons.photo_library, "Galeri", () {
-                    _handleScan(context, ImageSource.gallery);
-                  }),
+                  _buildOptionBtn(
+                    sheetContext,
+                    Icons.photo_library,
+                    "Galeri",
+                    () {
+                      _handleScanFromGallery(
+                        rootContext: rootContext,
+                        sheetContext: sheetContext,
+                      );
+                    },
+                  ),
                 ],
               ),
               SizedBox(height: 20),
@@ -424,34 +466,32 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Future<void> _handleScan(BuildContext context, ImageSource source) async {
-    try {
-      Navigator.pop(context);
+  Future<void> _handleScanFromGallery({
+    required BuildContext rootContext,
+    required BuildContext sheetContext,
+  }) async {
+    Navigator.pop(sheetContext);
 
-      final picker = ImagePicker();
-      final image = await picker.pickImage(source: source);
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
 
-      if (image != null) {
-        final prefs = await SharedPreferences.getInstance();
-        final email = prefs.getString('email');
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('email');
 
-        if (email == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Sesi habis, silakan login ulang")),
-          );
-          return;
-        }
-
-        print("📸 Dashboard: Mengirim foto dengan email: $email");
-
-        context.read<ScanBloc>().add(
-          AnalyzeImageEvent(imagePath: image.path, email: email),
-        );
-
-        Navigator.pushNamed(context, '/scan');
-      }
-    } catch (e) {
-      print("Error saat scan dashboard: $e");
+    if (email == null) {
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        const SnackBar(content: Text("Sesi habis, silakan login ulang")),
+      );
+      return;
     }
+
+    print("📸 Dashboard: Mengirim foto galeri dengan email: $email");
+
+    rootContext.read<ScanBloc>().add(
+      AnalyzeImageEvent(imagePath: image.path, email: email),
+    );
+
+    Navigator.pushNamed(rootContext, '/scan');
   }
 }

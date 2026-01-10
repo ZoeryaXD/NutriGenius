@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class ApiClient {
-  static const String _laptopIp = '192.169.0.3';
+  static const String _laptopIp = '192.168.0.103';
   static String get baseUrl {
     if (kIsWeb) {
       return 'http://localhost:3000/api';

@@ -73,7 +73,7 @@ class ScanPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Ayo Scan Makananmu!",
+                  "Ayo Coba Scan Lewat Kamera!",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 30),
@@ -100,26 +100,6 @@ class ScanPage extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 15),
-
-                // ElevatedButton.icon(
-                //   onPressed: () => _pickImage(context, ImageSource.gallery),
-                //   icon: const Icon(Icons.photo_library),
-                //   label: const Text("Pilih dari Galeri"),
-                //   style: ElevatedButton.styleFrom(
-                //     backgroundColor: Colors.green.shade400,
-                //     shape: const StadiumBorder(),
-                //     padding: const EdgeInsets.symmetric(
-                //       horizontal: 30,
-                //       vertical: 15,
-                //     ),
-                //   ),
-                // ),
-
-                const Text(
-                   "Fitur Galeri Segera Hadir",
-                   style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-                ),
-                
               ],
             ),
           );

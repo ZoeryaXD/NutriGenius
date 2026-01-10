@@ -16,5 +16,14 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         emit(DashboardError(e.toString()));
       }
     });
+
+    on<RefreshDashboard>((event, emit) async {
+      try {
+        final data = await repository.loadDashboardData();
+        emit(DashboardLoaded(data));
+      } catch (e) {
+        emit(DashboardError(e.toString()));
+      }
+    });
   }
 }
