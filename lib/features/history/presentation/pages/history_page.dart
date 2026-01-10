@@ -25,7 +25,9 @@ class _HistoryPageState extends State<HistoryPage> {
 
   void _loadInitialData() async {
     final prefs = await SharedPreferences.getInstance();
-    userEmail = prefs.getString('email');
+    setState(() {
+      userEmail = prefs.getString('email');
+    });
     if (userEmail != null) {
       context.read<HistoryBloc>().add(LoadHistoryEvent(userEmail!));
     }
@@ -33,89 +35,119 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          "Riwayat Makan",
-          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.green),
-            onPressed: () {
-              if (userEmail != null)
-                context.read<HistoryBloc>().add(LoadHistoryEvent(userEmail!));
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<HistoryBloc, HistoryState>(
-        builder: (context, state) {
-          if (state is HistoryLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.green),
-            );
-          }
-          if (state is HistoryFailure) {
-            return Center(
-              child: Text(
-                "Error: ${state.message}",
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-          if (state is HistoryLoaded) {
-            if (state.histories.isEmpty) {
-              return const Center(
-                child: Text("Belum ada riwayat makan. Yuk scan!"),
-              );
-            }
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  WeeklyReportCard(
-                    weeklyCalories: state.weeklyCalories,
-                    totalCalories: state.totalCaloriesThisWeek,
-                    dailyAverage: state.dailyAverage,
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  const Text(
-                    "Riwayat Scan",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.green,
+      backgroundColor: const Color(0xFFFAFAFA),
+      body: SafeArea(
+        child: BlocBuilder<HistoryBloc, HistoryState>(
+          builder: (context, state) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                if (userEmail != null) {
+                  context.read<HistoryBloc>().add(LoadHistoryEvent(userEmail!));
+                }
+              },
+              color: Colors.green,
+              child: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                    title: const Text(
+                      "Riwayat",
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 24,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 15),
-
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: state.histories.length,
-                    itemBuilder: (context, index) {
-                      return HistoryListItem(
-                        item: state.histories[index],
-                        userEmail: userEmail ?? '',
-                      );
-                    },
-                  ),
+                  if (state is HistoryLoaded)
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      sliver:
+                          isLandscape
+                              ? _buildLandscapeLayout(state)
+                              : _buildPortraitLayout(state),
+                    ),
                 ],
               ),
             );
-          }
-          return const SizedBox();
-        },
+          },
+        ),
       ),
+    );
+  }
+
+  Widget _buildPortraitLayout(HistoryLoaded state) {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        WeeklyReportCard(
+          weeklyCalories: state.weeklyCalories,
+          totalCalories: state.totalCaloriesThisWeek,
+          dailyAverage: state.dailyAverage,
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          "Aktivitas Terbaru",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        _buildList(state.histories),
+      ]),
+    );
+  }
+
+  Widget _buildLandscapeLayout(HistoryLoaded state) {
+    return SliverToBoxAdapter(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: WeeklyReportCard(
+              weeklyCalories: state.weeklyCalories,
+              totalCalories: state.totalCaloriesThisWeek,
+              dailyAverage: state.dailyAverage,
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            flex: 6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Aktivitas Terbaru",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 12),
+                _buildList(state.histories),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildList(List histories) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: histories.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 10),
+      itemBuilder:
+          (context, index) => HistoryListItem(
+            item: histories[index],
+            userEmail: userEmail ?? '',
+          ),
     );
   }
 }

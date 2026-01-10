@@ -28,6 +28,7 @@ import 'package:nutrigenius/features/scan/domain/repositories/scan_repository.da
 import 'package:nutrigenius/features/scan/domain/usecases/analyze_image_usecase.dart';
 import 'package:nutrigenius/features/scan/domain/usecases/save_scan_usecase.dart';
 import 'package:nutrigenius/features/scan/presentation/bloc/scan_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
@@ -43,15 +44,20 @@ import 'features/firstpage/domain/usecase/calculate_tdee.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // ! External
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
+  sl.registerLazySingleton(() => http.Client());
+  sl.registerLazySingleton(() => FirebaseAuth.instance);
+  sl.registerLazySingleton(() => DatabaseHelper.instance);
+
   // ==========================
   // ! 1. FITUR AUTH
   // ==========================
   sl.registerFactory(() => AuthBloc(sl()));
-
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remoteDataSource: sl()),
   );
-
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(firebaseAuth: sl(), client: sl()),
   );
@@ -62,13 +68,10 @@ Future<void> init() async {
   sl.registerFactory(
     () => FirstPageBloc(calculateTDEE: sl(), repository: sl()),
   );
-
   sl.registerLazySingleton(() => CalculateTDEE());
-
   sl.registerLazySingleton<FirstPageRepository>(
     () => FirstPageRepositoryImpl(remoteDataSource: sl()),
   );
-
   sl.registerLazySingleton<FirstpageRemoteDataSource>(
     () => FirstpageRemoteDataSourceImpl(client: sl()),
   );
@@ -77,11 +80,9 @@ Future<void> init() async {
   // ! 3. FITUR DASHBOARD
   // ==========================
   sl.registerFactory(() => DashboardBloc(repository: sl()));
-
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(client: sl()),
   );
-
   sl.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(client: sl()),
   );
@@ -90,11 +91,10 @@ Future<void> init() async {
   // ! 4. FITUR PROFILE
   // ==========================
   sl.registerFactory(() => ProfileBloc(repository: sl()));
-
   sl.registerLazySingleton<ProfileRepository>(
-    () => ProfileRepositoryImpl(remoteDataSource: sl()),
+    () =>
+        ProfileRepositoryImpl(remoteDataSource: sl(), sharedPreferences: sl()),
   );
-
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(client: sl()),
   );
@@ -102,17 +102,12 @@ Future<void> init() async {
   // ==========================
   // ! 5. FITUR SCAN
   // ==========================
-
   sl.registerFactory(() => ScanBloc(analyzeImage: sl(), saveScan: sl()));
-
   sl.registerLazySingleton(() => AnalyzeImageUseCase(sl()));
-
   sl.registerLazySingleton(() => SaveScanUseCase(sl()));
-
   sl.registerLazySingleton<ScanRepository>(
     () => ScanRepositoryImpl(remoteDataSource: sl()),
   );
-
   sl.registerLazySingleton<ScanRemoteDataSource>(
     () => ScanRemoteDataSourceImpl(client: sl()),
   );
@@ -120,23 +115,15 @@ Future<void> init() async {
   // ==========================
   // ! 6. CORE (Network)
   // ==========================
-
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-
   sl.registerLazySingleton(() => InternetConnectionChecker.createInstance());
 
   // ===========================
-  // ! 7.  FEATURE: HISTORY
+  // ! 7. FEATURE: HISTORY
   // ===========================
-
-  // 1. Bloc
   sl.registerFactory(() => HistoryBloc(getHistory: sl(), deleteHistory: sl()));
-
-  // 2. Use Cases
   sl.registerLazySingleton(() => GetHistoryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteHistoryUseCase(sl()));
-
-  // 3. Repository
   sl.registerLazySingleton<HistoryRepository>(
     () => HistoryRepositoryImpl(
       remoteDataSource: sl(),
@@ -144,17 +131,10 @@ Future<void> init() async {
       networkInfo: sl(),
     ),
   );
-
-  // 4. Data Sources
   sl.registerLazySingleton<HistoryRemoteDataSource>(
     () => HistoryRemoteDataSourceImpl(client: sl()),
   );
   sl.registerLazySingleton<HistoryLocalDataSource>(
     () => HistoryLocalDataSourceImpl(databaseHelper: sl()),
   );
-
-  // ! External
-  sl.registerLazySingleton(() => http.Client());
-  sl.registerLazySingleton(() => FirebaseAuth.instance);
-  sl.registerLazySingleton(() => DatabaseHelper.instance);
 }

@@ -14,20 +14,66 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<LoadHistoryEvent>((event, emit) async {
       emit(HistoryLoading());
 
-      final result = await getHistory(event.email);
+      // final result = await getHistory(event.email);
 
-      result.fold((failure) => emit(HistoryFailure(failure.message)), (data) {
-        final stats = _calculateWeeklyStats(data);
+      // result.fold((failure) => emit(HistoryFailure(failure.message)), (data) {
+      //   final stats = _calculateWeeklyStats(data);
 
-        emit(
-          HistoryLoaded(
-            histories: data,
-            weeklyCalories: stats['weeklyChart'] as List<double>,
-            totalCaloriesThisWeek: stats['total'] as double,
-            dailyAverage: stats['average'] as double,
-          ),
-        );
-      });
+      //   emit(
+      //     HistoryLoaded(
+      //       histories: data,
+      //       weeklyCalories: stats['weeklyChart'] as List<double>,
+      //       totalCaloriesThisWeek: stats['total'] as double,
+      //       dailyAverage: stats['average'] as double,
+      //     ),
+      //   );
+
+      final List<HistoryEntity> dummyData = [
+        HistoryEntity(
+          id: 1,
+          foodName: "Nasi Goreng Spesial",
+          calories: 700.0,
+          protein: 15.0,
+          carbs: 80.0,
+          fat: 25.0,
+          sugar: 5.0,
+          imagePath: "",
+          createdAt: DateTime.now(),
+        ),
+        HistoryEntity(
+          id: 2,
+          foodName: "Ayam Bakar Madu",
+          calories: 450.0,
+          protein: 30.0,
+          carbs: 10.0,
+          fat: 15.0,
+          sugar: 12.0,
+          imagePath: "",
+          createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+        HistoryEntity(
+          id: 3,
+          foodName: "Salad Sayur Mozzarella",
+          calories: 250.0,
+          protein: 8.0,
+          carbs: 15.0,
+          fat: 12.0,
+          sugar: 3.0,
+          imagePath: "",
+          createdAt: DateTime.now().subtract(const Duration(days: 3)),
+        ),
+      ];
+
+      final stats = _calculateWeeklyStats(dummyData);
+
+      emit(
+        HistoryLoaded(
+          histories: dummyData,
+          weeklyCalories: stats['weeklyChart'] as List<double>,
+          totalCaloriesThisWeek: stats['total'] as double,
+          dailyAverage: stats['average'] as double,
+        ),
+      );
     });
 
     on<DeleteHistoryEvent>((event, emit) async {

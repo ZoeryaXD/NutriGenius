@@ -16,53 +16,91 @@ class HistoryListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl =
-        "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${item.imagePath}";
+    String finalImageUrl = item.imagePath;
+    if (finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
+      final String cleanBaseUrl = ApiClient.baseUrl.replaceAll('/api', '');
+      finalImageUrl = "$cleanBaseUrl/uploads/scans/${item.imagePath}";
+    }
+
     final dateStr = DateFormat('HH:mm').format(item.createdAt);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 15),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 2,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(10),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.network(
-            imageUrl,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
-            errorBuilder:
-                (ctx, err, stack) => Container(
-                  width: 60,
-                  height: 60,
-                  color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.broken_image,
-                    size: 30,
-                    color: Colors.grey,
-                  ),
-                ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child:
+              finalImageUrl.isEmpty
+                  ? Container(
+                    width: 48,
+                    height: 48,
+                    color: const Color(0xFFE8F5E9),
+                    child: const Icon(
+                      Icons.fastfood_rounded,
+                      color: Colors.green,
+                      size: 24,
+                    ),
+                  )
+                  : Image.network(
+                    finalImageUrl,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (context, error, stackTrace) => Container(
+                          width: 48,
+                          height: 48,
+                          color: Colors.grey[100],
+                          child: const Icon(
+                            Icons.broken_image_rounded,
+                            size: 20,
+                            color: Colors.grey,
+                          ),
+                        ),
+                  ),
         ),
         title: Text(
           item.foodName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            color: Color(0xFF2D3142),
+            letterSpacing: -0.2,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text("${item.calories} kkal • $dateStr"),
+        subtitle: Text(
+          "${item.calories.toInt()} kcal - $dateStr",
+          style: TextStyle(
+            color: Colors.grey[500],
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.grey,
+          Icons.chevron_right_rounded,
+          color: Color(0xFFD1D1D1),
+          size: 18,
         ),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder:
-                  (context) =>
-                      DetailHistoryPage(history: item, email: userEmail),
+                  (context) => DetailHistoryPage(food: item, email: userEmail),
             ),
           );
         },

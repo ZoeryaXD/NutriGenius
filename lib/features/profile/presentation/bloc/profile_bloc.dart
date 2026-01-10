@@ -22,7 +22,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       try {
         await repository.updateProfile(event.updatedProfile);
         emit(ProfileActionSuccess("Profil berhasil diperbarui!"));
-        add(LoadProfile());
+        final freshData = await repository.getProfile();
+        emit(ProfileLoaded(freshData));
       } catch (e) {
         emit(ProfileError("Gagal update: $e"));
       }

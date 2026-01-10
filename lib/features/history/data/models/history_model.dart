@@ -15,15 +15,20 @@ class HistoryModel extends HistoryEntity {
 
   factory HistoryModel.fromMap(Map<String, dynamic> map) {
     return HistoryModel(
-      id: map['id'],
+      id: map['id'] ?? 0,
       foodName: map['food_name'] ?? 'Unknown',
-      calories: (map['calories'] as num).toDouble(),
-      protein: (map['protein'] as num?)?.toDouble(),
-      carbs: (map['carbs'] as num?)?.toDouble(),
-      fat: (map['fat'] as num?)?.toDouble(),
-      sugar: (map['sugar'] as num?)?.toDouble(),
+      calories: (map['calories'] ?? 0).toDouble(),
+      protein: (map['protein'] ?? 0).toDouble(),
+      carbs: (map['carbs'] ?? 0).toDouble(),
+      fat: (map['fat'] ?? 0).toDouble(),
+      sugar: (map['sugar'] ?? 0).toDouble(),
       imagePath: map['image_path'] ?? '',
-      createdAt: DateTime.parse(map['created_at']), 
+      createdAt:
+          (map['date'] != null)
+              ? DateTime.parse(map['date'])
+              : (map['created_at'] != null)
+              ? DateTime.parse(map['created_at'])
+              : DateTime.now(),
     );
   }
 
@@ -37,7 +42,7 @@ class HistoryModel extends HistoryEntity {
       'fat': fat,
       'sugar': sugar,
       'image_path': imagePath,
-      'created_at': createdAt.toIso8601String(), 
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

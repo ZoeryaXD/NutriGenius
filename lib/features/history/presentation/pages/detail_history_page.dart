@@ -7,182 +7,218 @@ import '../bloc/history_bloc.dart';
 import '../bloc/history_event.dart';
 
 class DetailHistoryPage extends StatelessWidget {
-  final HistoryEntity history;
+  final HistoryEntity food;
   final String email;
 
-  const DetailHistoryPage({
-    super.key,
-    required this.history,
-    required this.email,
-  });
+  const DetailHistoryPage({super.key, required this.food, required this.email});
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl =
-        "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${history.imagePath}";
-    final formattedDate = DateFormat(
-      'EEEE, d MMM yyyy • HH:mm',
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final String formattedDate = DateFormat(
+      'dd MMM yyyy, HH:mm',
       'id_ID',
-    ).format(history.createdAt);
+    ).format(food.createdAt);
+
+    String imageUrl = food.imagePath;
+    if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+      final String cleanBaseUrl = ApiClient.baseUrl.replaceAll('/api', '');
+      imageUrl = "$cleanBaseUrl/uploads/scans/${food.imagePath}";
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: Colors.green,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder:
-                    (ctx, err, stack) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(
-                        Icons.broken_image,
-                        size: 50,
-                        color: Colors.grey,
-                      ),
-                    ),
-              ),
-            ),
-            leading: IconButton(
-              icon: const CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.arrow_back, color: Colors.green),
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: IconButton(
-                  icon: const CircleAvatar(
-                    backgroundColor: Colors.red,
-                    child: Icon(Icons.delete, color: Colors.white),
-                  ),
-                  onPressed: () => _showDeleteConfirm(context),
-                ),
-              ),
-            ],
-          ),
-
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  Text(
-                    history.foodName,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
+      appBar: AppBar(
+        title: const Text(
+          "Detail Nutrisi",
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1B5E20),
+        elevation: 0,
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child:
+              isLandscape
+                  ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.access_time,
-                        size: 16,
-                        color: Colors.grey,
+                      Expanded(
+                        flex: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: _buildImage(imageUrl),
+                        ),
                       ),
-                      const SizedBox(width: 5),
-                      Text(
-                        formattedDate,
-                        style: const TextStyle(color: Colors.grey),
+                      Expanded(
+                        flex: 6,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(0, 24, 24, 24),
+                          child: _buildDetails(context, formattedDate),
+                        ),
                       ),
                     ],
+                  )
+                  : SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildImage(imageUrl),
+                        const SizedBox(height: 24),
+                        _buildDetails(context, formattedDate),
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 30),
-
-                  const Text(
-                    "Informasi Nutrisi",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 15),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 3,
-                    childAspectRatio: 1.5,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    children: [
-                      _buildNutrientCard(
-                        "🔥 Kalori",
-                        "${history.calories} kkal",
-                        Colors.orange,
-                      ),
-                      _buildNutrientCard(
-                        "🥩 Protein",
-                        "${history.protein ?? 0}g",
-                        Colors.blue,
-                      ),
-                      _buildNutrientCard(
-                        "🍞 Karbo",
-                        "${history.carbs ?? 0}g",
-                        Colors.brown,
-                      ),
-                      _buildNutrientCard(
-                        "🥑 Lemak",
-                        "${history.fat ?? 0}g",
-                        Colors.yellow[800]!,
-                      ),
-                      _buildNutrientCard(
-                        "🍬 Gula",
-                        "${history.sugar ?? 0}g",
-                        Colors.pink,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildNutrientCard(String label, String value, Color color) {
+  Widget _buildImage(String imageUrl) {
     return Container(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: color.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child:
+            imageUrl.isEmpty
+                ? Container(
+                  height: 300,
+                  width: double.infinity,
+                  color: const Color(0xFFF5F5F5),
+                  child: const Icon(
+                    Icons.restaurant_rounded,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                )
+                : Image.network(
+                  imageUrl,
+                  width: double.infinity,
+                  height: 300,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (ctx, err, stack) => Container(
+                        height: 300,
+                        color: const Color(0xFFF5F5F5),
+                        child: const Icon(Icons.broken_image_rounded, size: 64),
+                      ),
+                ),
+      ),
+    );
+  }
+
+  Widget _buildDetails(BuildContext context, String formattedDate) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          food.foodName,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          "Dicatat pada $formattedDate",
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Divider(thickness: 1.2),
+        ),
+        _buildRow(
+          "Energi / Kalori",
+          "${food.calories.toStringAsFixed(1)} kcal",
+          const Color(0xFF2E7D32),
+          isBold: true,
+        ),
+        _buildRow(
+          "Protein",
+          "${(food.protein ?? 0.0).toStringAsFixed(1)} g",
+          const Color(0xFF1976D2),
+        ),
+        _buildRow(
+          "Karbohidrat",
+          "${(food.carbs ?? 0.0).toStringAsFixed(1)} g",
+          const Color(0xFFF57C00),
+        ),
+        _buildRow(
+          "Lemak Total",
+          "${(food.fat ?? 0.0).toStringAsFixed(1)} g",
+          const Color(0xFF7B1FA2),
+        ),
+        _buildRow(
+          "Gula",
+          "${(food.sugar ?? 0.0).toStringAsFixed(1)} g",
+          const Color(0xFFC2185B),
+        ),
+        const SizedBox(height: 40),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD32F2F),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            onPressed: () => _showDelete(context),
+            child: const Text(
+              "Hapus Data Riwayat",
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRow(
+    String label,
+    String value,
+    Color color, {
+    bool isBold = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
-          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
           Text(
             value,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
               color: color,
             ),
           ),
@@ -191,37 +227,46 @@ class DetailHistoryPage extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirm(BuildContext context) {
+  void _showDelete(BuildContext context) {
     showDialog(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text("Hapus Riwayat?"),
-            content: const Text("Data ini akan hilang permanen."),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: const Text(
+              "Hapus Riwayat?",
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+            content: const Text(
+              "Data yang dihapus tidak dapat dipulihkan kembali.",
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text("Batal"),
+                child: const Text(
+                  "Batal",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              TextButton(
                 onPressed: () {
                   context.read<HistoryBloc>().add(
-                    DeleteHistoryEvent(id: history.id, email: email),
+                    DeleteHistoryEvent(id: food.id, email: email),
                   );
                   Navigator.pop(ctx);
                   Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Data berhasil dihapus"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
                 },
                 child: const Text(
                   "Hapus",
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Color(0xFFD32F2F),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],

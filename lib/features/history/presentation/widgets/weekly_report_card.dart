@@ -15,130 +15,129 @@ class WeeklyReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header Teks
-        const Text(
-          "LAPORAN MINGGUAN",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.green,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.green.shade600, Colors.green.shade400],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          "Total Kalori Minggu ini:",
-          style: TextStyle(color: Colors.grey[600]),
-        ),
-        Text(
-          "${totalCalories.toStringAsFixed(0)} kkal (Avg: ${dailyAverage.toStringAsFixed(0)}/hari)",
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.black87,
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
-        // Grafik Chart
-        Container(
-          height: 250,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.shade200,
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "TOTAL KALORI",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.white70,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  Text(
+                    "${totalCalories.toStringAsFixed(0)} kcal",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 28,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  "Rerata: ${dailyAverage.toStringAsFixed(0)}",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ],
           ),
-          child: LineChart(_mainData()),
-        ),
-      ],
+          const SizedBox(height: 24),
+          SizedBox(height: 150, child: LineChart(_chartData())),
+        ],
+      ),
     );
   }
 
-  LineChartData _mainData() {
+  LineChartData _chartData() {
     return LineChartData(
-      gridData: const FlGridData(
-        show: true,
-        drawVerticalLine: true,
-        horizontalInterval: 500,
-        verticalInterval: 1,
-      ),
+      gridData: const FlGridData(show: false),
       titlesData: FlTitlesData(
         show: true,
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            reservedSize: 30,
+            reservedSize: 32,
             interval: 1,
             getTitlesWidget: (value, meta) {
-              const style = TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: Colors.grey,
-              );
-              Widget text;
-              switch (value.toInt()) {
-                case 0:
-                  text = const Text('Sen', style: style);
-                  break;
-                case 1:
-                  text = const Text('Sel', style: style);
-                  break;
-                case 2:
-                  text = const Text('Rab', style: style);
-                  break;
-                case 3:
-                  text = const Text('Kam', style: style);
-                  break;
-                case 4:
-                  text = const Text('Jum', style: style);
-                  break;
-                case 5:
-                  text = const Text('Sab', style: style);
-                  break;
-                case 6:
-                  text = const Text('Min', style: style);
-                  break;
-                default:
-                  text = const Text('', style: style);
+              const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+              if (value.toInt() >= 0 && value.toInt() < days.length) {
+                return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  space: 12,
+                  child: Text(
+                    days[value.toInt()],
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                    ),
+                  ),
+                );
               }
-              // Gunakan meta.axisSide sesuai versi terbaru
-              return SideTitleWidget(axisSide: meta.axisSide, child: text);
+              return const SizedBox();
             },
           ),
         ),
+        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
       ),
       borderData: FlBorderData(show: false),
-      minX: 0,
-      maxX: 6,
-      minY: 0,
-      maxY: 3000,
       lineBarsData: [
         LineChartBarData(
-          spots: List.generate(weeklyCalories.length, (index) {
-            return FlSpot(index.toDouble(), weeklyCalories[index]);
-          }),
+          spots: List.generate(
+            weeklyCalories.length,
+            (i) => FlSpot(i.toDouble(), weeklyCalories[i]),
+          ),
           isCurved: true,
-          color: Colors.green,
-          barWidth: 3,
-          isStrokeCapRound: true,
+          color: Colors.white,
+          barWidth: 4,
           dotData: const FlDotData(show: true),
           belowBarData: BarAreaData(
             show: true,
-            color: Colors.green.withOpacity(0.2),
+            color: Colors.white.withOpacity(0.15),
           ),
         ),
       ],

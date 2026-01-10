@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:nutrigenius/dummy_page.dart';
 import 'package:nutrigenius/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:nutrigenius/features/history/presentation/pages/history_page.dart';
 import 'package:nutrigenius/features/profile/presentation/pages/profile_page.dart';
+import 'package:nutrigenius/dummy_page.dart'; // Pastikan NotificationPage ada di sini
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -26,80 +26,54 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isWideScreen = constraints.maxWidth > 600;
+
         return Scaffold(
           body: Row(
             children: [
-              if (isWideScreen)
+              if (isWideScreen) ...[
                 NavigationRail(
-                  extended: constraints.maxWidth > 900,
+                  extended: false,
                   selectedIndex: _currentIndex,
                   onDestinationSelected:
                       (index) => setState(() => _currentIndex = index),
-                  leading: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 40),
-                        constraints.maxWidth > 900
-                            ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.spa,
-                                  color: Color(0xFF2E7D32),
-                                  size: 32,
-                                ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  'NutriGenius',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2E7D32),
-                                  ),
-                                ),
-                              ],
-                            )
-                            : const Icon(
-                              Icons.spa,
-                              color: Color(0xFF2E7D32),
-                              size: 32,
-                            ),
-                        const SizedBox(height: 30),
-                      ],
-                    ),
-                  ),
-
-                  labelType:
-                      constraints.maxWidth > 900
-                          ? NavigationRailLabelType.none
-                          : NavigationRailLabelType.all,
                   backgroundColor: Colors.white,
+                  leading: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Icon(Icons.spa, color: Color(0xFF2E7D32), size: 30),
+                  ),
+                  labelType: NavigationRailLabelType.all,
                   selectedIconTheme: const IconThemeData(
                     color: Color(0xFF2E7D32),
+                    size: 28,
                   ),
                   selectedLabelTextStyle: const TextStyle(
                     color: Color(0xFF2E7D32),
                     fontWeight: FontWeight.bold,
+                    fontSize: 12,
                   ),
-                  unselectedIconTheme: const IconThemeData(color: Colors.grey),
-                  unselectedLabelTextStyle: const TextStyle(color: Colors.grey),
+                  unselectedIconTheme: const IconThemeData(
+                    color: Colors.grey,
+                    size: 24,
+                  ),
+                  unselectedLabelTextStyle: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 11,
+                  ),
                   destinations: const [
                     NavigationRailDestination(
-                      icon: Icon(Icons.spa_outlined),
-                      selectedIcon: Icon(Icons.spa),
-                      label: Text('Dashboard'),
+                      icon: Icon(Icons.dashboard_outlined),
+                      selectedIcon: Icon(Icons.dashboard),
+                      label: Text('Home'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.receipt_long_outlined),
                       selectedIcon: Icon(Icons.receipt_long),
-                      label: Text('History Log'),
+                      label: Text('History'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.notifications_none),
                       selectedIcon: Icon(Icons.notifications),
-                      label: Text('Notifications'),
+                      label: Text('Notif'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.person_outline),
@@ -108,6 +82,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                     ),
                   ],
                 ),
+                const VerticalDivider(
+                  thickness: 1,
+                  width: 1,
+                  color: Color(0xFFEEEEEE),
+                ),
+              ],
               Expanded(child: _pages[_currentIndex]),
             ],
           ),
@@ -116,31 +96,28 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                   ? null
                   : BottomNavigationBar(
                     currentIndex: _currentIndex,
-                    onTap: (index) {
-                      setState(() {
-                        _currentIndex = index;
-                      });
-                    },
+                    onTap: (index) => setState(() => _currentIndex = index),
                     type: BottomNavigationBarType.fixed,
                     backgroundColor: Colors.white,
                     selectedItemColor: const Color(0xFF2E7D32),
                     unselectedItemColor: Colors.grey,
-                    showUnselectedLabels: true,
+                    selectedFontSize: 12,
+                    unselectedFontSize: 12,
                     items: const [
                       BottomNavigationBarItem(
-                        icon: Icon(Icons.spa_outlined),
-                        activeIcon: Icon(Icons.spa),
-                        label: 'Dashboard',
+                        icon: Icon(Icons.dashboard_outlined),
+                        activeIcon: Icon(Icons.dashboard),
+                        label: 'Home',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.receipt_long_outlined),
                         activeIcon: Icon(Icons.receipt_long),
-                        label: 'History Log',
+                        label: 'History',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.notifications_none),
                         activeIcon: Icon(Icons.notifications),
-                        label: 'Notifications',
+                        label: 'Notif',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.person_outline),

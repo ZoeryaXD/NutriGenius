@@ -35,7 +35,7 @@ class ProfileModel extends ProfileEntity {
 
       birthDate:
           json['birth_date'] != null
-              ? DateTime.parse(json['birth_date'])
+              ? DateTime.parse(json['birth_date']).toLocal()
               : DateTime.now(),
 
       weight: _toDouble(json['weight_kg']),
@@ -45,6 +45,18 @@ class ProfileModel extends ProfileEntity {
       healthId: json['health_id'] ?? 1,
       activityId: json['activity_id'] ?? 1,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'full_name': fullName,
+      'gender': gender,
+      'birth_date': birthDate.toIso8601String().split('T')[0],
+      'weight_kg': weight,
+      'height_cm': height,
+      'health_id': healthId,
+      'activity_id': activityId,
+    };
   }
 
   String get fullImageUrl {
