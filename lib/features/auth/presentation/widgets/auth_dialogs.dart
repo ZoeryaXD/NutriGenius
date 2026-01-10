@@ -107,7 +107,6 @@ class AuthDialogs {
     );
   }
 
-  // Tambahkan ini di dalam class AuthDialogs (file auth_dialogs.dart)
 
   static void showRegisterSuccess(BuildContext context) {
     showGeneralDialog(
@@ -149,8 +148,8 @@ class AuthDialogs {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.pop(context); // Tutup Dialog
-                      Navigator.pop(context); // Kembali ke Login Page
+                      Navigator.pop(context);
+                      Navigator.pop(context);
                     },
                     child: const Text(
                       "OK",

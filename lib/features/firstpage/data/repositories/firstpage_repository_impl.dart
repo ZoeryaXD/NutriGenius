@@ -1,5 +1,6 @@
 import '../../domain/repositories/firstpage_repository.dart';
 import '../datasources/firstpage_remote_data_source.dart';
+import '../../domain/entities/firstpage_entity.dart';
 import '../models/firstpage_model.dart';
 
 class FirstPageRepositoryImpl implements FirstPageRepository {
@@ -34,5 +35,37 @@ class FirstPageRepositoryImpl implements FirstPageRepository {
     );
 
     await remoteDataSource.submitProfile(model.toJson());
+  }
+
+  @override
+  Future<List<ActivityLevel>> getActivityLevels() async {
+    final models = await remoteDataSource.getActivities();
+
+    return models
+        .map(
+          (model) => ActivityLevel(
+            id: model.id,
+            levelName: model.levelName,
+            multiplier: model.multiplier,
+            description: model.description,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<HealthCondition>> getHealthConditions() async {
+    final models = await remoteDataSource.getHealthConditions();
+
+    return models
+        .map(
+          (model) => HealthCondition(
+            id: model.id,
+            conditionName: model.conditionName,
+            sugarLimit: model.sugarLimit,
+            description: model.description,
+          ),
+        )
+        .toList();
   }
 }

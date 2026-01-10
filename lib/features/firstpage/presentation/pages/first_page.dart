@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
-import '../bloc/firstpage_bloc.dart'; // Pastikan import ini benar
+import '../bloc/firstpage_bloc.dart';
 
 class FirstPage extends StatefulWidget {
   final PageController pageController;
@@ -12,7 +12,6 @@ class FirstPage extends StatefulWidget {
 }
 
 class _FirstPageState extends State<FirstPage> {
-
   String? _gender;
   final _weightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
@@ -46,7 +45,7 @@ class _FirstPageState extends State<FirstPage> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.green[700], 
+              color: _gender == null ? Colors.grey[200] : Colors.green[700],
               borderRadius: BorderRadius.circular(12),
             ),
             child: DropdownButtonHideUnderline(
@@ -54,9 +53,16 @@ class _FirstPageState extends State<FirstPage> {
                 value: _gender,
                 isExpanded: true,
                 dropdownColor: Colors.green[700],
-                icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                style: TextStyle(
+                hint: Text(
+                  "Pilih Jenis Kelamin",
+                  style: TextStyle(color: Colors.green[700]),
+                ),
+                icon: Icon(
+                  Icons.arrow_drop_down,
                   color: Colors.white,
+                ),
+                style: TextStyle(
+                  color:Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -67,14 +73,12 @@ class _FirstPageState extends State<FirstPage> {
                         child: Row(
                           children: [
                             Icon(
-                              value == 'Laki-Laki'
-                                  ? Icons.male
-                                  : Icons.female,
+                              value == 'Laki-Laki' ? Icons.male : Icons.female,
                               color: Colors.white,
                               size: 20,
                             ),
                             SizedBox(width: 10),
-                            Text(value),
+                            Text(value, style: TextStyle(color: Colors.white)),
                           ],
                         ),
                       );
@@ -131,7 +135,11 @@ class _FirstPageState extends State<FirstPage> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today, color: Colors.white, size: 20),
+                  Icon(
+                    Icons.calendar_today,
+                    color:Colors.white,
+                    size: 20,
+                  ),
                   SizedBox(width: 12),
                   Text(
                     _birthDate == null
@@ -154,13 +162,13 @@ class _FirstPageState extends State<FirstPage> {
           Container(
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.green[700],
+              color: _birthDate == null ? Colors.grey[200] : Colors.green[700],
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               _birthDate == null ? "- Tahun" : "$_age Tahun",
               style: TextStyle(
-                color: Colors.white,
+                color: _birthDate == null ? Colors.green[700] : Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -209,7 +217,7 @@ class _FirstPageState extends State<FirstPage> {
               child: Text(
                 "Lanjut",
                 style: TextStyle(
-                  color: Colors.green[800],
+                  color: Colors.green[700],
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -229,7 +237,7 @@ class _FirstPageState extends State<FirstPage> {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Colors.green[800],
+          color: Colors.green[700],
         ),
       ),
     );
@@ -240,20 +248,24 @@ class _FirstPageState extends State<FirstPage> {
     TextEditingController ctrl,
     String suffix,
   ) {
+    bool isEmpty = ctrl.text.isEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel(label),
         Container(
           decoration: BoxDecoration(
-            color: Colors.green[700],
+            color: isEmpty ? Colors.grey[200] : Colors.green[700],
             borderRadius: BorderRadius.circular(12),
           ),
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: TextField(
             controller: ctrl,
+            onChanged: (val) {
+              setState(() {});
+            },
             style: TextStyle(
-              color: Colors.white,
+              color: isEmpty ? Colors.green[700] : Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -262,8 +274,11 @@ class _FirstPageState extends State<FirstPage> {
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: "0",
+              hintStyle: TextStyle(color: Colors.green[700]!.withOpacity(0.5)),
               suffixText: suffix,
-              suffixStyle: TextStyle(color: Colors.white38),
+              suffixStyle: TextStyle(
+                color: isEmpty ? Colors.green[700] : Colors.white70,
+              ),
             ),
           ),
         ),
@@ -276,7 +291,7 @@ class _FirstPageState extends State<FirstPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: () => Navigator.pushReplacementNamed(context, '/'),
           child: Row(
             children: [
               Icon(Icons.arrow_back, color: Colors.green),
@@ -297,7 +312,7 @@ class _FirstPageState extends State<FirstPage> {
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.bold,
-            color: Colors.green[800],
+            color: Colors.green[700],
           ),
         ),
         SizedBox(height: 8),

@@ -23,7 +23,6 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isObscure = true;
   PasswordStrength _passwordStrength = PasswordStrength.weak;
 
-  // Logika cek password tetap di sini (Logic UI)
   PasswordStrength _checkPasswordStrength(String password) {
     if (password.length < 6) return PasswordStrength.weak;
     final hasUpper = password.contains(RegExp(r'[A-Z]'));
@@ -52,7 +51,6 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthEmailVerificationRequired) {
-            // Panggil Dialog Reuse
             AuthDialogs.showRegisterSuccess(context);
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -69,14 +67,13 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 Text(
                   "Buat Akun Baru",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green[800]),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green[700]),
                 ),
                 const SizedBox(height: 8),
                 const Text("Mulai perjalanan sehatmu hari ini!", style: TextStyle(color: Colors.grey)),
                 
                 const SizedBox(height: 30),
 
-                // === NAMA ===
                 AuthTextField(
                   controller: _nameController,
                   label: "Nama Lengkap",
@@ -86,7 +83,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 
                 const SizedBox(height: 16),
 
-                // === EMAIL ===
                 AuthTextField(
                   controller: _emailController,
                   label: "Email",
@@ -97,13 +93,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 
                 const SizedBox(height: 16),
 
-                // === PASSWORD ===
                 AuthTextField(
                   controller: _passwordController,
                   label: "Password",
                   icon: Icons.lock_outline,
                   isObscure: _isObscure,
-                  // Logic realtime update strength meter
                   onChanged: (value) {
                     setState(() {
                       _passwordStrength = _checkPasswordStrength(value);
@@ -122,12 +116,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 
                 const SizedBox(height: 8),
                 
-                // === WIDGET INDIKATOR KEKUATAN PASSWORD ===
                 PasswordStrengthMeter(strength: _passwordStrength),
 
                 const SizedBox(height: 16),
 
-                // === KONFIRMASI PASSWORD ===
                 AuthTextField(
                   controller: _confirmPassController,
                   label: "Konfirmasi Password",
@@ -138,7 +130,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 
                 const SizedBox(height: 30),
 
-                // === TOMBOL REGISTER ===
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     return AuthButton(
@@ -161,7 +152,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 
                 const SizedBox(height: 20),
 
-                // === LINK LOGIN ===
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

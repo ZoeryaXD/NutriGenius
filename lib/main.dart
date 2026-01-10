@@ -15,7 +15,6 @@ import 'features/scan/presentation/bloc/scan_bloc.dart';
 import 'features/history/presentation/bloc/history_bloc.dart'; 
 import 'features/firstpage/presentation/pages/firstpage_main.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

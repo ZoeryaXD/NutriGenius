@@ -37,3 +37,37 @@ class FirstpageEntity extends Equatable {
     healthId,
   ];
 }
+
+class ActivityLevel extends Equatable {
+  final int id;
+  final String levelName;
+  final double multiplier;
+  final String description;
+
+  const ActivityLevel({
+    required this.id,
+    required this.levelName,
+    required this.multiplier,
+    required this.description,
+  });
+
+  @override
+  List<Object?> get props => [id, levelName, multiplier, description];
+}
+
+class HealthCondition extends Equatable {
+  final int id;
+  final String conditionName;
+  final double sugarLimit;
+  final String description;
+
+  const HealthCondition({
+    required this.id,
+    required this.conditionName,
+    required this.sugarLimit,
+    required this.description,
+  });
+
+  @override
+  List<Object?> get props => [id, conditionName, sugarLimit, description];
+}
