@@ -1,24 +1,42 @@
 import '../../domain/entities/profile_entity.dart';
 
-abstract class ProfileState {}
-
-class ProfileInitial extends ProfileState {}
-
-class ProfileLoading extends ProfileState {}
-
-class ProfileLoaded extends ProfileState {
-  final ProfileEntity profile;
-  ProfileLoaded(this.profile);
+enum ProfileStatus {
+  initial,
+  loading,
+  success,
+  error,
+  loadingMaster,
+  successMaster,
 }
 
-class ProfileError extends ProfileState {
-  final String message;
-  ProfileError(this.message);
-}
+class ProfileState {
+  final ProfileStatus status;
+  final ProfileEntity? profile;
+  final List<dynamic> healthConditions;
+  final List<dynamic> activityLevels;
+  final String? message;
 
-class ProfileActionSuccess extends ProfileState {
-  final String message;
-  ProfileActionSuccess(this.message);
-}
+  ProfileState({
+    this.status = ProfileStatus.initial,
+    this.profile,
+    this.healthConditions = const [],
+    this.activityLevels = const [],
+    this.message,
+  });
 
-class LogoutSuccess extends ProfileState {}
+  ProfileState copyWith({
+    ProfileStatus? status,
+    ProfileEntity? profile,
+    List<dynamic>? healthConditions,
+    List<dynamic>? activityLevels,
+    String? message,
+  }) {
+    return ProfileState(
+      status: status ?? this.status,
+      profile: profile ?? this.profile,
+      healthConditions: healthConditions ?? this.healthConditions,
+      activityLevels: activityLevels ?? this.activityLevels,
+      message: message ?? this.message,
+    );
+  }
+}

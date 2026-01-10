@@ -3,20 +3,26 @@ import '../../domain/entities/profile_entity.dart';
 
 abstract class ProfileEvent {}
 
-class LoadProfile extends ProfileEvent {}
+class LoadProfileData extends ProfileEvent {}
 
-class UpdateProfileData extends ProfileEvent {
-  final ProfileEntity updatedProfile;
-  UpdateProfileData(this.updatedProfile);
-}
+class LoadProfileMasterData extends ProfileEvent {}
+
+class LogoutRequested extends ProfileEvent {}
+
+class DeleteAccountRequested extends ProfileEvent {}
 
 class UploadProfilePhoto extends ProfileEvent {
   final File photo;
   UploadProfilePhoto(this.photo);
 }
 
-class DeleteProfilePhoto extends ProfileEvent {}
+class ChangePasswordRequested extends ProfileEvent {
+  final String newPassword;
+  ChangePasswordRequested(this.newPassword);
+}
 
-class DeleteAccountRequested extends ProfileEvent {}
-
-class LogoutRequested extends ProfileEvent {}
+class UpdateProfileData extends ProfileEvent {
+  final ProfileEntity updatedProfile;
+  final File? imageFile;
+  UpdateProfileData(this.updatedProfile, {this.imageFile});
+}

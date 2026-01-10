@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
-import '../../domain/entities/profile_entity.dart';
-import '../../data/models/profile_model.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
+import '../widgets/profile_header.dart';
+import '../widgets/profile_menu_item.dart';
+import '../widgets/profile_stat_card.dart';
 import 'edit_profile_page.dart';
 import 'settings_page.dart';
 import '../../../auth/presentation/pages/login_page.dart';
@@ -17,94 +18,170 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final isDark = theme.brightness == Brightness.dark;
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return BlocProvider(
-      create: (_) => sl<ProfileBloc>()..add(LoadProfile()),
+      create: (_) => sl<ProfileBloc>()..add(LoadProfileData()),
       child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Profil Saya",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+          ),
+          centerTitle: false,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: primaryColor,
+        ),
         body: SafeArea(
           child: BlocConsumer<ProfileBloc, ProfileState>(
             listener: (context, state) {
-              if (state is LogoutSuccess) {
+              if (state.status == ProfileStatus.initial &&
+                  state.profile == null) {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => LoginPage()),
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
                   (route) => false,
                 );
               }
             },
             builder: (context, state) {
-              if (state is ProfileLoading) {
+              if ((state.status == ProfileStatus.loading ||
+                      state.status == ProfileStatus.initial) &&
+                  state.profile == null) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (state is ProfileLoaded) {
-                final data = state.profile;
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 20,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 900),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Profil Saya",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: primaryColor,
-                            ),
+              if (state.status == ProfileStatus.error &&
+                  state.profile == null) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.wifi_off_rounded,
+                          size: 64,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "Koneksi Gagal",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 30),
-                          isLandscape
-                              ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 4,
-                                    child: _buildInfoFisik(
-                                      data,
-                                      primaryColor,
-                                      isDark,
-                                      theme,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 32),
-                                  Expanded(
-                                    flex: 6,
-                                    child: _buildMenuAksi(
-                                      context,
-                                      data,
-                                      primaryColor,
-                                    ),
-                                  ),
-                                ],
-                              )
-                              : Column(
-                                children: [
-                                  _buildInfoFisik(
-                                    data,
-                                    primaryColor,
-                                    isDark,
-                                    theme,
-                                  ),
-                                  const SizedBox(height: 40),
-                                  _buildMenuAksi(context, data, primaryColor),
-                                ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.message ?? "Terjadi kesalahan saat memuat data",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed:
+                              () => context.read<ProfileBloc>().add(
+                                LoadProfileData(),
                               ),
-                        ],
-                      ),
+                          child: const Text("COBA LAGI"),
+                        ),
+                      ],
                     ),
                   ),
                 );
               }
-              return const SizedBox();
+
+              final data = state.profile;
+              if (data == null) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.person_off_outlined,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
+                      SizedBox(height: 16),
+                      Text("Data profil tidak tersedia"),
+                    ],
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: () async {
+                  context.read<ProfileBloc>().add(LoadProfileData());
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 30,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Column(
+                        children: [
+                          ProfileHeader(user: data, primaryColor: primaryColor),
+                          const SizedBox(height: 30),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              ProfileStatCard(
+                                value: "${data.weight.toInt()} kg",
+                                label: "Berat",
+                                color: primaryColor,
+                              ),
+                              _buildDivider(),
+                              ProfileStatCard(
+                                value: "${data.height.toInt()} cm",
+                                label: "Tinggi",
+                                color: primaryColor,
+                              ),
+                              _buildDivider(),
+                              ProfileStatCard(
+                                value: "${data.age} th",
+                                label: "Umur",
+                                color: primaryColor,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 40),
+                          ProfileMenuItem(
+                            icon: Icons.person_outline,
+                            label: "Edit Profil",
+                            onTap:
+                                () => _navigateTo(
+                                  context,
+                                  EditProfilePage(currentData: data),
+                                ),
+                            color: primaryColor,
+                          ),
+                          const SizedBox(height: 16),
+                          ProfileMenuItem(
+                            icon: Icons.settings_outlined,
+                            label: "Pengaturan",
+                            onTap:
+                                () =>
+                                    _navigateTo(context, const SettingsPage()),
+                            color: primaryColor,
+                          ),
+                          const SizedBox(height: 40),
+                          ProfileMenuItem(
+                            icon: Icons.logout_rounded,
+                            label: "Keluar Akun",
+                            isDestructive: true,
+                            onTap: () => _showLogoutDialog(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
             },
           ),
         ),
@@ -112,193 +189,50 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoFisik(
-    ProfileEntity data,
-    Color color,
-    bool isDark,
-    ThemeData theme,
-  ) {
-    return Column(
-      children: [
-        _buildProfilePicture(data, color, isDark, theme),
-        const SizedBox(height: 16),
-        Text(
-          data.fullName,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        _buildHealthLabel(data, color),
-        const SizedBox(height: 30),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildStatItem("${data.weight.toInt()} kg", "Berat", color),
-            _buildStatItem("${data.height.toInt()} cm", "Tinggi", color),
-            _buildStatItem("${data.age} th", "Umur", color),
-          ],
-        ),
-      ],
-    );
+  Widget _buildDivider() {
+    return Container(height: 30, width: 1, color: Colors.grey.withOpacity(0.3));
   }
 
-  Widget _buildMenuAksi(BuildContext context, ProfileEntity data, Color color) {
-    return Column(
-      children: [
-        _buildMenuButton(context, Icons.person, "Edit Profil", () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (_) => BlocProvider.value(
-                    value: context.read<ProfileBloc>(),
-                    child: EditProfilePage(currentData: data),
-                  ),
+  void _navigateTo(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (contextInside) => BlocProvider.value(
+              value: context.read<ProfileBloc>(),
+              child: page,
             ),
-          );
-        }, color),
-        const SizedBox(height: 16),
-        _buildMenuButton(context, Icons.settings, "Pengaturan", () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (_) => BlocProvider.value(
-                    value: context.read<ProfileBloc>(),
-                    child: const SettingsPage(),
-                  ),
-            ),
-          );
-        }, color),
-        const SizedBox(height: 40),
-        _buildLogoutButton(context),
-      ],
-    );
-  }
-
-  Widget _buildProfilePicture(
-    ProfileEntity data,
-    Color color,
-    bool isDark,
-    ThemeData theme,
-  ) {
-    String? imageUrl;
-    if (data is ProfileModel) imageUrl = data.fullImageUrl;
-    bool hasImage =
-        (data.profilePicture != null && data.profilePicture!.isNotEmpty);
-
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: color, width: 3),
-      ),
-      child: CircleAvatar(
-        radius: 60,
-        backgroundColor: color.withOpacity(0.1),
-        backgroundImage:
-            (hasImage && imageUrl != null) ? NetworkImage(imageUrl) : null,
-        child: (!hasImage) ? Icon(Icons.person, size: 60, color: color) : null,
       ),
     );
   }
 
-  Widget _buildHealthLabel(ProfileEntity data, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        data.healthLabel,
-        style: TextStyle(
-          fontSize: 14,
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String value, String label, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(label, style: TextStyle(color: Colors.grey, fontSize: 14)),
-      ],
-    );
-  }
-
-  Widget _buildMenuButton(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback onTap,
-    Color color,
-  ) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(
-                theme.brightness == Brightness.dark ? 0.2 : 0.05,
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text("Keluar"),
+            content: const Text("Apakah Anda yakin ingin keluar?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Batal"),
               ),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.read<ProfileBloc>().add(LogoutRequested());
+                },
+                child: const Text(
+                  "Ya, Keluar",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: () => context.read<ProfileBloc>().add(LogoutRequested()),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Colors.red),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-        ),
-        child: const Text(
-          "Keluar",
-          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-        ),
-      ),
     );
   }
 }

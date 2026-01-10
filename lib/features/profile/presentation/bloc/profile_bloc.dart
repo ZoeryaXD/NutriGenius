@@ -6,62 +6,72 @@ import 'profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ProfileRepository repository;
 
-  ProfileBloc({required this.repository}) : super(ProfileInitial()) {
-    on<LoadProfile>((event, emit) async {
-      emit(ProfileLoading());
+  ProfileBloc({required this.repository}) : super(ProfileState()) {
+    on<LoadProfileData>((event, emit) async {
+      emit(state.copyWith(status: ProfileStatus.loading));
       try {
         final profile = await repository.getProfile();
-        emit(ProfileLoaded(profile));
+        emit(state.copyWith(status: ProfileStatus.success, profile: profile));
       } catch (e) {
-        emit(ProfileError(e.toString()));
+        emit(
+          state.copyWith(status: ProfileStatus.error, message: e.toString()),
+        );
+      }
+    });
+
+    on<LoadProfileMasterData>((event, emit) async {
+      emit(state.copyWith(status: ProfileStatus.loadingMaster));
+      try {
+        final health = await repository.getHealthConditions();
+        final activity = await repository.getActivityLevels();
+        print("BERHASIL AMBIL: ${health.length} data kesehatan");
+        emit(
+          state.copyWith(
+            status: ProfileStatus.successMaster,
+            healthConditions: health,
+            activityLevels: activity,
+          ),
+        );
+      } catch (e) {
+        print("LOG ERROR MASTER DATA: $e");
+        emit(
+          state.copyWith(status: ProfileStatus.error, message: e.toString()),
+        );
       }
     });
 
     on<UpdateProfileData>((event, emit) async {
-      emit(ProfileLoading());
+      emit(state.copyWith(status: ProfileStatus.loading));
       try {
-        await repository.updateProfile(event.updatedProfile);
-        emit(ProfileActionSuccess("Profil berhasil diperbarui!"));
-        final freshData = await repository.getProfile();
-        emit(ProfileLoaded(freshData));
-      } catch (e) {
-        emit(ProfileError("Gagal update: $e"));
-      }
-    });
+        String? imageUrl;
+        if (event.imageFile != null) {
+          imageUrl = await repository.uploadPhoto(event.imageFile!);
+        }
 
-    on<UploadProfilePhoto>((event, emit) async {
-      emit(ProfileLoading());
-      try {
-        await repository.uploadPhoto(event.photo);
-        emit(ProfileActionSuccess("Foto berhasil diupload!"));
-        add(LoadProfile());
-      } catch (e) {
-        emit(ProfileError("Gagal upload: $e"));
-      }
-    });
+        final profileToSave = event.updatedProfile.copyWith(
+          profilePicture: imageUrl ?? event.updatedProfile.profilePicture,
+        );
 
-    on<DeleteProfilePhoto>((event, emit) async {
-      try {
-        await repository.deletePhoto();
-        add(LoadProfile());
-      } catch (e) {
-        emit(ProfileError("Gagal hapus foto: $e"));
-      }
-    });
+        await repository.updateProfile(profileToSave);
+        final freshProfile = await repository.getProfile();
 
-    on<DeleteAccountRequested>((event, emit) async {
-      emit(ProfileLoading());
-      try {
-        await repository.deleteAccount();
-        emit(LogoutSuccess());
+        emit(
+          state.copyWith(
+            status: ProfileStatus.success,
+            profile: freshProfile,
+            message: "Profil berhasil diperbarui!",
+          ),
+        );
       } catch (e) {
-        emit(ProfileError("Gagal hapus akun: $e"));
+        emit(
+          state.copyWith(status: ProfileStatus.error, message: e.toString()),
+        );
       }
     });
 
     on<LogoutRequested>((event, emit) async {
       await repository.logout();
-      emit(LogoutSuccess());
+      emit(ProfileState(status: ProfileStatus.initial, profile: null));
     });
   }
 }

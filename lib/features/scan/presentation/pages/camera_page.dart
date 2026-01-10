@@ -14,7 +14,7 @@ class CameraPage extends StatefulWidget {
 
 class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   CameraController? _controller;
-  bool _isCameraInitialized = false; // Flag manual biar lebih stabil
+  bool _isCameraInitialized = false;
 
   @override
   void initState() {
@@ -23,21 +23,15 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     _initCamera();
   }
 
-  // Menangani Minimize/Resume Aplikasi
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final CameraController? cameraController = _controller;
-
-    // Jika controller belum ada/mati, abaikan
-    if (cameraController == null || !cameraController.value.isInitialized) {
+    if (cameraController == null || !cameraController.value.isInitialized)
       return;
-    }
 
     if (state == AppLifecycleState.inactive) {
-      // Aplikasi diminimize -> Stop kamera biar gak crash BufferQueue
       cameraController.dispose();
     } else if (state == AppLifecycleState.resumed) {
-      // Aplikasi dibuka lagi -> Nyalakan ulang
       _initCamera();
     }
   }
@@ -47,23 +41,16 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
       final cameras = await availableCameras();
       if (cameras.isEmpty) return;
 
-      // 👇 UBAH JADI MEDIUM (PENTING!)
-      // 'high' sering bikin crash BufferQueue di banyak HP Android.
-      // 'medium' (720p/480p) sudah SANGAT CUKUP untuk AI NutriGenius.
       _controller = CameraController(
-        cameras.first, 
-        ResolutionPreset.high, 
+        cameras.first,
+        ResolutionPreset.medium,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg, // Paksa format JPG biar aman
+        imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
       await _controller!.initialize();
-      
       if (!mounted) return;
-      
-      setState(() {
-        _isCameraInitialized = true;
-      });
+      setState(() => _isCameraInitialized = true);
     } catch (e) {
       debugPrint("Error Init Camera: $e");
     }
@@ -72,29 +59,28 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // Hancurkan controller
     _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: BlocConsumer<ScanBloc, ScanState>(
         listener: (context, state) {
           if (state is ScanSuccess) {
-            // Gunakan pushReplacement agar halaman kamera dimatikan total saat pindah
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => ScanResultPage(
-                  data: state.result,
-                  // Karena CameraPage sudah di-kill (replacement), 
-                  // kalau mau scan lagi user harus buka menu scan dari awal.
-                  // Ini lebih aman buat memori.
-                  onScanGallery: () => Navigator.pop(context), 
-                ),
+                builder:
+                    (context) => ScanResultPage(
+                      data: state.result,
+                      onScanGallery: () => Navigator.pop(context),
+                    ),
               ),
             );
           } else if (state is ScanFailure) {
@@ -109,37 +95,47 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         builder: (context, state) {
           return Stack(
             children: [
-              // 1. KAMERA PREVIEW
-              // Kita cek manual flag-nya, jangan pakai FutureBuilder biar gak flicker
               if (_isCameraInitialized && _controller != null)
                 SizedBox.expand(child: CameraPreview(_controller!))
               else
-                const Center(child: CircularProgressIndicator(color: Colors.green)),
-
-              // 2. FRAME KOTAK
+                Center(child: CircularProgressIndicator(color: primaryColor)),
               Center(
                 child: Container(
                   height: 280,
                   width: 280,
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withOpacity(0.3),
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Stack(
                     children: [
-                      Positioned(top: 0, left: 0, child: _cornerIcon(0)),
-                      Positioned(top: 0, right: 0, child: _cornerIcon(1)),
-                      Positioned(bottom: 0, right: 0, child: _cornerIcon(2)),
-                      Positioned(bottom: 0, left: 0, child: _cornerIcon(3)),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: _cornerIcon(0, primaryColor),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: _cornerIcon(1, primaryColor),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: _cornerIcon(2, primaryColor),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        child: _cornerIcon(3, primaryColor),
+                      ),
                     ],
                   ),
                 ),
               ),
-
-              // 3. TOMBOL & INSTRUKSI
               Positioned(
                 bottom: 50,
                 left: 0,
@@ -147,50 +143,46 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                 child: Column(
                   children: [
                     if (state is ScanLoading)
-                      const CircularProgressIndicator(color: Colors.green)
+                      CircularProgressIndicator(color: primaryColor)
                     else
                       GestureDetector(
                         onTap: () async {
-                          // Cek apakah controller siap
-                          if (_controller == null || !_controller!.value.isInitialized) return;
-                          
-                          // Cek apakah sedang memproses (biar gak double tap)
+                          if (_controller == null ||
+                              !_controller!.value.isInitialized)
+                            return;
                           if (_controller!.value.isTakingPicture) return;
 
-                          // SNAPSHOT VARIABEL
                           final scanBloc = context.read<ScanBloc>();
                           final messenger = ScaffoldMessenger.of(context);
 
                           try {
-                            // Ambil Foto
                             final image = await _controller!.takePicture();
-                            
                             if (!mounted) return;
-
                             final prefs = await SharedPreferences.getInstance();
                             final email = prefs.getString('email');
-                            
                             if (!mounted) return;
 
                             if (email == null) {
                               messenger.showSnackBar(
-                                const SnackBar(content: Text("Sesi habis, silakan login ulang")),
+                                const SnackBar(
+                                  content: Text("Sesi habis, login ulang"),
+                                ),
                               );
                               return;
                             }
-
-                            // Kirim ke Bloc
                             scanBloc.add(
-                              AnalyzeImageEvent(imagePath: image.path, email: email),
+                              AnalyzeImageEvent(
+                                imagePath: image.path,
+                                email: email,
+                              ),
                             );
-
                           } catch (e) {
-                            debugPrint("Error capture: $e");
-                            if (mounted) {
+                            if (mounted)
                               messenger.showSnackBar(
-                                const SnackBar(content: Text("Gagal mengambil gambar")),
+                                const SnackBar(
+                                  content: Text("Gagal ambil gambar"),
+                                ),
                               );
-                            }
                           }
                         },
                         child: _buildShutterButton(),
@@ -206,8 +198,6 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-
-              // 4. TOMBOL BACK
               Positioned(
                 top: 50,
                 left: 20,
@@ -244,10 +234,10 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _cornerIcon(int turns) {
+  Widget _cornerIcon(int turns, Color color) {
     return RotatedBox(
       quarterTurns: turns,
-      child: const Icon(Icons.crop_free, color: Colors.green, size: 40),
+      child: Icon(Icons.crop_free, color: color, size: 40),
     );
   }
 }

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../../../../core/network/api_client.dart';
+import '../models/activity_level_model.dart';
+import '../models/health_condition_model.dart';
 import '../models/profile_model.dart';
 
 abstract class ProfileRemoteDataSource {
@@ -10,6 +12,8 @@ abstract class ProfileRemoteDataSource {
   Future<String> uploadPhoto(String email, File file);
   Future<void> deletePhoto(String email);
   Future<void> deleteAccount(String email);
+  Future<List<ActivityLevelModel>> getActivityLevels();
+  Future<List<HealthConditionModel>> getHealthConditions();
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -45,6 +49,34 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
+  Future<List<ActivityLevelModel>> getActivityLevels() async {
+    final uri = Uri.parse('${ApiClient.baseUrl}/master/activity-levels');
+    final response = await client.get(uri, headers: ApiClient.headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List data = json['data'];
+      return data.map((e) => ActivityLevelModel.fromMap(e)).toList();
+    } else {
+      throw Exception("Gagal memuat data aktivitas harian");
+    }
+  }
+
+  @override
+  Future<List<HealthConditionModel>> getHealthConditions() async {
+    final uri = Uri.parse('${ApiClient.baseUrl}/master/health-conditions');
+    final response = await client.get(uri, headers: ApiClient.headers);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List data = json['data'];
+      return data.map((e) => HealthConditionModel.fromMap(e)).toList();
+    } else {
+      throw Exception("Gagal memuat data kondisi kesehatan");
+    }
+  }
+
+  @override
   Future<String> uploadPhoto(String email, File file) async {
     final uri = Uri.parse('${ApiClient.baseUrl}/profile/upload-photo');
     var request = http.MultipartRequest('POST', uri);
@@ -57,7 +89,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
-      return json['filename']; // Balikan nama file baru
+      return json['filename'];
     } else {
       throw Exception("Gagal upload foto");
     }

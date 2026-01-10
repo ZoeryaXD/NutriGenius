@@ -8,25 +8,23 @@ import '../../data/models/profile_model.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
+import '../widgets/profile_dropdown_field.dart';
+import '../widgets/profile_text_field.dart';
 
 class EditProfilePage extends StatefulWidget {
   final ProfileEntity currentData;
   const EditProfilePage({super.key, required this.currentData});
 
   @override
-  _EditProfilePageState createState() => _EditProfilePageState();
+  State<EditProfilePage> createState() => _EditProfilePageState();
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameCtrl;
-  late TextEditingController _emailCtrl;
-  late TextEditingController _weightCtrl;
-  late TextEditingController _heightCtrl;
+  late TextEditingController _nameCtrl, _weightCtrl, _heightCtrl;
   late String _gender;
   late DateTime _birthDate;
-  late int _activityId;
-  late int _healthId;
+  late int _activityId, _healthId;
   File? _pickedImageFile;
   final ImagePicker _picker = ImagePicker();
 
@@ -35,19 +33,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     final d = widget.currentData;
     _nameCtrl = TextEditingController(text: d.fullName);
-    _emailCtrl = TextEditingController(text: d.email);
     _weightCtrl = TextEditingController(text: d.weight.toString());
     _heightCtrl = TextEditingController(text: d.height.toString());
     _gender = d.gender;
     _birthDate = d.birthDate;
     _activityId = d.activityId;
     _healthId = d.healthId;
+    context.read<ProfileBloc>().add(LoadProfileMasterData());
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _emailCtrl.dispose();
     _weightCtrl.dispose();
     _heightCtrl.dispose();
     super.dispose();
@@ -55,51 +52,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   void _saveProfile() {
     if (_formKey.currentState!.validate()) {
-      if (_pickedImageFile != null) {
-        context.read<ProfileBloc>().add(UploadProfilePhoto(_pickedImageFile!));
-      }
       final updatedProfile = ProfileEntity(
         fullName: _nameCtrl.text,
         email: widget.currentData.email,
         gender: _gender,
         birthDate: _birthDate,
-        weight: double.parse(_weightCtrl.text),
-        height: double.parse(_heightCtrl.text),
+        weight: double.tryParse(_weightCtrl.text) ?? 0.0,
+        height: double.tryParse(_heightCtrl.text) ?? 0.0,
         healthId: _healthId,
         activityId: _activityId,
         age: 0,
         profilePicture: widget.currentData.profilePicture,
       );
-      context.read<ProfileBloc>().add(UpdateProfileData(updatedProfile));
+
+      context.read<ProfileBloc>().add(
+        UpdateProfileData(updatedProfile, imageFile: _pickedImageFile),
+      );
     }
+  }
+
+  Future<void> _pickImage() async {
+    final p = await _picker.pickImage(source: ImageSource.gallery);
+    if (p != null) setState(() => _pickedImageFile = File(p.path));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
+        title: const Text(
           "Edit Profil",
-          style: TextStyle(
-            color: isDark ? Colors.white : theme.primaryColor,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        leading: BackButton(color: isDark ? Colors.white : theme.primaryColor),
+        centerTitle: false,
         actions: [
           BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, state) {
-              if (state is ProfileLoading) {
+              print("JUMLAH DATA KESEHATAN: ${state.healthConditions.length}");
+              print("JUMLAH DATA AKTIVITAS: ${state.activityLevels.length}");
+              if (state.status == ProfileStatus.loading) {
                 return const Center(
                   child: Padding(
-                    padding: EdgeInsets.only(right: 16),
+                    padding: EdgeInsets.all(16),
                     child: SizedBox(
                       width: 20,
                       height: 20,
@@ -110,13 +105,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
               }
               return TextButton(
                 onPressed: _saveProfile,
-                child: Text(
+                child: const Text(
                   "SIMPAN",
-                  style: TextStyle(
-                    color:
-                        isDark ? const Color(0xFF00E676) : theme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               );
             },
@@ -125,147 +116,65 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
       body: BlocListener<ProfileBloc, ProfileState>(
         listener: (context, state) {
-          if (state is ProfileActionSuccess) {
-            if (state.message.toLowerCase().contains("berhasil") ||
-                state.message.toLowerCase().contains("profil")) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              if (Navigator.canPop(context)) Navigator.pop(context);
-            }
-          } else if (state is ProfileError) {
+          if (state.status == ProfileStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
+                content: Text(state.message ?? "Sukses"),
+                backgroundColor: Colors.green,
               ),
             );
+            Navigator.pop(context);
           }
         },
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: BlocBuilder<ProfileBloc, ProfileState>(
+          builder: (context, state) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     _buildPhotoSection(theme),
                     const SizedBox(height: 32),
-                    if (isLandscape)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _buildAccountInfoSection(theme, isDark),
+                    ProfileTextField(
+                      label: "Nama Lengkap",
+                      controller: _nameCtrl,
+                      icon: Icons.person_outline,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDatePicker(theme),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ProfileTextField(
+                            label: "Berat (kg)",
+                            controller: _weightCtrl,
+                            isNumber: true,
+                            icon: Icons.monitor_weight_outlined,
                           ),
-                          const SizedBox(width: 32),
-                          Expanded(
-                            child: _buildPhysicalDataSection(theme, isDark),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ProfileTextField(
+                            label: "Tinggi (cm)",
+                            controller: _heightCtrl,
+                            isNumber: true,
+                            icon: Icons.height,
                           ),
-                        ],
-                      )
-                    else
-                      Column(
-                        children: [
-                          _buildAccountInfoSection(theme, isDark),
-                          const SizedBox(height: 32),
-                          _buildPhysicalDataSection(theme, isDark),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildHealthDropdown(state),
+                    const SizedBox(height: 16),
+                    _buildActivityDropdown(state),
                   ],
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
-      ),
-    );
-  }
-
-  Widget _buildAccountInfoSection(ThemeData theme, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader("Informasi Akun", theme),
-        const SizedBox(height: 16),
-        _buildTextField(
-          "Nama Lengkap",
-          _nameCtrl,
-          theme,
-          icon: Icons.person_outline,
-        ),
-        const SizedBox(height: 16),
-        _buildTextField(
-          "Email (Read Only)",
-          _emailCtrl,
-          theme,
-          icon: Icons.email_outlined,
-          readOnly: true,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPhysicalDataSection(ThemeData theme, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader("Data Fisik", theme),
-        const SizedBox(height: 16),
-        _buildDropdown(
-          "Jenis Kelamin",
-          _gender,
-          ["Laki-laki", "Perempuan"],
-          (val) => setState(() => _gender = val!),
-          theme,
-          Icons.wc,
-        ),
-        const SizedBox(height: 16),
-        _buildDatePicker(theme),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                "Berat (kg)",
-                _weightCtrl,
-                theme,
-                isNumber: true,
-                icon: Icons.monitor_weight_outlined,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildTextField(
-                "Tinggi (cm)",
-                _heightCtrl,
-                theme,
-                isNumber: true,
-                icon: Icons.height,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _buildHealthDropdown(theme),
-        const SizedBox(height: 16),
-        _buildActivityDropdown(theme),
-      ],
-    );
-  }
-
-  Widget _buildSectionHeader(String title, ThemeData theme) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: theme.colorScheme.primary,
       ),
     );
   }
@@ -274,20 +183,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     String? imageUrl;
     if (widget.currentData is ProfileModel)
       imageUrl = (widget.currentData as ProfileModel).fullImageUrl;
-
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: theme.primaryColor.withOpacity(0.2),
-              width: 4,
-            ),
-          ),
-          child: CircleAvatar(
+    return Center(
+      child: Stack(
+        children: [
+          CircleAvatar(
             radius: 60,
-            backgroundColor: theme.colorScheme.surface,
             backgroundImage:
                 _pickedImageFile != null
                     ? FileImage(_pickedImageFile!) as ImageProvider
@@ -297,150 +197,44 @@ class _EditProfilePageState extends State<EditProfilePage> {
             child:
                 (_pickedImageFile == null &&
                         (imageUrl == null || imageUrl.isEmpty))
-                    ? Icon(Icons.person, size: 60, color: theme.primaryColor)
+                    ? const Icon(Icons.person, size: 60)
                     : null,
           ),
-        ),
-        Positioned(
-          bottom: 0,
-          right: 4,
-          child: GestureDetector(
-            onTap: _showPhotoOptions,
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: theme.primaryColor,
-              child: const Icon(
-                Icons.camera_alt,
-                color: Colors.white,
-                size: 18,
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: _pickImage,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: theme.primaryColor,
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField(
-    String label,
-    TextEditingController ctrl,
-    ThemeData theme, {
-    bool readOnly = false,
-    bool isNumber = false,
-    IconData? icon,
-  }) {
-    return TextFormField(
-      controller: ctrl,
-      readOnly: readOnly,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(fontSize: 15),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: icon != null ? Icon(icon, size: 20) : null,
-        filled: true,
-        fillColor: theme.colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-      ),
-      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-    );
-  }
-
-  Widget _buildDatePicker(ThemeData theme) {
-    return InkWell(
-      onTap: _pickDate,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today, size: 20, color: Colors.grey),
-            const SizedBox(width: 12),
-            Text(
-              DateFormat('dd/MM/yyyy').format(_birthDate),
-              style: const TextStyle(fontSize: 15),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildDropdown(
-    String label,
-    String value,
-    List<String> items,
-    Function(String?) onChanged,
-    ThemeData theme,
-    IconData icon,
-  ) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      isExpanded: true,
-      dropdownColor: theme.colorScheme.surface,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 20),
-        filled: true,
-        fillColor: theme.colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
+  Widget _buildHealthDropdown(ProfileState state) {
+    return ProfileDropdownField<int>(
+      label: "Kondisi Kesehatan",
+      icon: Icons.health_and_safety_outlined,
+      value:
+          state.healthConditions.any((e) => e.id == _healthId)
+              ? _healthId
+              : null,
       items:
-          items
+          state.healthConditions
               .map(
-                (e) => DropdownMenuItem(
-                  value: e,
-                  child: Text(e, style: const TextStyle(fontSize: 15)),
-                ),
-              )
-              .toList(),
-      onChanged: onChanged,
-    );
-  }
-
-  Widget _buildHealthDropdown(ThemeData theme) {
-    final items = [
-      {'id': 1, 'label': 'Normal'},
-      {'id': 2, 'label': 'Diabetes'},
-      {'id': 3, 'label': 'Obesitas'},
-      {'id': 4, 'label': 'Hipertensi'},
-    ];
-    return DropdownButtonFormField<int>(
-      value: _healthId,
-      isExpanded: true,
-      dropdownColor: theme.colorScheme.surface,
-      decoration: InputDecoration(
-        labelText: "Kondisi Kesehatan",
-        prefixIcon: const Icon(Icons.health_and_safety_outlined, size: 20),
-        filled: true,
-        fillColor: theme.colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      items:
-          items
-              .map(
-                (e) => DropdownMenuItem(
-                  value: e['id'] as int,
-                  child: Text(
-                    e['label'] as String,
-                    style: const TextStyle(fontSize: 15),
-                  ),
+                (e) => DropdownMenuItem<int>(
+                  value: e.id as int,
+                  child: Text(e.conditionName),
                 ),
               )
               .toList(),
@@ -448,36 +242,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildActivityDropdown(ThemeData theme) {
-    final items = [
-      {'id': 1, 'label': 'Sedentary'},
-      {'id': 2, 'label': 'Light Active'},
-      {'id': 3, 'label': 'Active'},
-      {'id': 4, 'label': 'Very Active'},
-    ];
-    return DropdownButtonFormField<int>(
-      value: _activityId,
-      isExpanded: true,
-      dropdownColor: theme.colorScheme.surface,
-      decoration: InputDecoration(
-        labelText: "Aktivitas Harian",
-        prefixIcon: const Icon(Icons.directions_run, size: 20),
-        filled: true,
-        fillColor: theme.colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
+  Widget _buildActivityDropdown(ProfileState state) {
+    return ProfileDropdownField<int>(
+      label: "Aktivitas Harian",
+      icon: Icons.directions_run,
+      value:
+          state.activityLevels.any((e) => e.id == _activityId)
+              ? _activityId
+              : null,
       items:
-          items
+          state.activityLevels
               .map(
-                (e) => DropdownMenuItem(
-                  value: e['id'] as int,
-                  child: Text(
-                    e['label'] as String,
-                    style: const TextStyle(fontSize: 15),
-                  ),
+                (e) => DropdownMenuItem<int>(
+                  value: e.id as int,
+                  child: Text(e.levelName),
                 ),
               )
               .toList(),
@@ -485,51 +263,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
-    final picked = await _picker.pickImage(source: source);
-    if (picked != null) setState(() => _pickedImageFile = File(picked.path));
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _birthDate,
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) setState(() => _birthDate = picked);
-  }
-
-  void _showPhotoOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (_) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text("Galeri"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _pickImage(ImageSource.gallery);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.camera_alt),
-                  title: const Text("Kamera"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _pickImage(ImageSource.camera);
-                  },
-                ),
-              ],
-            ),
+  Widget _buildDatePicker(ThemeData theme) {
+    return InkWell(
+      onTap: () async {
+        final p = await showDatePicker(
+          context: context,
+          initialDate: _birthDate,
+          firstDate: DateTime(1900),
+          lastDate: DateTime.now(),
+        );
+        if (p != null) setState(() => _birthDate = p);
+      },
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: "Tanggal Lahir",
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide.none,
           ),
+          filled: true,
+        ),
+        child: Text(DateFormat('dd/MM/yyyy').format(_birthDate)),
+      ),
     );
   }
 }

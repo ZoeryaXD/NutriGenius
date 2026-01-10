@@ -92,8 +92,7 @@ Future<void> init() async {
   // ==========================
   sl.registerFactory(() => ProfileBloc(repository: sl()));
   sl.registerLazySingleton<ProfileRepository>(
-    () =>
-        ProfileRepositoryImpl(remoteDataSource: sl(), sharedPreferences: sl()),
+    () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(client: sl()),

@@ -1,19 +1,15 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/usecases/database_helper.dart';
 import '../../domain/entities/profile_entity.dart';
+import '../../domain/entities/activity_level_entity.dart';
+import '../../domain/entities/health_condition_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
-  final SharedPreferences sharedPreferences;
 
-  ProfileRepositoryImpl({
-    required this.remoteDataSource,
-    required this.sharedPreferences,
-  });
+  ProfileRepositoryImpl({required this.remoteDataSource});
 
   String get _email => FirebaseAuth.instance.currentUser!.email!;
 
@@ -50,14 +46,53 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<void> deleteAccount() async {
     await remoteDataSource.deleteAccount(_email);
-    await DatabaseHelper.instance.clearAllHistory();
     await FirebaseAuth.instance.currentUser?.delete();
-    await sharedPreferences.clear();
   }
 
   @override
   Future<void> logout() async {
     await FirebaseAuth.instance.signOut();
-    await sharedPreferences.clear();
+  }
+
+  @override
+  Future<void> changePassword(String newPassword) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.updatePassword(newPassword);
+      }
+    } catch (e) {
+      throw Exception("Gagal ganti password: ${e.toString()}");
+    }
+  }
+
+  @override
+  Future<List<ActivityLevelEntity>> getActivityLevels() async {
+    final models = await remoteDataSource.getActivityLevels();
+    return models
+        .map(
+          (model) => ActivityLevelEntity(
+            id: model.id,
+            levelName: model.levelName,
+            multiplier: model.multiplier,
+            description: model.description,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<HealthConditionEntity>> getHealthConditions() async {
+    final models = await remoteDataSource.getHealthConditions();
+    return models
+        .map(
+          (model) => HealthConditionEntity(
+            id: model.id,
+            conditionName: model.conditionName,
+            sugarLimit: model.sugarLimit,
+            description: model.description,
+          ),
+        )
+        .toList();
   }
 }
