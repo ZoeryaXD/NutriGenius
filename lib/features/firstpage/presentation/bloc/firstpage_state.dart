@@ -1,6 +1,15 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/entities/firstpage_entity.dart';
 
-enum FirstPageStatus { initial, calculating, success, successSubmit, failure }
+enum FirstPageStatus {
+  initial,
+  loadingMaster,
+  successMaster,
+  calculating,
+  success,
+  successSubmit,
+  failure,
+}
 
 class FirstPageState extends Equatable {
   final String gender;
@@ -9,6 +18,9 @@ class FirstPageState extends Equatable {
   final int activityId, healthId;
   final FirstPageStatus status;
   final String? error;
+
+  final List<ActivityLevel> activityLevels;
+  final List<HealthCondition> healthConditions;
 
   const FirstPageState({
     this.gender = '-',
@@ -21,6 +33,8 @@ class FirstPageState extends Equatable {
     this.healthId = 1,
     this.status = FirstPageStatus.initial,
     this.error,
+    this.activityLevels = const [],
+    this.healthConditions = const [],
   });
 
   FirstPageState copyWith({
@@ -34,6 +48,8 @@ class FirstPageState extends Equatable {
     int? healthId,
     FirstPageStatus? status,
     String? error,
+    List<ActivityLevel>? activityLevels,
+    List<HealthCondition>? healthConditions,
   }) {
     return FirstPageState(
       gender: gender ?? this.gender,
@@ -46,6 +62,8 @@ class FirstPageState extends Equatable {
       healthId: healthId ?? this.healthId,
       status: status ?? this.status,
       error: error ?? this.error,
+      activityLevels: activityLevels ?? this.activityLevels,
+      healthConditions: healthConditions ?? this.healthConditions,
     );
   }
 
@@ -61,5 +79,7 @@ class FirstPageState extends Equatable {
     healthId,
     status,
     error,
+    activityLevels,
+    healthConditions,
   ];
 }

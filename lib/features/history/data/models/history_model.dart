@@ -10,6 +10,7 @@ class HistoryModel extends HistoryEntity {
     super.fat,
     super.sugar,
     required super.imagePath,
+    required super.mealType,
     required super.createdAt,
   });
 
@@ -18,11 +19,13 @@ class HistoryModel extends HistoryEntity {
       id: map['id'] ?? 0,
       foodName: map['food_name'] ?? 'Unknown',
       calories: (map['calories'] ?? 0).toDouble(),
+      mealType: map['meal_type'] ?? 'Cemilan',
       protein: (map['protein'] ?? 0).toDouble(),
       carbs: (map['carbs'] ?? 0).toDouble(),
       fat: (map['fat'] ?? 0).toDouble(),
       sugar: (map['sugar'] ?? 0).toDouble(),
       imagePath: map['image_path'] ?? '',
+
       createdAt:
           (map['date'] != null)
               ? DateTime.parse(map['date'])

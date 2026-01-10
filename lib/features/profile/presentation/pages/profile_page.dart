@@ -24,7 +24,6 @@ class ProfilePage extends StatelessWidget {
     return BlocProvider(
       create: (_) => sl<ProfileBloc>()..add(LoadProfile()),
       child: Scaffold(
-        // Tidak menggunakan AppBar agar tidak ada bar abu-abu di atas
         body: SafeArea(
           child: BlocConsumer<ProfileBloc, ProfileState>(
             listener: (context, state) {
@@ -63,8 +62,6 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 30),
-
-                          // Logika Responsif
                           isLandscape
                               ? Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,6 +72,7 @@ class ProfilePage extends StatelessWidget {
                                       data,
                                       primaryColor,
                                       isDark,
+                                      theme,
                                     ),
                                   ),
                                   const SizedBox(width: 32),
@@ -90,7 +88,12 @@ class ProfilePage extends StatelessWidget {
                               )
                               : Column(
                                 children: [
-                                  _buildInfoFisik(data, primaryColor, isDark),
+                                  _buildInfoFisik(
+                                    data,
+                                    primaryColor,
+                                    isDark,
+                                    theme,
+                                  ),
                                   const SizedBox(height: 40),
                                   _buildMenuAksi(context, data, primaryColor),
                                 ],
@@ -109,24 +112,23 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // --- Widget Helpers ---
-
-  Widget _buildInfoFisik(ProfileEntity data, Color color, bool isDark) {
+  Widget _buildInfoFisik(
+    ProfileEntity data,
+    Color color,
+    bool isDark,
+    ThemeData theme,
+  ) {
     return Column(
       children: [
-        _buildProfilePicture(data, color, isDark),
+        _buildProfilePicture(data, color, isDark, theme),
         const SizedBox(height: 16),
         Text(
           data.fullName,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        _buildHealthLabel(data, color, isDark),
+        _buildHealthLabel(data, color),
         const SizedBox(height: 30),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -163,7 +165,7 @@ class ProfilePage extends StatelessWidget {
               builder:
                   (_) => BlocProvider.value(
                     value: context.read<ProfileBloc>(),
-                    child: SettingsPage(),
+                    child: const SettingsPage(),
                   ),
             ),
           );
@@ -174,7 +176,12 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfilePicture(ProfileEntity data, Color color, bool isDark) {
+  Widget _buildProfilePicture(
+    ProfileEntity data,
+    Color color,
+    bool isDark,
+    ThemeData theme,
+  ) {
     String? imageUrl;
     if (data is ProfileModel) imageUrl = data.fullImageUrl;
     bool hasImage =
@@ -195,7 +202,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHealthLabel(ProfileEntity data, Color color, bool isDark) {
+  Widget _buildHealthLabel(ProfileEntity data, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -224,7 +231,7 @@ class ProfilePage extends StatelessWidget {
             color: color,
           ),
         ),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+        Text(label, style: TextStyle(color: Colors.grey, fontSize: 14)),
       ],
     );
   }
@@ -236,17 +243,20 @@ class ProfilePage extends StatelessWidget {
     VoidCallback onTap,
     Color color,
   ) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(
+                theme.brightness == Brightness.dark ? 0.2 : 0.05,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

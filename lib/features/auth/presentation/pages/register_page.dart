@@ -3,11 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
-// Import bloc dan common widgets lainnya
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
@@ -17,17 +18,16 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passController = TextEditingController();
   final _confirmPassController = TextEditingController();
   bool _isObscure = true;
-
   final _passRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,}$');
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.green),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: BackButton(color: primaryColor),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -38,86 +38,105 @@ class _RegisterPageState extends State<RegisterPage> {
               context: context,
               builder:
                   (_) => AlertDialog(
-                    title: Text("Verifikasi Email"),
-                    content: Text(
-                      "Link verifikasi telah dikirim ke email Anda. Silakan cek dan klik link tersebut sebelum login.",
+                    backgroundColor: theme.colorScheme.surface,
+                    title: const Text(
+                      "Verifikasi Email",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    content: const Text(
+                      "Link verifikasi telah dikirim ke email Anda. Silakan cek sebelum login.",
                     ),
                     actions: [
-                      TextButton(
+                      ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
                           Navigator.pop(context);
                         },
-                        child: Text("OK"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text("OK"),
                       ),
                     ],
                   ),
             );
           } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Buat Akun Baru",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[800],
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.spa_rounded, color: primaryColor, size: 40),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Buat Akun",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 8),
-                Text(
+                const SizedBox(height: 8),
+                const Text(
                   "Mulai perjalanan sehatmu hari ini!",
                   style: TextStyle(color: Colors.grey),
                 ),
-                SizedBox(height: 30),
-
-                // Nama Lengkap
+                const SizedBox(height: 30),
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.person_outline),
+                    prefixIcon: const Icon(Icons.person_outline),
                     labelText: "Nama Lengkap",
+                    filled: true,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator:
                       (val) => val!.isEmpty ? "Nama tidak boleh kosong" : null,
                 ),
-                SizedBox(height: 16),
-
-                // Email
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.email_outlined),
+                    prefixIcon: const Icon(Icons.email_outlined),
                     labelText: "Email",
+                    filled: true,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator:
                       (val) => !val!.contains('@') ? "Email tidak valid" : null,
                 ),
-                SizedBox(height: 16),
-
-                // Password
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _passController,
                   obscureText: _isObscure,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(Icons.lock_outline),
                     labelText: "Password",
+                    filled: true,
+                    fillColor: theme.colorScheme.surface,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isObscure ? Icons.visibility_off : Icons.visibility,
@@ -126,27 +145,29 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator: (val) {
                     if (val == null || val.isEmpty)
                       return "Password wajib diisi";
-                    if (!_passRegex.hasMatch(val)) {
-                      return "Password harus kombinasi angka & simbol (!@#\$&*~)";
-                    }
+                    if (!_passRegex.hasMatch(val))
+                      return "Gunakan kombinasi angka & simbol (!@#\$&*~)";
                     return null;
                   },
                 ),
-                SizedBox(height: 16),
-
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmPassController,
                   obscureText: _isObscure,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(Icons.lock_outline),
                     labelText: "Konfirmasi Password",
+                    filled: true,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator:
@@ -155,14 +176,14 @@ class _RegisterPageState extends State<RegisterPage> {
                               ? "Password tidak sama"
                               : null,
                 ),
-                SizedBox(height: 30),
-
+                const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 55,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -181,30 +202,31 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, state) {
                         return state is AuthLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text(
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : const Text(
                               "REGISTER",
                               style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             );
                       },
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
-
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Sudah punya akun? "),
+                    const Text("Sudah punya akun? "),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Text(
                         "Login",
                         style: TextStyle(
-                          color: Colors.green,
+                          color: primaryColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

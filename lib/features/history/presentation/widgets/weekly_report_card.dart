@@ -15,6 +15,8 @@ class WeeklyReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -22,12 +24,15 @@ class WeeklyReportCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.green.shade600, Colors.green.shade400],
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withOpacity(0.7),
+          ],
         ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.25),
+            color: theme.colorScheme.primary.withOpacity(0.25),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

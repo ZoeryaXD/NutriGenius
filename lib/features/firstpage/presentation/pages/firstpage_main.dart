@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../bloc/firstpage_bloc.dart';
-
+import '../bloc/firstpage_event.dart';
 import 'first_page.dart';
 import 'second_page.dart';
 import 'third_page.dart';
 
 class FirstPageMain extends StatefulWidget {
-  const FirstPageMain({Key? key}) : super(key: key);
+  const FirstPageMain({super.key});
 
   @override
   _FirstPageMainState createState() => _FirstPageMainState();
 }
 
 class _FirstPageMainState extends State<FirstPageMain> {
-
   final PageController _pageController = PageController();
 
   @override
@@ -26,10 +25,12 @@ class _FirstPageMainState extends State<FirstPageMain> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider(
-      create: (_) => sl<FirstPageBloc>(),
+      create: (_) => sl<FirstPageBloc>()..add(LoadMasterData()),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: PageView(
             controller: _pageController,
@@ -37,7 +38,7 @@ class _FirstPageMainState extends State<FirstPageMain> {
             children: [
               FirstPage(pageController: _pageController),
               SecondPage(pageController: _pageController),
-              ThirdPage(),
+              const ThirdPage(),
             ],
           ),
         ),

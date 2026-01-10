@@ -11,11 +11,9 @@ import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/scan/presentation/bloc/scan_bloc.dart';
 import 'firebase_options.dart';
 import 'injection_container.dart' as di;
-
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/register_page.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
-
 import 'features/history/presentation/bloc/history_bloc.dart';
 import 'features/firstpage/presentation/pages/firstpage_main.dart';
 
@@ -25,7 +23,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await di.init();
-
   await initializeDateFormatting('id_ID', null);
 
   final pref = await SharedPreferences.getInstance();
@@ -52,10 +49,8 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             title: 'NutriGenius',
             themeMode: mode,
-
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-
             initialRoute: '/',
             routes: {
               '/': (context) => LoginPage(),

@@ -11,52 +11,50 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../scan/presentation/bloc/scan_bloc.dart';
 
 class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider(
       create: (_) => sl<DashboardBloc>()..add(LoadDashboard()),
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
         body: SafeArea(
           child: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
               if (state is DashboardLoading) {
                 return Center(
-                  child: CircularProgressIndicator(color: Colors.green),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 );
               } else if (state is DashboardLoaded) {
-                return _buildDashboardContent(context, state.data);
+                return _buildDashboardContent(context, state.data, theme);
               } else if (state is DashboardError) {
                 return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red, size: 48),
-                        SizedBox(height: 10),
-                        Text(
-                          "Gagal memuat data",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          state.message,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<DashboardBloc>().add(LoadDashboard());
-                          },
-                          child: Text("Coba Lagi"),
-                        ),
-                      ],
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(state.message),
+                      ElevatedButton(
+                        onPressed:
+                            () => context.read<DashboardBloc>().add(
+                              LoadDashboard(),
+                            ),
+                        child: const Text("Coba Lagi"),
+                      ),
+                    ],
                   ),
                 );
               }
-              return Container();
+              return const SizedBox();
             },
           ),
         ),
@@ -64,73 +62,55 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDashboardContent(BuildContext context, DashboardEntity data) {
+  Widget _buildDashboardContent(
+    BuildContext context,
+    DashboardEntity data,
+    ThemeData theme,
+  ) {
+    final primaryColor = theme.colorScheme.primary;
+
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ==============================
-          // 1. LOGO & APP NAME
-          // ==============================
           Row(
             children: [
-              Image.asset(
-                'assets/images/logo.png',
-                width: 32,
-                height: 32,
-                errorBuilder:
-                    (context, error, stackTrace) =>
-                        Icon(Icons.eco, color: Colors.green, size: 32),
-              ),
-              SizedBox(width: 10),
+              Icon(Icons.spa_rounded, color: primaryColor, size: 36),
+              const SizedBox(width: 12),
               Text(
                 "NutriGenius",
                 style: TextStyle(
-                  color: Colors.green[800],
+                  color: primaryColor,
                   fontWeight: FontWeight.bold,
-                  fontSize: 20,
+                  fontSize: 22,
                 ),
               ),
             ],
           ),
-
-          SizedBox(height: 24),
-
-          // ==============================
-          // 2. SAPAAN & NAMA USER
-          // ==============================
+          const SizedBox(height: 28),
           Text(
             _getGreeting(),
-            style: TextStyle(color: Colors.green[700], fontSize: 16),
+            style: TextStyle(color: theme.hintColor, fontSize: 16),
           ),
           Text(
-            // Tampilkan nama dari backend, atau default jika kosong
             (data.displayName.isNotEmpty) ? data.displayName : "Nutri User",
             style: TextStyle(
-              color: Colors.green[800],
-              fontSize: 24,
+              color: primaryColor,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
             ),
           ),
-
-          SizedBox(height: 24),
-
-          // ==============================
-          // 3. HERO CARD (PROGRESS HARIAN)
-          // ==============================
+          const SizedBox(height: 24),
           Container(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.green[800],
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primaryColor, primaryColor.withOpacity(0.8)],
+              ),
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -138,29 +118,24 @@ class DashboardPage extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       "Kalori Masuk",
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      style: TextStyle(color: Colors.white70),
                     ),
-                    SizedBox(height: 4),
-
                     Text(
                       "${data.caloriesConsumed.toInt()}",
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     Text(
                       "dari target ${data.tdee.toInt()} kkal",
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      style: const TextStyle(color: Colors.white70),
                     ),
                   ],
                 ),
-
-                // CIRCULAR PROGRESS
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -173,20 +148,21 @@ class DashboardPage extends StatelessWidget {
                         strokeWidth: 8,
                       ),
                     ),
-
                     SizedBox(
                       width: 80,
                       height: 80,
                       child: CircularProgressIndicator(
-                        value: data.progress,
+                        value:
+                            (data.progress > 1.0)
+                                ? 1.0
+                                : (data.progress < 0 ? 0 : data.progress),
                         color: Colors.white,
                         strokeWidth: 8,
                         strokeCap: StrokeCap.round,
                       ),
                     ),
-
-                    Icon(
-                      Icons.local_fire_department,
+                    const Icon(
+                      Icons.local_fire_department_rounded,
                       color: Colors.white,
                       size: 32,
                     ),
@@ -195,94 +171,70 @@ class DashboardPage extends StatelessWidget {
               ],
             ),
           ),
-
-          SizedBox(height: 24),
-
-          // ==============================
-          // 4. MAKRO NUTRISI
-          // ==============================
+          const SizedBox(height: 28),
           Text(
-            "Makro Nutrisi (Harian)",
+            "Makro Nutrisi",
             style: TextStyle(
-              color: Colors.green[800],
+              color: primaryColor,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 18,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               _buildMacroCard(
+                theme,
                 "Protein",
                 "${data.proteinConsumed.toInt()}g",
-                Icons.fitness_center,
+                Icons.fitness_center_rounded,
+                Colors.blue,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               _buildMacroCard(
+                theme,
                 "Karbo",
                 "${data.carbsConsumed.toInt()}g",
-                Icons.grain,
+                Icons.grain_rounded,
+                Colors.orange,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               _buildMacroCard(
+                theme,
                 "Lemak",
                 "${data.fatConsumed.toInt()}g",
-                Icons.water_drop,
+                Icons.water_drop_rounded,
+                Colors.redAccent,
               ),
             ],
           ),
-
-          SizedBox(height: 24),
-
-          // ==============================
-          // 5. TOMBOL SCAN
-          // ==============================
-          Text(
-            "Scan Makananmu",
-            style: TextStyle(
-              color: Colors.green[800],
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          SizedBox(height: 12),
+          const SizedBox(height: 28),
           SizedBox(
             width: double.infinity,
-            height: 80,
+            height: 70,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                elevation: 4,
               ),
-              onPressed: () {
-                _showScanOptions(context);
-              },
-              child: Row(
+              onPressed: () => _showScanOptions(context, theme),
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.center_focus_strong,
-                    size: 40,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.center_focus_strong_rounded, size: 32),
                   SizedBox(width: 12),
                   Text(
                     "Mulai Scan",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
           ),
-
-          SizedBox(height: 40),
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -290,69 +242,64 @@ class DashboardPage extends StatelessWidget {
 
   String _getGreeting() {
     var hour = DateTime.now().hour;
-    if (hour < 11) {
-      return 'Selamat Pagi,';
-    } else if (hour < 15) {
-      return 'Selamat Siang,';
-    } else if (hour < 18) {
-      return 'Selamat Sore,';
-    } else {
-      return 'Selamat Malam,';
-    }
+    if (hour < 11) return 'Selamat Pagi,';
+    if (hour < 15) return 'Selamat Siang,';
+    if (hour < 18) return 'Selamat Sore,';
+    return 'Selamat Malam,';
   }
 
-  void _showScanOptions(BuildContext context) {
+  void _showScanOptions(BuildContext context, ThemeData theme) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return Container(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              SizedBox(height: 20),
               Text(
                 "Pilih Metode Scan",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green[800],
+                  color: theme.colorScheme.primary,
                 ),
               ),
-              SizedBox(height: 30),
-
+              const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildOptionBtn(context, Icons.camera_alt, "Kamera", () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                const CameraPage(),
-                      ),
-                    );
-                  }),
-                  _buildOptionBtn(context, Icons.photo_library, "Galeri", () {
-                    _handleScan(context, ImageSource.gallery);
-                  }),
+                  _buildOptionBtn(
+                    context,
+                    theme,
+                    Icons.camera_alt_rounded,
+                    "Kamera",
+                    () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CameraPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildOptionBtn(
+                    context,
+                    theme,
+                    Icons.photo_library_rounded,
+                    "Galeri",
+                    () {
+                      _handleScan(context, ImageSource.gallery);
+                    },
+                  ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 24),
             ],
           ),
         );
@@ -362,6 +309,7 @@ class DashboardPage extends StatelessWidget {
 
   Widget _buildOptionBtn(
     BuildContext context,
+    ThemeData theme,
     IconData icon,
     String label,
     VoidCallback onTap,
@@ -370,16 +318,19 @@ class DashboardPage extends StatelessWidget {
       onTap: onTap,
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.green[50],
-            child: Icon(icon, color: Colors.green[700], size: 28),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 32),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             label,
             style: TextStyle(
-              color: Colors.green[800],
+              color: theme.colorScheme.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -388,36 +339,37 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMacroCard(String label, String value, IconData icon) {
+  Widget _buildMacroCard(
+    ThemeData theme,
+    String label,
+    String value,
+    IconData icon,
+    Color iconColor,
+  ) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 5,
-              offset: Offset(0, 2),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.orange, size: 24),
-            SizedBox(height: 8),
+            Icon(icon, color: iconColor, size: 24),
+            const SizedBox(height: 12),
             Text(
               value,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
             ),
-            SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(fontSize: 13, color: theme.hintColor)),
           ],
         ),
       ),
@@ -427,31 +379,19 @@ class DashboardPage extends StatelessWidget {
   Future<void> _handleScan(BuildContext context, ImageSource source) async {
     try {
       Navigator.pop(context);
-
       final picker = ImagePicker();
       final image = await picker.pickImage(source: source);
-
       if (image != null) {
         final prefs = await SharedPreferences.getInstance();
         final email = prefs.getString('email');
-
-        if (email == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Sesi habis, silakan login ulang")),
-          );
-          return;
-        }
-
-        print("📸 Dashboard: Mengirim foto dengan email: $email");
-
+        if (email == null) return;
         context.read<ScanBloc>().add(
           AnalyzeImageEvent(imagePath: image.path, email: email),
         );
-
         Navigator.pushNamed(context, '/scan');
       }
     } catch (e) {
-      print("Error saat scan dashboard: $e");
+      debugPrint(e.toString());
     }
   }
 }

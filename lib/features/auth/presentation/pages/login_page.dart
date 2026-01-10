@@ -5,11 +5,12 @@ import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
 import 'package:nutrigenius/features/auth/presentation/pages/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// Import FirstPage dan Dashboard Page
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -18,38 +19,59 @@ class _LoginPageState extends State<LoginPage> {
   bool _isObscure = true;
 
   void _showForgotPasswordDialog() {
-    final _resetEmailController = TextEditingController();
+    final theme = Theme.of(context);
+    final resetEmailController = TextEditingController();
+
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text("Lupa Password"),
+            backgroundColor: theme.colorScheme.surface,
+            title: const Text(
+              "Lupa Password",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  "Masukkan email Anda, kami akan mengirimkan link reset password.",
+                const Text(
+                  "Masukkan email Anda untuk menerima link reset password.",
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 16),
                 TextField(
-                  controller: _resetEmailController,
-                  decoration: InputDecoration(hintText: "Email Anda"),
+                  controller: resetEmailController,
+                  decoration: InputDecoration(
+                    hintText: "Email Anda",
+                    filled: true,
+                    fillColor:
+                        theme.brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text("Batal"),
+                child: Text("Batal", style: TextStyle(color: theme.hintColor)),
               ),
               ElevatedButton(
                 onPressed: () {
                   context.read<AuthBloc>().add(
-                    ForgotPasswordRequested(_resetEmailController.text),
+                    ForgotPasswordRequested(resetEmailController.text),
                   );
                   Navigator.pop(context);
                 },
-                child: Text("Kirim"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text("Kirim"),
               ),
             ],
           ),
@@ -58,19 +80,15 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) async {
           if (state is AuthSuccess) {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('email', _emailController.text.trim());
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Login Berhasil!"),
-                backgroundColor: Colors.green,
-              ),
-            );
             if (state.isOnboarded) {
               Navigator.pushReplacementNamed(context, '/dashboard');
             } else {
@@ -79,53 +97,39 @@ class _LoginPageState extends State<LoginPage> {
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  state.message,
-                  style: TextStyle(color: Colors.white),
-                ),
+                content: Text(state.message),
                 backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is AuthResetEmailSent) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  "Link reset password telah dikirim ke email Anda.",
-                ),
-                backgroundColor: Colors.green,
               ),
             );
           }
         },
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
           child: Column(
             children: [
-              SizedBox(height: 40),
-              // Logo
-              Image.asset('assets/images/logo.png', height: 100),
-              SizedBox(height: 20),
+              const SizedBox(height: 40),
+              Icon(Icons.spa_rounded, size: 100, color: primaryColor),
+              const SizedBox(height: 10),
               Text(
                 "NutriGenius",
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green[800],
+                  color: primaryColor,
+                  letterSpacing: -1,
                 ),
               ),
               Text(
                 "Cara Genius Hidup Sehat",
-                style: TextStyle(fontSize: 16, color: Colors.green[600]),
+                style: TextStyle(fontSize: 16, color: theme.hintColor),
               ),
-              SizedBox(height: 50),
-
-              // Form Login
+              const SizedBox(height: 50),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
                   labelText: "Email",
-                  fillColor: Colors.grey[200],
+                  fillColor: theme.colorScheme.surface,
                   filled: true,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -133,14 +137,14 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: _passController,
                 obscureText: _isObscure,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
                   labelText: "Password",
-                  fillColor: Colors.grey[200],
+                  fillColor: theme.colorScheme.surface,
                   filled: true,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -154,30 +158,28 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
-              // Lupa Password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: _showForgotPasswordDialog,
                   child: Text(
                     "Lupa Password?",
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: theme.hintColor),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-
-              // Tombol Login
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 2,
                   ),
                   onPressed: () {
                     context.read<AuthBloc>().add(
@@ -190,18 +192,20 @@ class _LoginPageState extends State<LoginPage> {
                   child: BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       return state is AuthLoading
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : Text(
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
                             "LOGIN",
-                            style: TextStyle(fontSize: 18, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           );
                     },
                   ),
                 ),
               ),
-
-              SizedBox(height: 30),
-              Row(
+              const SizedBox(height: 30),
+              const Row(
                 children: [
                   Expanded(child: Divider()),
                   Padding(
@@ -211,23 +215,24 @@ class _LoginPageState extends State<LoginPage> {
                   Expanded(child: Divider()),
                 ],
               ),
-              SizedBox(height: 20),
-
+              const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Belum punya akun? "),
+                  const Text("Belum punya akun? "),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => RegisterPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterPage(),
+                        ),
                       );
                     },
                     child: Text(
                       "Daftar Sekarang",
                       style: TextStyle(
-                        color: Colors.green,
+                        color: primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

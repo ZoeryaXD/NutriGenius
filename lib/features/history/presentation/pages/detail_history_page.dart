@@ -14,6 +14,7 @@ class DetailHistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
     final String formattedDate = DateFormat(
@@ -28,15 +29,14 @@ class DetailHistoryPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           "Detail Nutrisi",
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1B5E20),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: false,
       ),
       body: Center(
         child: ConstrainedBox(
@@ -50,14 +50,14 @@ class DetailHistoryPage extends StatelessWidget {
                         flex: 4,
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
-                          child: _buildImage(imageUrl),
+                          child: _buildImage(imageUrl, theme),
                         ),
                       ),
                       Expanded(
                         flex: 6,
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.fromLTRB(0, 24, 24, 24),
-                          child: _buildDetails(context, formattedDate),
+                          child: _buildDetails(context, formattedDate, theme),
                         ),
                       ),
                     ],
@@ -67,9 +67,9 @@ class DetailHistoryPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildImage(imageUrl),
+                        _buildImage(imageUrl, theme),
                         const SizedBox(height: 24),
-                        _buildDetails(context, formattedDate),
+                        _buildDetails(context, formattedDate, theme),
                       ],
                     ),
                   ),
@@ -78,13 +78,15 @@ class DetailHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildImage(String imageUrl) {
+  Widget _buildImage(String imageUrl, ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(
+              theme.brightness == Brightness.dark ? 0.3 : 0.08,
+            ),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -97,7 +99,7 @@ class DetailHistoryPage extends StatelessWidget {
                 ? Container(
                   height: 300,
                   width: double.infinity,
-                  color: const Color(0xFFF5F5F5),
+                  color: theme.colorScheme.surface,
                   child: const Icon(
                     Icons.restaurant_rounded,
                     size: 64,
@@ -112,7 +114,7 @@ class DetailHistoryPage extends StatelessWidget {
                   errorBuilder:
                       (ctx, err, stack) => Container(
                         height: 300,
-                        color: const Color(0xFFF5F5F5),
+                        color: theme.colorScheme.surface,
                         child: const Icon(Icons.broken_image_rounded, size: 64),
                       ),
                 ),
@@ -120,7 +122,11 @@ class DetailHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetails(BuildContext context, String formattedDate) {
+  Widget _buildDetails(
+    BuildContext context,
+    String formattedDate,
+    ThemeData theme,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -149,27 +155,32 @@ class DetailHistoryPage extends StatelessWidget {
           "Energi / Kalori",
           "${food.calories.toStringAsFixed(1)} kcal",
           const Color(0xFF2E7D32),
+          theme,
           isBold: true,
         ),
         _buildRow(
           "Protein",
           "${(food.protein ?? 0.0).toStringAsFixed(1)} g",
           const Color(0xFF1976D2),
+          theme,
         ),
         _buildRow(
           "Karbohidrat",
           "${(food.carbs ?? 0.0).toStringAsFixed(1)} g",
           const Color(0xFFF57C00),
+          theme,
         ),
         _buildRow(
           "Lemak Total",
           "${(food.fat ?? 0.0).toStringAsFixed(1)} g",
           const Color(0xFF7B1FA2),
+          theme,
         ),
         _buildRow(
           "Gula",
           "${(food.sugar ?? 0.0).toStringAsFixed(1)} g",
           const Color(0xFFC2185B),
+          theme,
         ),
         const SizedBox(height: 40),
         SizedBox(
@@ -198,7 +209,8 @@ class DetailHistoryPage extends StatelessWidget {
   Widget _buildRow(
     String label,
     String value,
-    Color color, {
+    Color valueColor,
+    ThemeData theme, {
     bool isBold = false,
   }) {
     return Padding(
@@ -211,7 +223,6 @@ class DetailHistoryPage extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-              color: Colors.black87,
             ),
           ),
           Text(
@@ -219,7 +230,7 @@ class DetailHistoryPage extends StatelessWidget {
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w900,
-              color: color,
+              color: valueColor,
             ),
           ),
         ],

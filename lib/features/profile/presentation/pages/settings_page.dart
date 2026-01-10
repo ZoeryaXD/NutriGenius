@@ -200,9 +200,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final pref = sl<SharedPreferences>();
     await pref.setBool('darkMode', value);
     themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
-    setState(() {
-      _darkMode = value;
-    });
+    setState(() => _darkMode = value);
   }
 
   void _showDeleteConfirmDialog(BuildContext context) {
@@ -261,7 +259,7 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Text(
         title,
         style: TextStyle(
-          color: theme.primaryColor,
+          color: theme.colorScheme.primary,
           fontWeight: FontWeight.w800,
           fontSize: 12,
           letterSpacing: 1.1,

@@ -16,6 +16,9 @@ class HistoryListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     String finalImageUrl = item.imagePath;
     if (finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
       final String cleanBaseUrl = ApiClient.baseUrl.replaceAll('/api', '');
@@ -27,11 +30,11 @@ class HistoryListItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -46,10 +49,10 @@ class HistoryListItem extends StatelessWidget {
                   ? Container(
                     width: 48,
                     height: 48,
-                    color: const Color(0xFFE8F5E9),
-                    child: const Icon(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    child: Icon(
                       Icons.fastfood_rounded,
-                      color: Colors.green,
+                      color: theme.colorScheme.primary,
                       size: 24,
                     ),
                   )
@@ -62,7 +65,7 @@ class HistoryListItem extends StatelessWidget {
                         (context, error, stackTrace) => Container(
                           width: 48,
                           height: 48,
-                          color: Colors.grey[100],
+                          color: theme.disabledColor.withOpacity(0.1),
                           child: const Icon(
                             Icons.broken_image_rounded,
                             size: 20,
@@ -76,7 +79,6 @@ class HistoryListItem extends StatelessWidget {
           style: const TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 14,
-            color: Color(0xFF2D3142),
             letterSpacing: -0.2,
           ),
           maxLines: 1,
@@ -85,14 +87,14 @@ class HistoryListItem extends StatelessWidget {
         subtitle: Text(
           "${item.calories.toInt()} kcal - $dateStr",
           style: TextStyle(
-            color: Colors.grey[500],
+            color: theme.hintColor,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
         ),
         trailing: const Icon(
           Icons.chevron_right_rounded,
-          color: Color(0xFFD1D1D1),
+          color: Colors.grey,
           size: 18,
         ),
         onTap: () {

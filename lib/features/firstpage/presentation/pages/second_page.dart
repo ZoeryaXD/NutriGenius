@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
+import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_state.dart';
 import '../bloc/firstpage_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-
 class SecondPage extends StatefulWidget {
   final PageController pageController;
-  const SecondPage({required this.pageController});
+  const SecondPage({super.key, required this.pageController});
 
   @override
   _SecondPageState createState() => _SecondPageState();
@@ -18,203 +18,220 @@ class _SecondPageState extends State<SecondPage> {
   int? _healthId;
 
   @override
+  void initState() {
+    super.initState();
+    final state = context.read<FirstPageBloc>().state;
+    if (state.activityLevels.isEmpty || state.healthConditions.isEmpty) {
+      context.read<FirstPageBloc>().add(LoadMasterData());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap:
-                () => widget.pageController.previousPage(
-                  duration: Duration(milliseconds: 300),
-                  curve: Curves.ease,
-                ),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_back, color: Colors.green),
-                SizedBox(width: 8),
-                Text(
-                  "Langkah 2 dari 3",
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
+    return BlocConsumer<FirstPageBloc, FirstPageState>(
+      listener: (context, state) {
+        if (state.status == FirstPageStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.error ?? "Terjadi kesalahan"),
+              backgroundColor: Colors.red,
             ),
-          ),
-          SizedBox(height: 30),
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state.status == FirstPageStatus.loadingMaster) {
+          return Center(child: CircularProgressIndicator(color: primaryColor));
+        }
 
-          Text(
-            "Seberapa aktif\nkeseharianmu?",
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[800],
-            ),
-          ),
-          SizedBox(height: 30),
-
-          _buildActivityButton(1, "Sedentary (Duduk seharian/Office)"),
-          _buildActivityButton(2, "Light Active (Olahraga 1-3x/minggu)"),
-          _buildActivityButton(3, "Active (Olahraga 3-5x/minggu)"),
-          _buildActivityButton(4, "Very Active (Fisik berat/Atlet)"),
-
-          SizedBox(height: 30),
-
-          Text(
-            "Tujuan Kamu:",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[800],
-            ),
-          ),
-          SizedBox(height: 10),
-
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green[700],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: _healthId,
-                hint: Text(
-                  "Pilih Tujuan Kesehatan",
-                  style: TextStyle(color: Colors.white70),
-                ),
-                isExpanded: true,
-                dropdownColor: Colors.green[700],
-                icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: 1,
-                    child: _buildHealthItem(
-                      Icons.accessibility,
-                      "Normal / Sehat",
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap:
+                    () => widget.pageController.previousPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.ease,
                     ),
-                  ),
-                  DropdownMenuItem(
-                    value: 2,
-                    child: _buildHealthItem(
-                      Icons.bloodtype,
-                      "Pasien Diabetes",
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 3,
-                    child: _buildHealthItem(FontAwesomeIcons.weightScale, "Obesitas"),
-                  ),
-                ],
-                onChanged: (v) => setState(() => _healthId = v!),
-              ),
-            ),
-          ),
-
-          SizedBox(height: 40),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                side: BorderSide(color: Colors.green),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                if (_activityId == null || _healthId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        "Harap pilih aktivitas dan tujuan kesehatan!",
+                child: Row(
+                  children: [
+                    Icon(Icons.arrow_back, color: primaryColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Langkah 2 dari 3",
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.bold,
                       ),
-                      backgroundColor: Colors.red,
                     ),
-                  );
-                  return;
-                }
-
-                context.read<FirstPageBloc>().add(
-                  HealthGoalChanged(_healthId!),
-                );
-
-                context.read<FirstPageBloc>().add(
-                  CalculateStep2Data(_activityId!),
-                );
-
-                widget.pageController.nextPage(
-                  duration: Duration(milliseconds: 300),
-                  curve: Curves.ease,
-                );
-              },
-              child: Text(
-                "Hitung",
-                style: TextStyle(
-                  color: Colors.green[800],
-                  fontWeight: FontWeight.bold,
+                  ],
                 ),
               ),
-            ),
+              const SizedBox(height: 30),
+              Text(
+                "Seberapa aktif\nkeseharianmu?",
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
+              ),
+              const SizedBox(height: 30),
+              ...state.activityLevels
+                  .map(
+                    (activity) => _buildActivityButton(
+                      context,
+                      activity.id,
+                      "${activity.levelName} (${activity.description})",
+                    ),
+                  )
+                  .toList(),
+              const SizedBox(height: 30),
+              Text(
+                "Tujuan Kamu:",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _healthId,
+                    hint: Text(
+                      "Pilih Tujuan Kesehatan",
+                      style: TextStyle(color: theme.hintColor),
+                    ),
+                    isExpanded: true,
+                    dropdownColor: theme.colorScheme.surface,
+                    icon: Icon(Icons.arrow_drop_down, color: primaryColor),
+                    items:
+                        state.healthConditions.map((condition) {
+                          return DropdownMenuItem<int>(
+                            value: condition.id,
+                            child: _buildHealthItem(
+                              context,
+                              _getIconForHealth(condition.conditionName),
+                              condition.conditionName,
+                            ),
+                          );
+                        }).toList(),
+                    onChanged: (v) => setState(() => _healthId = v!),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (_activityId == null || _healthId == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Harap pilih aktivitas dan tujuan kesehatan!",
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    context.read<FirstPageBloc>().add(
+                      HealthGoalChanged(_healthId!),
+                    );
+                    context.read<FirstPageBloc>().add(
+                      CalculateStep2Data(_activityId!),
+                    );
+                    widget.pageController.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.ease,
+                    );
+                  },
+                  child: const Text(
+                    "Hitung",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildHealthItem(IconData icon, String text) {
+  Widget _buildHealthItem(BuildContext context, IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, color: Colors.white),
-        SizedBox(width: 10),
-        Text(text),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
+        const SizedBox(width: 12),
+        Expanded(child: Text(text, overflow: TextOverflow.ellipsis)),
       ],
     );
   }
 
-  Widget _buildActivityButton(int id, String text) {
+  Widget _buildActivityButton(BuildContext context, int id, String text) {
+    final theme = Theme.of(context);
     bool isSelected = _activityId == id;
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () => setState(() => _activityId = id),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.green[700] : Colors.grey[300],
-            borderRadius: BorderRadius.circular(12),
-            boxShadow:
+            color:
                 isSelected
-                    ? [
-                      BoxShadow(
-                        color: Colors.green.withOpacity(0.4),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ]
-                    : [],
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color:
+                  isSelected ? theme.colorScheme.primary : theme.dividerColor,
+            ),
           ),
           child: Text(
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black54,
+              color:
+                  isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
               fontWeight: FontWeight.bold,
-              fontSize: 14,
             ),
           ),
         ),
       ),
     );
+  }
+
+  IconData _getIconForHealth(String name) {
+    final lowerName = name.toLowerCase();
+    if (lowerName.contains('diabetes')) return Icons.bloodtype;
+    if (lowerName.contains('obesitas')) return FontAwesomeIcons.weightScale;
+    if (lowerName.contains('hipertensi')) return FontAwesomeIcons.heartPulse;
+    return Icons.spa_rounded;
   }
 }

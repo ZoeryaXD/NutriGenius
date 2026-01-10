@@ -9,6 +9,7 @@ class HistoryEntity extends Equatable {
   final double? fat;
   final double? sugar;
   final String imagePath;
+  final String mealType;
   final DateTime createdAt;
 
   const HistoryEntity({
@@ -20,6 +21,7 @@ class HistoryEntity extends Equatable {
     this.fat,
     this.sugar,
     required this.imagePath,
+    required this.mealType,
     required this.createdAt,
   });
 

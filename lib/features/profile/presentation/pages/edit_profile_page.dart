@@ -19,17 +19,14 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-
   late TextEditingController _nameCtrl;
   late TextEditingController _emailCtrl;
   late TextEditingController _weightCtrl;
   late TextEditingController _heightCtrl;
-
   late String _gender;
   late DateTime _birthDate;
   late int _activityId;
   late int _healthId;
-
   File? _pickedImageFile;
   final ImagePicker _picker = ImagePicker();
 
@@ -41,7 +38,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _emailCtrl = TextEditingController(text: d.email);
     _weightCtrl = TextEditingController(text: d.weight.toString());
     _heightCtrl = TextEditingController(text: d.height.toString());
-
     _gender = d.gender;
     _birthDate = d.birthDate;
     _activityId = d.activityId;
@@ -62,7 +58,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (_pickedImageFile != null) {
         context.read<ProfileBloc>().add(UploadProfilePhoto(_pickedImageFile!));
       }
-
       final updatedProfile = ProfileEntity(
         fullName: _nameCtrl.text,
         email: widget.currentData.email,
@@ -118,7 +113,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Text(
                   "SIMPAN",
                   style: TextStyle(
-                    color: isDark ? Colors.greenAccent : theme.primaryColor,
+                    color:
+                        isDark ? const Color(0xFF00E676) : theme.primaryColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -195,7 +191,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader("Informasi Akun", isDark),
+        _buildSectionHeader("Informasi Akun", theme),
         const SizedBox(height: 16),
         _buildTextField(
           "Nama Lengkap",
@@ -219,7 +215,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader("Data Fisik", isDark),
+        _buildSectionHeader("Data Fisik", theme),
         const SizedBox(height: 16),
         _buildDropdown(
           "Jenis Kelamin",
@@ -263,22 +259,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, bool isDark) {
+  Widget _buildSectionHeader(String title, ThemeData theme) {
     return Text(
       title,
       style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: isDark ? Colors.white70 : Colors.green[800],
+        color: theme.colorScheme.primary,
       ),
     );
   }
 
   Widget _buildPhotoSection(ThemeData theme) {
     String? imageUrl;
-    if (widget.currentData is ProfileModel) {
+    if (widget.currentData is ProfileModel)
       imageUrl = (widget.currentData as ProfileModel).fullImageUrl;
-    }
 
     return Stack(
       children: [
@@ -292,10 +287,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           child: CircleAvatar(
             radius: 60,
-            backgroundColor:
-                theme.brightness == Brightness.dark
-                    ? Colors.white10
-                    : Colors.green[50],
+            backgroundColor: theme.colorScheme.surface,
             backgroundImage:
                 _pickedImageFile != null
                     ? FileImage(_pickedImageFile!) as ImageProvider
@@ -337,7 +329,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     bool isNumber = false,
     IconData? icon,
   }) {
-    final isDark = theme.brightness == Brightness.dark;
     return TextFormField(
       controller: ctrl,
       readOnly: readOnly,
@@ -347,7 +338,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         labelText: label,
         prefixIcon: icon != null ? Icon(icon, size: 20) : null,
         filled: true,
-        fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
+        fillColor: theme.colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -362,14 +353,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Widget _buildDatePicker(ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
     return InkWell(
       onTap: _pickDate,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -397,15 +387,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return DropdownButtonFormField<String>(
       value: value,
       isExpanded: true,
-      dropdownColor: theme.cardColor,
+      dropdownColor: theme.colorScheme.surface,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, size: 20),
         filled: true,
-        fillColor:
-            theme.brightness == Brightness.dark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey[50],
+        fillColor: theme.colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -426,22 +413,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Widget _buildHealthDropdown(ThemeData theme) {
     final items = [
-      {'id': 1, 'label': 'Normal / Sehat'},
-      {'id': 2, 'label': 'Pasien Diabetes'},
+      {'id': 1, 'label': 'Normal'},
+      {'id': 2, 'label': 'Diabetes'},
       {'id': 3, 'label': 'Obesitas'},
+      {'id': 4, 'label': 'Hipertensi'},
     ];
     return DropdownButtonFormField<int>(
       value: _healthId,
       isExpanded: true,
-      dropdownColor: theme.cardColor,
+      dropdownColor: theme.colorScheme.surface,
       decoration: InputDecoration(
         labelText: "Kondisi Kesehatan",
         prefixIcon: const Icon(Icons.health_and_safety_outlined, size: 20),
         filled: true,
-        fillColor:
-            theme.brightness == Brightness.dark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey[50],
+        fillColor: theme.colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -473,15 +458,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return DropdownButtonFormField<int>(
       value: _activityId,
       isExpanded: true,
-      dropdownColor: theme.cardColor,
+      dropdownColor: theme.colorScheme.surface,
       decoration: InputDecoration(
         labelText: "Aktivitas Harian",
         prefixIcon: const Icon(Icons.directions_run, size: 20),
         filled: true,
-        fillColor:
-            theme.brightness == Brightness.dark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey[50],
+        fillColor: theme.colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -514,13 +496,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       initialDate: _birthDate,
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      builder:
-          (context, child) => Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-            ),
-            child: child!,
-          ),
     );
     if (picked != null) setState(() => _birthDate = picked);
   }
