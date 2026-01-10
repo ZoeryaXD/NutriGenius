@@ -4,7 +4,6 @@ import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event
 import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_state.dart';
 import '../bloc/firstpage_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../domain/entities/firstpage_entity.dart';
 
 class SecondPage extends StatefulWidget {
   final PageController pageController;
