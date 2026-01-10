@@ -5,6 +5,8 @@ abstract class FirstPageEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class LoadMasterData extends FirstPageEvent {}
+
 class UpdateStep1Data extends FirstPageEvent {
   final String gender;
   final double weight, height;

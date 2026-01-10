@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nutrigenius/features/notification/presentation/pages/notification_page.dart';
 import 'package:nutrigenius/features/scan/presentation/pages/scan_page.dart';
 import 'package:nutrigenius/main_navigation_page.dart';
 import 'features/history/presentation/pages/history_page.dart';
@@ -15,7 +14,6 @@ import 'features/scan/presentation/bloc/scan_bloc.dart';
 
 import 'features/history/presentation/bloc/history_bloc.dart'; 
 import 'features/firstpage/presentation/pages/firstpage_main.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,13 +38,14 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'NutriGenius',
         theme: ThemeData(primarySwatch: Colors.green, fontFamily: 'Poppins'),
-        initialRoute: '/',
+        // UBAH BAGIAN INI
+        // Sebelumnya: initialRoute: '/', 
+        initialRoute: '/dashboard', 
         routes: {
           '/': (context) => LoginPage(),
           '/register': (context) => RegisterPage(),
           '/firstpage': (context) => FirstPageMain(),
           '/dashboard': (context) => MainNavigationPage(),
-          '/notification': (context) => NotificationPage(),
           '/scan': (context) => ScanPage(),
           '/history': (context) => HistoryPage(),
         },

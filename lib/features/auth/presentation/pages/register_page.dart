@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
 import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
-// Import bloc dan common widgets lainnya
+import 'package:nutrigenius/features/auth/presentation/widgets/auth_button_field.dart';
+import 'package:nutrigenius/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:nutrigenius/features/auth/presentation/widgets/auth_dialogs.dart';
+import 'package:nutrigenius/features/auth/presentation/widgets/password_strength_meter.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -14,18 +17,32 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
+  
   bool _isObscure = true;
+  PasswordStrength _passwordStrength = PasswordStrength.weak;
 
-  final _passRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,}$');
+  PasswordStrength _checkPasswordStrength(String password) {
+    if (password.length < 6) return PasswordStrength.weak;
+    final hasUpper = password.contains(RegExp(r'[A-Z]'));
+    final hasLower = password.contains(RegExp(r'[a-z]'));
+    final hasNumber = password.contains(RegExp(r'[0-9]'));
+    final hasSymbol = password.contains(RegExp(r'[!@#\$&*~]'));
+
+    if (password.length >= 8 && hasUpper && hasLower && hasNumber && hasSymbol) {
+      return PasswordStrength.strong;
+    }
+    if (hasLower && hasNumber) return PasswordStrength.medium;
+    return PasswordStrength.weak;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.green),
+          icon: const Icon(Icons.arrow_back, color: Colors.green),
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.transparent,
@@ -34,33 +51,15 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthEmailVerificationRequired) {
-            showDialog(
-              context: context,
-              builder:
-                  (_) => AlertDialog(
-                    title: Text("Verifikasi Email"),
-                    content: Text(
-                      "Link verifikasi telah dikirim ke email Anda. Silakan cek dan klik link tersebut sebelum login.",
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                        },
-                        child: Text("OK"),
-                      ),
-                    ],
-                  ),
-            );
+            AuthDialogs.showRegisterSuccess(context);
           } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
           }
         },
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
@@ -68,145 +67,100 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 Text(
                   "Buat Akun Baru",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[800],
-                  ),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green[700]),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  "Mulai perjalanan sehatmu hari ini!",
-                  style: TextStyle(color: Colors.grey),
-                ),
-                SizedBox(height: 30),
+                const SizedBox(height: 8),
+                const Text("Mulai perjalanan sehatmu hari ini!", style: TextStyle(color: Colors.grey)),
+                
+                const SizedBox(height: 30),
 
-                // Nama Lengkap
-                TextFormField(
+                AuthTextField(
                   controller: _nameController,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.person_outline),
-                    labelText: "Nama Lengkap",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator:
-                      (val) => val!.isEmpty ? "Nama tidak boleh kosong" : null,
+                  label: "Nama Lengkap",
+                  icon: Icons.person_outline,
+                  validator: (val) => val!.isEmpty ? "Nama tidak boleh kosong" : null,
                 ),
-                SizedBox(height: 16),
+                
+                const SizedBox(height: 16),
 
-                // Email
-                TextFormField(
+                AuthTextField(
                   controller: _emailController,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.email_outlined),
-                    labelText: "Email",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator:
-                      (val) => !val!.contains('@') ? "Email tidak valid" : null,
+                  label: "Email",
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (val) => !val!.contains('@') ? "Email tidak valid" : null,
                 ),
-                SizedBox(height: 16),
+                
+                const SizedBox(height: 16),
 
-                // Password
-                TextFormField(
-                  controller: _passController,
-                  obscureText: _isObscure,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock_outline),
-                    labelText: "Password",
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isObscure ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () => setState(() => _isObscure = !_isObscure),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                AuthTextField(
+                  controller: _passwordController,
+                  label: "Password",
+                  icon: Icons.lock_outline,
+                  isObscure: _isObscure,
+                  onChanged: (value) {
+                    setState(() {
+                      _passwordStrength = _checkPasswordStrength(value);
+                    });
+                  },
                   validator: (val) {
-                    if (val == null || val.isEmpty)
-                      return "Password wajib diisi";
-                    if (!_passRegex.hasMatch(val)) {
-                      return "Password harus kombinasi angka & simbol (!@#\$&*~)";
-                    }
+                    if (val == null || val.isEmpty) return "Password wajib diisi";
+                    if (val.length < 6) return "Password minimal 6 karakter";
                     return null;
                   },
+                  suffixIcon: IconButton(
+                    icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _isObscure = !_isObscure),
+                  ),
                 ),
-                SizedBox(height: 16),
+                
+                const SizedBox(height: 8),
+                
+                PasswordStrengthMeter(strength: _passwordStrength),
 
-                TextFormField(
+                const SizedBox(height: 16),
+
+                AuthTextField(
                   controller: _confirmPassController,
-                  obscureText: _isObscure,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock_outline),
-                    labelText: "Konfirmasi Password",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator:
-                      (val) =>
-                          val != _passController.text
-                              ? "Password tidak sama"
-                              : null,
+                  label: "Konfirmasi Password",
+                  icon: Icons.lock_outline,
+                  isObscure: _isObscure,
+                  validator: (val) => val != _passwordController.text ? "Password tidak sama" : null,
                 ),
-                SizedBox(height: 30),
+                
+                const SizedBox(height: 30),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        context.read<AuthBloc>().add(
-                          RegisterRequested(
-                            _nameController.text,
-                            _emailController.text,
-                            _passController.text,
-                          ),
-                        );
-                      }
-                    },
-                    child: BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        return state is AuthLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                              "REGISTER",
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            );
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    return AuthButton(
+                      text: "REGISTER",
+                      isLoading: state is AuthLoading,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          context.read<AuthBloc>().add(
+                                RegisterRequested(
+                                  _nameController.text,
+                                  _emailController.text,
+                                  _passwordController.text,
+                                ),
+                              );
+                        }
                       },
-                    ),
-                  ),
+                    );
+                  },
                 ),
-                SizedBox(height: 20),
+                
+                const SizedBox(height: 20),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Sudah punya akun? "),
+                    const Text("Sudah punya akun? "),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Text(
+                      child: const Text(
                         "Login",
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],

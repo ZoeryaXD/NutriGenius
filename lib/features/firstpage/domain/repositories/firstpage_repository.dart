@@ -1,3 +1,5 @@
+import '../entities/firstpage_entity.dart';
+
 abstract class FirstPageRepository {
   Future<void> submitProfile({
     required String email,
@@ -10,4 +12,7 @@ abstract class FirstPageRepository {
     required double bmr,
     required double tdee,
   });
+
+  Future<List<ActivityLevel>> getActivityLevels();
+  Future<List<HealthCondition>> getHealthConditions();
 }

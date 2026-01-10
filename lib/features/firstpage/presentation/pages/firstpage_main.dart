@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../bloc/firstpage_bloc.dart';
+import '../bloc/firstpage_event.dart';
 
 import 'first_page.dart';
 import 'second_page.dart';
@@ -27,7 +28,8 @@ class _FirstPageMainState extends State<FirstPageMain> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<FirstPageBloc>(),
+      create: (_) => sl<FirstPageBloc>()..add(LoadMasterData()),
+      
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(

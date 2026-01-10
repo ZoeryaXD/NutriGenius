@@ -4,7 +4,7 @@ class CalculateTDEE {
     double weight,
     double height,
     int age,
-    int activityId,
+    double multiplier,
   ) {
     double bmr;
     if (gender == 'Laki-laki') {
@@ -13,22 +13,8 @@ class CalculateTDEE {
       bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
 
-    double multiplier = 1.2;
-    switch (activityId) {
-      case 1:
-        multiplier = 1.2;
-        break;
-      case 2:
-        multiplier = 1.375;
-        break;
-      case 3:
-        multiplier = 1.55;
-        break;
-      case 4:
-        multiplier = 1.725;
-        break;
-    }
+    double tdee = bmr * multiplier;
 
-    return {'bmr': bmr, 'tdee': bmr * multiplier};
+    return {'bmr': bmr, 'tdee': tdee};
   }
 }

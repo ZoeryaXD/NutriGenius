@@ -3,6 +3,7 @@ import 'firstpage_event.dart';
 import 'firstpage_state.dart';
 import '../../domain/usecase/calculate_tdee.dart';
 import '../../domain/repositories/firstpage_repository.dart';
+import '../../domain/entities/firstpage_entity.dart';
 
 class FirstPageBloc extends Bloc<FirstPageEvent, FirstPageState> {
   final CalculateTDEE calculateTDEE;
@@ -10,6 +11,34 @@ class FirstPageBloc extends Bloc<FirstPageEvent, FirstPageState> {
 
   FirstPageBloc({required this.calculateTDEE, required this.repository})
     : super(const FirstPageState()) {
+    on<LoadMasterData>((event, emit) async {
+      emit(state.copyWith(status: FirstPageStatus.loadingMaster));
+      try {
+        final results = await Future.wait([
+          repository.getActivityLevels(),
+          repository.getHealthConditions(),
+        ]);
+
+        final activities = results[0] as List<ActivityLevel>;
+        final conditions = results[1] as List<HealthCondition>;
+
+        emit(
+          state.copyWith(
+            status: FirstPageStatus.successMaster,
+            activityLevels: activities,
+            healthConditions: conditions,
+          ),
+        );
+      } catch (e) {
+        emit(
+          state.copyWith(
+            status: FirstPageStatus.failure,
+            error: "Gagal memuat data: $e",
+          ),
+        );
+      }
+    });
+
     on<UpdateStep1Data>((event, emit) {
       emit(
         state.copyWith(
@@ -23,12 +52,23 @@ class FirstPageBloc extends Bloc<FirstPageEvent, FirstPageState> {
 
     on<CalculateStep2Data>((event, emit) {
       final age = DateTime.now().year - (state.birthDate?.year ?? 2000);
+      double selectedMultiplier = 1.2;
+
+      try {
+        final selectedActivity = state.activityLevels.firstWhere(
+          (act) => act.id == event.activityId,
+        );
+        selectedMultiplier = selectedActivity.multiplier;
+      } catch (e) {
+        print("Activity ID tidak ditemukan di master data");
+      }
+
       final result = calculateTDEE(
         state.gender,
         state.weight,
         state.height,
         age,
-        event.activityId,
+        selectedMultiplier,
       );
       emit(
         state.copyWith(

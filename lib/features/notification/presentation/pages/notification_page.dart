@@ -1,213 +1,364 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../core/network/api_client.dart'; // Pastikan path ApiClient benar
-import '../../data/models/notification_model.dart'; // Pastikan path Model benar
+import 'dart:math';
+import 'notification_detail_page.dart';
+
+// --- MODEL DATA NOTIFIKASI ---
+class NotificationItem {
+  final String title;
+  final String body;
+  final IconData icon;
+  final Color color;
+  final String category; // 'reminder', 'motivation', 'system', 'water', 'workout'
+  bool isRead;
+  final DateTime timestamp;
+
+  NotificationItem({
+    required this.title,
+    required this.body,
+    required this.icon,
+    required this.color,
+    required this.category,
+    this.isRead = false,
+    required this.timestamp,
+  });
+}
+
+// 🔥 DATA GLOBAL (Disimpan di memori)
+List<NotificationItem> _fakeDatabase = [];
+
+// 🔥 PENANDA GLOBAL BARU
+// Ini fungsinya untuk mengingat apakah aplikasi sudah pernah generate data awal atau belum.
+bool _hasInitialized = false; 
 
 class NotificationPage extends StatefulWidget {
-  const NotificationPage({Key? key}) : super(key: key);
+  const NotificationPage({super.key});
 
   @override
-  _NotificationPageState createState() => _NotificationPageState();
+  State<NotificationPage> createState() => _NotificationPageState();
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  // Variabel untuk menampung data
-  late Future<List<NotificationModel>> _notificationFuture;
+  final Color primaryGreen = const Color(0xFF2E7D32);
+  
+  List<NotificationItem> _notifications = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _notificationFuture = fetchNotifications();
+    _loadNotifications();
   }
 
-  // FUNGSI API (Pengganti Bloc sementara biar cepat)
-  Future<List<NotificationModel>> fetchNotifications() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.email == null) throw Exception("User belum login");
+  Future<void> _loadNotifications() async {
+    setState(() => _isLoading = true);
 
-    try {
-      final url = Uri.parse('${ApiClient.baseUrl}/notifications'); 
-      final response = await http.post(
-        url,
-        headers: ApiClient.headers,
-        body: jsonEncode({'email': user.email}),
-      );
+    // Simulasi delay
+    await Future.delayed(const Duration(milliseconds: 800));
 
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        if (jsonResponse['success'] == true) {
-          List data = jsonResponse['data'];
-          return data.map((e) => NotificationModel.fromJson(e)).toList();
-        }
+    // 🔥 LOGIKA PERBAIKAN:
+    // Cek apakah ini "Pertama Kali Load" (_hasInitialized == false)?
+    // Kalau SUDAH pernah load (_hasInitialized == true), kita SKIP pembuatan data baru.
+    // Jadi kalau database kosong karena dihapus, dia akan tetap kosong.
+    if (!_hasInitialized) {
+      final now = DateTime.now();
+      List<NotificationItem> generatedList = [];
+
+      // --- 1. MINUM AIR ---
+      generatedList.add(NotificationItem(
+        title: "Waktunya Minum Air! 💧",
+        body: "Sudah minum gelas ke-4 hari ini? Tetap terhidrasi agar metabolisme lancar.",
+        icon: Icons.local_drink,
+        color: Colors.blueAccent,
+        category: 'reminder',
+        timestamp: now.subtract(const Duration(minutes: 15)),
+      ));
+
+      // --- 2. JADWAL OLAHRAGA ---
+      int currentHour = now.hour;
+      if (currentHour >= 5 && currentHour < 10) {
+        generatedList.add(NotificationItem(
+          title: "Olahraga Pagi Yuk! 🏃‍♂️",
+          body: "Mulai harimu dengan Jogging 15 menit atau Yoga ringan untuk energi maksimal.",
+          icon: Icons.directions_run,
+          color: Colors.orange,
+          category: 'motivation',
+          timestamp: now,
+        ));
+      } 
+      else if (currentHour >= 11 && currentHour < 15) {
+        generatedList.add(NotificationItem(
+          title: "Waktunya Stretching Siang 🧘",
+          body: "Badan pegal duduk terus? Lakukan peregangan 5 menit agar tidak kaku.",
+          icon: Icons.accessibility_new,
+          color: Colors.teal,
+          category: 'motivation',
+          timestamp: now,
+        ));
+      } 
+      else if (currentHour >= 15 && currentHour < 21) {
+        generatedList.add(NotificationItem(
+          title: "Jadwal Workout Sore 💪",
+          body: "Saatnya bakar kalori! Angkat beban atau Cardio intensif sepulang aktivitas.",
+          icon: Icons.fitness_center,
+          color: Colors.redAccent,
+          category: 'motivation',
+          timestamp: now,
+        ));
       }
-      return []; // Return kosong jika gagal
-    } catch (e) {
-      print("Error Notif: $e");
-      return [];
+
+      // --- 3. FITUR LAMA ---
+      generatedList.add(NotificationItem(
+        title: "Lengkapi Profil Anda 👤",
+        body: "Silahkan lengkapi informasi profil untuk pengalaman yang lebih personal.",
+        icon: Icons.person_search,
+        color: Colors.purple,
+        category: 'system',
+        timestamp: now.subtract(const Duration(days: 1)),
+      ));
+
+      if (currentHour >= 6 && currentHour < 10) {
+        generatedList.add(NotificationItem(
+          title: "Sarapan Sehat 🍳",
+          body: "Jangan lewatkan sarapan. Sudah log makananmu?",
+          icon: Icons.wb_sunny,
+          color: Colors.orangeAccent,
+          category: 'reminder',
+          timestamp: now.subtract(const Duration(minutes: 5)),
+        ));
+      } else if (currentHour >= 11 && currentHour < 14) {
+        generatedList.add(NotificationItem(
+          title: "Waktunya Makan Siang 🥗",
+          body: "Ingat, porsi sayuran harus lebih banyak dari karbohidrat!",
+          icon: Icons.lunch_dining,
+          color: Colors.green,
+          category: 'reminder',
+          timestamp: now.subtract(const Duration(minutes: 5)),
+        ));
+      } else if (currentHour >= 17 && currentHour < 21) {
+        generatedList.add(NotificationItem(
+          title: "Makan Malam Ringan 🍽️",
+          body: "Hindari makanan berat sebelum tidur ya.",
+          icon: Icons.nightlight_round,
+          color: Colors.indigo,
+          category: 'reminder',
+          timestamp: now.subtract(const Duration(minutes: 5)),
+        ));
+      }
+
+      final quotes = [
+        "Tubuhmu adalah aset terbaikmu.",
+        "Rasa sakit hari ini adalah kekuatan bagi esok hari.",
+        "Jangan berhenti saat lelah, berhentilah saat selesai.",
+      ];
+      generatedList.add(NotificationItem(
+        title: "Motivasi Hari Ini ✨",
+        body: quotes[Random().nextInt(quotes.length)],
+        icon: Icons.emoji_events,
+        color: Colors.amber,
+        category: 'motivation',
+        timestamp: now.subtract(const Duration(hours: 4)),
+      ));
+
+      generatedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      
+      // Simpan ke database global
+      _fakeDatabase = generatedList;
+      
+      // 🔥 TANDAI BAHWA KITA SUDAH PERNAH ISI DATA
+      _hasInitialized = true;
     }
+
+    if (mounted) {
+      setState(() {
+        _notifications = _fakeDatabase;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleRefresh() async {
+     await Future.delayed(const Duration(seconds: 1));
+     setState(() {}); 
+  }
+
+  void _onNotificationTap(NotificationItem item) {
+    setState(() {
+      item.isRead = true;
+    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationDetailPage(item: item),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text("Notifikasi", style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
-      body: FutureBuilder<List<NotificationModel>>(
-        future: _notificationFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: Colors.green));
-          }
-          
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("Belum ada notifikasi"));
-          }
-
-          final notifications = snapshot.data!;
-          
-          // Pisahkan Hari Ini & Kemarin (Logic Sederhana)
-          final today = DateTime.now();
-          final listToday = notifications.where((n) => 
-            n.createdAt.day == today.day && n.createdAt.month == today.month).toList();
-            
-          final listYesterday = notifications.where((n) => 
-            !(n.createdAt.day == today.day && n.createdAt.month == today.month)).toList();
-
-          return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (listToday.isNotEmpty) ...[
-                  _buildSectionTitle("Hari ini"),
-                  SizedBox(height: 10),
-                  ...listToday.map((n) => _buildDynamicCard(n, true)).toList(),
-                  SizedBox(height: 20),
-                ],
-
-                if (listYesterday.isNotEmpty) ...[
-                  _buildSectionTitle("Kemarin"),
-                  SizedBox(height: 10),
-                  ...listYesterday.map((n) => _buildDynamicCard(n, false)).toList(),
-                ],
-              ],
-            ),
-          );
-        },
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Notifikasi",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: primaryGreen,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.cleaning_services_outlined),
+                      color: Colors.grey,
+                      tooltip: "Hapus Semua Notifikasi",
+                      onPressed: () {
+                        setState(() {
+                          _fakeDatabase.clear(); 
+                          _notifications.clear();
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Semua notifikasi telah dihapus."),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                        // Catatan: _hasInitialized TETAP TRUE. 
+                        // Jadi saat kembali nanti, dia tidak akan generate ulang.
+                      },
+                    )
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _notifications.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.notifications_off_outlined, size: 60, color: Colors.grey[300]),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "Tidak ada notifikasi baru", 
+                                  style: TextStyle(color: Colors.grey[400]),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            itemCount: _notifications.length,
+                            itemBuilder: (context, index) {
+                              return _buildNotificationCard(_notifications[index]);
+                            },
+                          ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  // Helper Judul
-  Widget _buildSectionTitle(String text) => Text(text, style: TextStyle(fontSize: 16, color: Colors.green[700], fontWeight: FontWeight.w500));
+  Widget _buildNotificationCard(NotificationItem item) {
+    final bgColor = item.isRead ? Colors.grey[50] : Colors.white;
+    final borderColor = item.isRead ? Colors.grey[300]! : item.color.withOpacity(0.5);
 
-  // WIDGET CARD DINAMIS (Menyesuaikan Kategori dari Database)
-  Widget _buildDynamicCard(NotificationModel item, bool isToday) {
-    // 1. Tentukan Warna & Icon berdasarkan Kategori di Database
-    Color color;
-    IconData icon;
-    
-    switch (item.category) {
-      case 'sugar':
-        color = Colors.red;
-        icon = Icons.warning_amber_rounded;
-        break;
-      case 'lunch':
-        color = Colors.orange;
-        icon = Icons.lunch_dining;
-        break;
-      case 'hydration':
-        color = Colors.blue;
-        icon = Icons.water_drop;
-        break;
-      case 'protein':
-        color = Colors.green;
-        icon = Icons.emoji_events;
-        break;
-      case 'weekly':
-        color = Colors.purple;
-        icon = Icons.bar_chart;
-        break;
-      case 'recipe':
-        color = Colors.teal;
-        icon = Icons.menu_book;
-        break;
-      default:
-        color = Colors.grey;
-        icon = Icons.notifications;
-    }
-
-    if (isToday) {
-      // Tampilan "Hari Ini" (Ada Border)
-      return Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor, width: item.isRead ? 1 : 1.5),
+        boxShadow: item.isRead
+            ? [] 
+            : [
+                BoxShadow(
+                  color: item.color.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.5), width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          onTap: () => _onNotificationTap(item),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: item.isRead ? Colors.grey[200] : item.color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(item.icon, color: item.isRead ? Colors.grey : item.color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.green[900])),
-                      Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                      Text(
+                        item.title,
+                        style: TextStyle(
+                          fontWeight: item.isRead ? FontWeight.normal : FontWeight.bold,
+                          fontSize: 14,
+                          color: item.isRead ? Colors.grey[600] : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.body,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time, size: 10, color: Colors.grey[400]),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${item.timestamp.hour}:${item.timestamp.minute.toString().padLeft(2, '0')}", 
+                            style: TextStyle(color: Colors.grey[400], fontSize: 10),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  SizedBox(height: 4),
-                  Text(item.body, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                ],
-              ),
+                ),
+                if (!item.isRead)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4, left: 8),
+                    child: CircleAvatar(
+                      radius: 4,
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
-      );
-    } else {
-      // Tampilan "Kemarin" (Abu-abu)
-      return Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(20)),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.green[800]?.withOpacity(0.7))),
-                  SizedBox(height: 4),
-                  Text(item.body, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+      ),
+    );
   }
 }

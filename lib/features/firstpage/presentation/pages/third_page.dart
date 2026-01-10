@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
-import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_state.dart';
+import '../bloc/firstpage_event.dart';
+import '../bloc/firstpage_state.dart';
 import '../bloc/firstpage_bloc.dart';
 
 class ThirdPage extends StatelessWidget {
@@ -23,6 +23,8 @@ class ThirdPage extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        bool isLoading = state.status == FirstPageStatus.calculating;
+
         return SingleChildScrollView(
           padding: EdgeInsets.all(24),
           child: Column(
@@ -107,6 +109,7 @@ class ThirdPage extends StatelessWidget {
               ),
 
               SizedBox(height: 40),
+
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -117,12 +120,26 @@ class ThirdPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    final email = FirebaseAuth.instance.currentUser?.email;
-                    if (email != null) {
-                      context.read<FirstPageBloc>().add(SubmitProfile(email));
-                    }
-                  },
+                  onPressed:
+                      isLoading
+                          ? null
+                          : () {
+                            final email =
+                                FirebaseAuth.instance.currentUser?.email;
+                            if (email != null) {
+                              context.read<FirstPageBloc>().add(
+                                SubmitProfile(email),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "User tidak terdeteksi (Belum Login)",
+                                  ),
+                                ),
+                              );
+                            }
+                          },
                   child: Text(
                     "Masuk Dashboard",
                     style: TextStyle(
