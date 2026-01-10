@@ -51,4 +51,28 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<void> logout() async {
     await FirebaseAuth.instance.signOut();
   }
+
+  @override
+  Future<List<ActivityLevel>> getActivityLevels() async {
+    final models = await remoteDataSource.getActivityLevels();
+    
+    return models.map((model) => ActivityLevel(
+      id: model.id,
+      levelName: model.levelName,
+      multiplier: model.multiplier,
+      description: model.description,
+    )).toList();
+  }
+
+  @override
+  Future<List<HealthCondition>> getHealthConditions() async {
+    final models = await remoteDataSource.getHealthConditions();
+    
+    return models.map((model) => HealthCondition(
+      id: model.id,
+      conditionName: model.conditionName,
+      sugarLimit: model.sugarLimit,
+      description: model.description,
+    )).toList();
+  }
 }

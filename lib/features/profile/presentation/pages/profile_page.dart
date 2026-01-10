@@ -120,7 +120,7 @@ class ProfilePage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        data.healthLabel,
+                        _getHealthLabel(data.healthId),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.green[700],
@@ -220,8 +220,15 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET HELPER ---
-
+  String _getHealthLabel(int id) {
+    switch (id) {
+      case 2: return "Diabetes";
+      case 3: return "Obesitas";
+      case 4: return "Hipertensi";
+      default: return "Normal / Sehat";
+    }
+  }
+  
   Widget _buildProfilePicture(ProfileEntity data) {
     String? imageUrl;
     if (data is ProfileModel) {

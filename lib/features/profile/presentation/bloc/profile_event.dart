@@ -4,6 +4,7 @@ import '../../domain/entities/profile_entity.dart';
 abstract class ProfileEvent {}
 
 class LoadProfile extends ProfileEvent {}
+class LoadMasterData extends ProfileEvent {}
 
 class UpdateProfileData extends ProfileEvent {
   final ProfileEntity updatedProfile;
