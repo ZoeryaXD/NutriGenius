@@ -1,6 +1,6 @@
 class NotificationModel {
   final int id;
-  final String category; // sugar, lunch, etc.
+  final String category; 
   final String title;
   final String body;
   final DateTime createdAt;

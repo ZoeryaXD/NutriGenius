@@ -23,11 +23,8 @@ class NotificationItem {
   });
 }
 
-// 🔥 DATA GLOBAL (Disimpan di memori)
 List<NotificationItem> _fakeDatabase = [];
 
-// 🔥 PENANDA GLOBAL BARU
-// Ini fungsinya untuk mengingat apakah aplikasi sudah pernah generate data awal atau belum.
 bool _hasInitialized = false; 
 
 class NotificationPage extends StatefulWidget {
@@ -52,13 +49,8 @@ class _NotificationPageState extends State<NotificationPage> {
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
 
-    // Simulasi delay
     await Future.delayed(const Duration(milliseconds: 800));
 
-    // 🔥 LOGIKA PERBAIKAN:
-    // Cek apakah ini "Pertama Kali Load" (_hasInitialized == false)?
-    // Kalau SUDAH pernah load (_hasInitialized == true), kita SKIP pembuatan data baru.
-    // Jadi kalau database kosong karena dihapus, dia akan tetap kosong.
     if (!_hasInitialized) {
       final now = DateTime.now();
       List<NotificationItem> generatedList = [];
@@ -106,7 +98,6 @@ class _NotificationPageState extends State<NotificationPage> {
         ));
       }
 
-      // --- 3. FITUR LAMA ---
       generatedList.add(NotificationItem(
         title: "Lengkapi Profil Anda 👤",
         body: "Silahkan lengkapi informasi profil untuk pengalaman yang lebih personal.",
@@ -161,10 +152,8 @@ class _NotificationPageState extends State<NotificationPage> {
 
       generatedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       
-      // Simpan ke database global
       _fakeDatabase = generatedList;
       
-      // 🔥 TANDAI BAHWA KITA SUDAH PERNAH ISI DATA
       _hasInitialized = true;
     }
 

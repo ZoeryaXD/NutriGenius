@@ -31,8 +31,7 @@ class NotificationDetailPage extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // --- HERO ANIMATION (DESTINATION) ---
-            // Tag harus sama persis dengan yang ada di NotificationPage
+
             Hero(
               tag: 'icon_${item.timestamp}',
               child: Container(
@@ -47,7 +46,6 @@ class NotificationDetailPage extends StatelessWidget {
                 ),
               ),
             ),
-            // --- HERO ANIMATION (END) ---
 
             const SizedBox(height: 16),
             
@@ -121,8 +119,6 @@ class NotificationDetailPage extends StatelessWidget {
   void _handleNavigation(BuildContext context, NotificationItem item) {
     final String titleLower = item.title.toLowerCase();
 
-    // Pastikan Mas sudah mengimport halaman EditProfilePage di bagian atas file ini
-    // Atau jika ingin ke ProfilePage biasa, ganti EditProfilePage() dengan ProfilePage()
     if (titleLower.contains('profil') || titleLower.contains('lengkap')) {
       Navigator.push(
         context,
