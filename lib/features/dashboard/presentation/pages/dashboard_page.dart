@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nutrigenius/features/scan/domain/entities/scan_result.dart';
 import '../../../../injection_container.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
@@ -10,9 +11,32 @@ import '../../../scan/presentation/pages/camera_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../scan/presentation/bloc/scan_bloc.dart';
+import 'package:nutrigenius/features/scan/domain/entities/scan_result.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+  class _DashboardPageState extends State<DashboardPage> {
+  late Timer _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTimer = Timer.periodic(Duration(seconds: 5), (_) {
+      if (mounted) {
+        context.read<DashboardBloc>().add(RefreshDashboard());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer.cancel();
+    super.dispose();
+  }
+
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<DashboardBloc>()..add(LoadDashboard()),
@@ -66,7 +90,13 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildDashboardContent(BuildContext context, DashboardEntity data) {
-    return SingleChildScrollView(
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<DashboardBloc>().add(RefreshDashboard());
+        // Wait a bit for the refresh to complete
+        await Future.delayed(Duration(milliseconds: 500));
+      }, color: Colors.green,
+      child: SingleChildScrollView(
       padding: EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,6 +124,7 @@ class DashboardPage extends StatelessWidget {
           ),
 
           SizedBox(height: 24),
+
           Text(
             _getGreeting(),
             style: TextStyle(color: Colors.green[700], fontSize: 16),
@@ -108,6 +139,7 @@ class DashboardPage extends StatelessWidget {
           ),
 
           SizedBox(height: 24),
+
           Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -266,6 +298,7 @@ class DashboardPage extends StatelessWidget {
 
           SizedBox(height: 40),
         ],
+      ),
       ),
     );
   }

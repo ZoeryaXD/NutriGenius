@@ -81,6 +81,6 @@ class DatabaseHelper {
 
   Future<void> clearHistory() async {
     final db = await database;
-    await db.delete('scan_history'); 
+    await db.delete('journal_details'); 
   }
 }

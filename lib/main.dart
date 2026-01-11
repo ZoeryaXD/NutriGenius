@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nutrigenius/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:nutrigenius/features/scan/presentation/pages/scan_page.dart';
 import 'package:nutrigenius/main_navigation_page.dart';
 import 'features/history/presentation/pages/history_page.dart';
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(create: (_) => di.sl<DashboardBloc>()),
         BlocProvider(create: (_) => di.sl<ScanBloc>()),
         BlocProvider(create: (_) => di.sl<HistoryBloc>()), 
       ],
