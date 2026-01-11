@@ -6,72 +6,76 @@ import 'profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ProfileRepository repository;
 
-  ProfileBloc({required this.repository}) : super(ProfileState()) {
-    on<LoadProfileData>((event, emit) async {
-      emit(state.copyWith(status: ProfileStatus.loading));
+  ProfileBloc({required this.repository}) : super(ProfileInitial()) {
+    on<LoadProfile>((event, emit) async {
+      emit(ProfileLoading());
       try {
         final profile = await repository.getProfile();
-        emit(state.copyWith(status: ProfileStatus.success, profile: profile));
-      } catch (e) {
+        final activities = await repository.getActivityLevels();
+        final conditions = await repository.getHealthConditions();
         emit(
-          state.copyWith(status: ProfileStatus.error, message: e.toString()),
-        );
-      }
-    });
-
-    on<LoadProfileMasterData>((event, emit) async {
-      emit(state.copyWith(status: ProfileStatus.loadingMaster));
-      try {
-        final health = await repository.getHealthConditions();
-        final activity = await repository.getActivityLevels();
-        print("BERHASIL AMBIL: ${health.length} data kesehatan");
-        emit(
-          state.copyWith(
-            status: ProfileStatus.successMaster,
-            healthConditions: health,
-            activityLevels: activity,
+          ProfileLoaded(
+            profile,
+            activityLevels: activities,
+            healthConditions: conditions,
           ),
         );
       } catch (e) {
-        print("LOG ERROR MASTER DATA: $e");
-        emit(
-          state.copyWith(status: ProfileStatus.error, message: e.toString()),
-        );
+        emit(ProfileError(e.toString()));
+      }
+    });
+
+    on<LoadMasterData>((event, emit) async {
+      if (state is ProfileLoaded) {
+        final currentState = state as ProfileLoaded;
+        try {
+          final activities = await repository.getActivityLevels();
+          final conditions = await repository.getHealthConditions();
+          emit(
+            ProfileLoaded(
+              currentState.profile,
+              activityLevels: activities,
+              healthConditions: conditions,
+            ),
+          );
+        } catch (e) {}
       }
     });
 
     on<UpdateProfileData>((event, emit) async {
-      emit(state.copyWith(status: ProfileStatus.loading));
+      emit(ProfileLoading());
       try {
-        String? imageUrl;
-        if (event.imageFile != null) {
-          imageUrl = await repository.uploadPhoto(event.imageFile!);
-        }
-
-        final profileToSave = event.updatedProfile.copyWith(
-          profilePicture: imageUrl ?? event.updatedProfile.profilePicture,
-        );
-
-        await repository.updateProfile(profileToSave);
-        final freshProfile = await repository.getProfile();
-
-        emit(
-          state.copyWith(
-            status: ProfileStatus.success,
-            profile: freshProfile,
-            message: "Profil berhasil diperbarui!",
-          ),
-        );
+        await repository.updateProfile(event.updatedProfile);
+        emit(ProfileUpdateSuccess("Profil berhasil diperbarui!"));
+        add(LoadProfile());
       } catch (e) {
-        emit(
-          state.copyWith(status: ProfileStatus.error, message: e.toString()),
-        );
+        emit(ProfileError("Gagal update: $e"));
+      }
+    });
+
+    on<UploadProfilePhoto>((event, emit) async {
+      emit(ProfileLoading());
+      try {
+        await repository.uploadPhoto(event.photo);
+        emit(PhotoUploadSuccess("Foto berhasil diupload!"));
+        add(LoadProfile());
+      } catch (e) {
+        emit(ProfileError("Gagal upload: $e"));
+      }
+    });
+
+    on<DeleteProfilePhoto>((event, emit) async {
+      try {
+        await repository.deletePhoto();
+        add(LoadProfile());
+      } catch (e) {
+        emit(ProfileError("Gagal hapus foto: $e"));
       }
     });
 
     on<LogoutRequested>((event, emit) async {
       await repository.logout();
-      emit(ProfileState(status: ProfileStatus.initial, profile: null));
+      emit(LogoutSuccess());
     });
   }
 }

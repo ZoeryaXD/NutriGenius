@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_client.dart';
-import '../models/history_model.dart';
+import '../../../scan/data/models/scan_result_model.dart';
 
 abstract class HistoryRemoteDataSource {
-  Future<List<HistoryModel>> getHistory(String email);
+  Future<List<ScanResultModel>> getHistory(String email);
   Future<void> deleteHistory(int id);
 }
 
@@ -15,31 +15,43 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
   HistoryRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<List<HistoryModel>> getHistory(String email) async {
-    final uri = Uri.parse('${ApiClient.baseUrl}/history?email=$email');
+  Future<List<ScanResultModel>> getHistory(String email) async {
+    final uri = Uri.parse('${ApiClient.baseUrl}/scan/history?email=$email');
     final headers = await _getHeaders();
 
-    try {
-      final response = await client.get(uri, headers: headers);
+    final response = await client.get(uri, headers: headers);
 
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        final List data = jsonResponse['data'] ?? [];
-        return data.map((e) => HistoryModel.fromMap(e)).toList();
-      } else {
-        throw Exception('Server Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Gagal koneksi: $e');
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      final List data = jsonResponse['data'];
+      return data.map((e) {
+        return ScanResultModel.fromJson(e, e['image_path'] ?? "");
+      }).toList();
+    } else {
+      throw Exception('Server Error: ${response.body}');
     }
   }
 
   @override
   Future<void> deleteHistory(int id) async {
-    final uri = Uri.parse('${ApiClient.baseUrl}/history?email=$id');
+    // Pastikan endpoint ini sesuai dengan dokumentasi API backend-mu
+    // Misal: /api/scan/history/12
+    final uri = Uri.parse('${ApiClient.baseUrl}/scan/history/$id');
     final headers = await _getHeaders();
-    final response = await client.delete(uri, headers: headers);
-    if (response.statusCode != 200) throw Exception('Gagal delete data');
+
+    try {
+      final response = await client.delete(uri, headers: headers);
+
+      if (response.statusCode != 200) {
+        // Jika backend kirim pesan error, kita tangkap di sini
+        final errorMsg =
+            json.decode(response.body)['message'] ??
+            'Gagal menghapus data di server';
+        throw Exception(errorMsg);
+      }
+    } catch (e) {
+      throw Exception('Koneksi Gagal: $e');
+    }
   }
 
   Future<Map<String, String>> _getHeaders() async {

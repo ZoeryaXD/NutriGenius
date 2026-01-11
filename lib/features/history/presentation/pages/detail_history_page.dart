@@ -5,200 +5,131 @@ import '../../../../core/network/api_client.dart';
 import '../../domain/entities/history_entity.dart';
 import '../bloc/history_bloc.dart';
 import '../bloc/history_event.dart';
+import '../bloc/history_state.dart';
 
 class DetailHistoryPage extends StatelessWidget {
-  final HistoryEntity food;
+  final HistoryEntity history;
   final String email;
 
-  const DetailHistoryPage({super.key, required this.food, required this.email});
+  const DetailHistoryPage({
+    super.key,
+    required this.history,
+    required this.email,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cs = theme.colorScheme;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
-    final String formattedDate = DateFormat(
-      'dd MMM yyyy, HH:mm',
+    final imageUrl =
+        "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${history.imagePath}";
+    final date = DateFormat(
+      'EEEE, d MMM yyyy • HH:mm',
       'id_ID',
-    ).format(food.createdAt);
+    ).format(history.createdAt);
 
-    String imageUrl = food.imagePath;
-    if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      final String cleanBaseUrl = ApiClient.baseUrl.replaceAll('/api', '');
-      imageUrl = "$cleanBaseUrl/uploads/scans/${food.imagePath}";
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Detail Nutrisi",
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child:
-              isLandscape
-                  ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: _buildImage(imageUrl, theme),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 6,
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(0, 24, 24, 24),
-                          child: _buildDetails(context, formattedDate, theme),
-                        ),
-                      ),
-                    ],
-                  )
-                  : SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildImage(imageUrl, theme),
-                        const SizedBox(height: 24),
-                        _buildDetails(context, formattedDate, theme),
-                      ],
-                    ),
-                  ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImage(String imageUrl, ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(
-              theme.brightness == Brightness.dark ? 0.3 : 0.08,
-            ),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child:
-            imageUrl.isEmpty
-                ? Container(
-                  height: 300,
-                  width: double.infinity,
-                  color: theme.colorScheme.surface,
-                  child: const Icon(
-                    Icons.restaurant_rounded,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                )
-                : Image.network(
+    return BlocListener<HistoryBloc, HistoryState>(
+      listener: (context, state) {
+        if (state is HistoryFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+        if (state is HistoryLoaded) {
+          // Jika state berubah jadi Loaded setelah kita delete, berarti hapus berhasil
+          // Kita tidak perlu pop di sini karena sudah dihandle di tombol hapus,
+          // tapi ini menjaga agar UI sinkron.
+        }
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body:
+            isLandscape
+                ? _buildLandscapeLayout(
+                  context,
                   imageUrl,
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
-                  errorBuilder:
-                      (ctx, err, stack) => Container(
-                        height: 300,
-                        color: theme.colorScheme.surface,
-                        child: const Icon(Icons.broken_image_rounded, size: 64),
-                      ),
+                  date,
+                  isDark,
+                  theme,
+                  cs,
+                )
+                : _buildPortraitLayout(
+                  context,
+                  imageUrl,
+                  date,
+                  isDark,
+                  theme,
+                  cs,
                 ),
       ),
     );
   }
 
-  Widget _buildDetails(
+  Widget _buildPortraitLayout(
     BuildContext context,
-    String formattedDate,
+    String url,
+    String date,
+    bool isDark,
     ThemeData theme,
+    ColorScheme cs,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 300,
+          pinned: true,
+          backgroundColor: isDark ? const Color(0xFF0A0F0A) : Colors.green,
+          flexibleSpace: FlexibleSpaceBar(
+            background: Image.network(url, fit: BoxFit.cover),
+          ),
+          leading: _backBtn(context, isDark),
+          actions: [_delBtn(context, isDark)],
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: _content(date, isDark, cs, false),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout(
+    BuildContext context,
+    String url,
+    String date,
+    bool isDark,
+    ThemeData theme,
+    ColorScheme cs,
+  ) {
+    return Row(
       children: [
-        Text(
-          food.foodName,
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
+        Expanded(
+          flex: 4,
+          child: Stack(
+            children: [
+              Positioned.fill(child: Image.network(url, fit: BoxFit.cover)),
+              Positioned(top: 40, left: 20, child: _backBtn(context, isDark)),
+            ],
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          "Dicatat pada $formattedDate",
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Divider(thickness: 1.2),
-        ),
-        _buildRow(
-          "Energi / Kalori",
-          "${food.calories.toStringAsFixed(1)} kcal",
-          const Color(0xFF2E7D32),
-          theme,
-          isBold: true,
-        ),
-        _buildRow(
-          "Protein",
-          "${(food.protein ?? 0.0).toStringAsFixed(1)} g",
-          const Color(0xFF1976D2),
-          theme,
-        ),
-        _buildRow(
-          "Karbohidrat",
-          "${(food.carbs ?? 0.0).toStringAsFixed(1)} g",
-          const Color(0xFFF57C00),
-          theme,
-        ),
-        _buildRow(
-          "Lemak Total",
-          "${(food.fat ?? 0.0).toStringAsFixed(1)} g",
-          const Color(0xFF7B1FA2),
-          theme,
-        ),
-        _buildRow(
-          "Gula",
-          "${(food.sugar ?? 0.0).toStringAsFixed(1)} g",
-          const Color(0xFFC2185B),
-          theme,
-        ),
-        const SizedBox(height: 40),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD32F2F),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 18),
+        Expanded(
+          flex: 5,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
               elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              automaticallyImplyLeading: false,
+              actions: [_delBtn(context, isDark)],
             ),
-            onPressed: () => _showDelete(context),
-            child: const Text(
-              "Hapus Data Riwayat",
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: _content(date, isDark, cs, true),
             ),
           ),
         ),
@@ -206,31 +137,102 @@ class DetailHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(
-    String label,
-    String value,
-    Color valueColor,
-    ThemeData theme, {
-    bool isBold = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _content(String date, bool isDark, ColorScheme cs, bool isLandscape) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          history.foodName,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.green[800],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(Icons.access_time, size: 16, color: Colors.grey),
+            const SizedBox(width: 8),
+            Text(date, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
+        const SizedBox(height: 32),
+        const Text(
+          "Informasi Nutrisi",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: isLandscape ? 3 : 2,
+          childAspectRatio: 2.2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          children: [
+            _card(
+              "🔥 Kalori",
+              "${history.calories.toInt()} kkal",
+              Colors.orange,
+              isDark,
+            ),
+            _card(
+              "🥩 Protein",
+              "${history.protein?.toInt() ?? 0}g",
+              Colors.blue,
+              isDark,
+            ),
+            _card(
+              "🍞 Karbo",
+              "${history.carbs?.toInt() ?? 0}g",
+              Colors.brown,
+              isDark,
+            ),
+            _card(
+              "🥑 Lemak",
+              "${history.fat?.toInt() ?? 0}g",
+              Colors.teal,
+              isDark,
+            ),
+            _card(
+              "🍬 Gula",
+              "${history.sugar?.toInt() ?? 0}g",
+              Colors.pink,
+              isDark,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _card(String l, String v, Color c, bool d) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: d ? c.withOpacity(0.1) : c.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            label,
+            l,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 11,
+              color: c,
+              fontWeight: FontWeight.bold,
             ),
           ),
           Text(
-            value,
+            v,
             style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w900,
-              color: valueColor,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: d ? Colors.white : Colors.black87,
             ),
           ),
         ],
@@ -238,46 +240,47 @@ class DetailHistoryPage extends StatelessWidget {
     );
   }
 
-  void _showDelete(BuildContext context) {
+  Widget _backBtn(BuildContext context, bool d) => IconButton(
+    icon: CircleAvatar(
+      backgroundColor: d ? Colors.black54 : Colors.white,
+      child: Icon(Icons.arrow_back, color: d ? Colors.white : Colors.green),
+    ),
+    onPressed: () => Navigator.pop(context),
+  );
+
+  Widget _delBtn(BuildContext context, bool d) => IconButton(
+    icon: const CircleAvatar(
+      backgroundColor: Colors.red,
+      child: Icon(Icons.delete, color: Colors.white),
+    ),
+    onPressed: () => _confirm(context, d),
+  );
+
+  void _confirm(BuildContext context, bool isDark) {
     showDialog(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: const Text(
-              "Hapus Riwayat?",
-              style: TextStyle(fontWeight: FontWeight.w900),
-            ),
-            content: const Text(
-              "Data yang dihapus tidak dapat dipulihkan kembali.",
-            ),
+            backgroundColor: isDark ? const Color(0xFF161D16) : Colors.white,
+            title: const Text("Hapus Riwayat?"),
+            content: const Text("Data ini akan dihapus permanen."),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text(
-                  "Batal",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: const Text("Batal"),
               ),
-              TextButton(
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
                   context.read<HistoryBloc>().add(
-                    DeleteHistoryEvent(id: food.id, email: email),
+                    DeleteHistoryEvent(id: history.id, email: email),
                   );
                   Navigator.pop(ctx);
                   Navigator.pop(context);
                 },
                 child: const Text(
                   "Hapus",
-                  style: TextStyle(
-                    color: Color(0xFFD32F2F),
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],

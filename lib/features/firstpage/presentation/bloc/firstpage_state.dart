@@ -1,15 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/firstpage_entity.dart';
 
-enum FirstPageStatus {
-  initial,
-  loadingMaster,
-  successMaster,
-  calculating,
-  success,
-  successSubmit,
-  failure,
-}
+enum FirstPageStatus { initial, loadingMaster, successMaster, calculating, success, successSubmit, failure }
 
 class FirstPageState extends Equatable {
   final String gender;

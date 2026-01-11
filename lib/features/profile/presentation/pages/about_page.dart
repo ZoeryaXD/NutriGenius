@@ -6,113 +6,144 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(
-          "Tentang NutriGenius",
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+        title: const Text("Tentang NutriGenius"),
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left_rounded, size: 32),
+          onPressed: () => Navigator.pop(context),
         ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        leading: BackButton(color: primaryColor),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            Center(
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colorScheme.primary.withOpacity(0.1),
+                    ),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 100,
+                      height: 100,
+                      errorBuilder:
+                          (_, __, ___) => Icon(
+                            Icons.eco_rounded,
+                            size: 80,
+                            color: colorScheme.primary,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "NutriGenius",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : colorScheme.primary,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  Text(
+                    "Versi 1.0.0 (Stable)",
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 40),
+
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: primaryColor.withOpacity(0.1),
-              ),
-              child: Image.asset(
-                'assets/images/logo.png',
-                width: 80,
-                height: 80,
-                errorBuilder:
-                    (_, __, ___) =>
-                        Icon(Icons.eco, size: 80, color: primaryColor),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "NutriGenius",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const Text(
-              "Versi 1.0.0 (Beta)",
-              style: TextStyle(color: Colors.grey),
-            ),
-
-            const SizedBox(height: 30),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor),
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
               child: Text(
-                "NutriGenius adalah asisten kesehatan pintar yang membantumu menghitung kebutuhan kalori harian (TDEE), memantau nutrisi, dan menjaga pola hidup sehat sesuai kondisi tubuhmu.",
+                "NutriGenius adalah asisten kesehatan pintar yang membantumu menghitung kebutuhan kalori harian (TDEE), memantau nutrisi melalui pemindaian AI, dan menjaga pola hidup sehat sesuai kondisi tubuhmu secara personal.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 15,
-                  color: theme.textTheme.bodyLarge?.color,
-                  height: 1.5,
+                  fontSize: 16,
+                  height: 1.6,
+                  color: isDark ? Colors.grey[300] : Colors.black87,
                 ),
               ),
             ),
 
-            const SizedBox(height: 30),
-            const Divider(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 40),
 
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                "Kelompok 4",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Text(
+                  "DIBANGUN OLEH KELOMPOK 4",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                    letterSpacing: 1.5,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
+
             _buildTeamMember(
               context,
               "Rifqi Falih Ramadhan",
-              "Auth & FirstPage",
+              "Auth & FirstPage Lead",
             ),
             _buildTeamMember(
               context,
               "Januar Surya Mukti",
-              "Dashboard & AI Food Scan",
+              "Dashboard & AI Scan Expert",
             ),
             _buildTeamMember(
               context,
               "Royhan Firdaus",
-              "History Log & Profile",
+              "Profile & History Architect",
             ),
             _buildTeamMember(
               context,
               "Ardika Fatnurivan",
-              "Notification System",
+              "Notification System Specialist",
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 60),
+
             Text(
               "© 2026 NutriGenius Project",
-              style: TextStyle(color: Colors.grey[400], fontSize: 12),
+              style: TextStyle(
+                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -121,32 +152,34 @@ class AboutPage extends StatelessWidget {
 
   Widget _buildTeamMember(BuildContext context, String name, String role) {
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surface,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.dividerColor),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: primaryColor.withOpacity(0.1),
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : "?",
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: colorScheme.primary.withOpacity(0.1),
+            child: Text(
+              name.isNotEmpty ? name[0].toUpperCase() : "?",
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
-            const SizedBox(width: 16),
-            Column(
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -156,15 +189,19 @@ class AboutPage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   role,
-                  style: TextStyle(fontSize: 13, color: theme.hintColor),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

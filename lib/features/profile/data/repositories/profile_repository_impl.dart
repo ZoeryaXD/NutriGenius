@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/entities/profile_entity.dart';
-import '../../domain/entities/activity_level_entity.dart';
-import '../../domain/entities/health_condition_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 
@@ -44,6 +42,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+  }
+
+  @override
   Future<void> deleteAccount() async {
     await remoteDataSource.deleteAccount(_email);
     await FirebaseAuth.instance.currentUser?.delete();
@@ -55,44 +58,26 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<void> changePassword(String newPassword) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await user.updatePassword(newPassword);
-      }
-    } catch (e) {
-      throw Exception("Gagal ganti password: ${e.toString()}");
-    }
-  }
-
-  @override
-  Future<List<ActivityLevelEntity>> getActivityLevels() async {
+  Future<List<ActivityLevel>> getActivityLevels() async {
     final models = await remoteDataSource.getActivityLevels();
-    return models
-        .map(
-          (model) => ActivityLevelEntity(
-            id: model.id,
-            levelName: model.levelName,
-            multiplier: model.multiplier,
-            description: model.description,
-          ),
-        )
-        .toList();
+    
+    return models.map((model) => ActivityLevel(
+      id: model.id,
+      levelName: model.levelName,
+      multiplier: model.multiplier,
+      description: model.description,
+    )).toList();
   }
 
   @override
-  Future<List<HealthConditionEntity>> getHealthConditions() async {
+  Future<List<HealthCondition>> getHealthConditions() async {
     final models = await remoteDataSource.getHealthConditions();
-    return models
-        .map(
-          (model) => HealthConditionEntity(
-            id: model.id,
-            conditionName: model.conditionName,
-            sugarLimit: model.sugarLimit,
-            description: model.description,
-          ),
-        )
-        .toList();
+    
+    return models.map((model) => HealthCondition(
+      id: model.id,
+      conditionName: model.conditionName,
+      sugarLimit: model.sugarLimit,
+      description: model.description,
+    )).toList();
   }
 }

@@ -1,42 +1,39 @@
 import '../../domain/entities/profile_entity.dart';
 
-enum ProfileStatus {
-  initial,
-  loading,
-  success,
-  error,
-  loadingMaster,
-  successMaster,
-}
+abstract class ProfileState {}
 
-class ProfileState {
-  final ProfileStatus status;
-  final ProfileEntity? profile;
-  final List<dynamic> healthConditions;
-  final List<dynamic> activityLevels;
-  final String? message;
+class ProfileInitial extends ProfileState {}
 
-  ProfileState({
-    this.status = ProfileStatus.initial,
-    this.profile,
-    this.healthConditions = const [],
+class ProfileLoading extends ProfileState {}
+
+class ProfileLoaded extends ProfileState {
+  final ProfileEntity profile;
+  final List<ActivityLevel> activityLevels;
+  final List<HealthCondition> healthConditions;
+
+  ProfileLoaded(
+    this.profile, {
     this.activityLevels = const [],
-    this.message,
+    this.healthConditions = const [],
   });
-
-  ProfileState copyWith({
-    ProfileStatus? status,
-    ProfileEntity? profile,
-    List<dynamic>? healthConditions,
-    List<dynamic>? activityLevels,
-    String? message,
-  }) {
-    return ProfileState(
-      status: status ?? this.status,
-      profile: profile ?? this.profile,
-      healthConditions: healthConditions ?? this.healthConditions,
-      activityLevels: activityLevels ?? this.activityLevels,
-      message: message ?? this.message,
-    );
-  }
 }
+
+class ProfileError extends ProfileState {
+  final String message;
+  ProfileError(this.message);
+}
+
+class ProfileActionSuccess extends ProfileState {
+  final String message;
+  ProfileActionSuccess(this.message);
+}
+
+class ProfileUpdateSuccess extends ProfileActionSuccess {
+  ProfileUpdateSuccess(String message) : super(message);
+}
+
+class PhotoUploadSuccess extends ProfileActionSuccess {
+  PhotoUploadSuccess(String message) : super(message);
+}
+
+class LogoutSuccess extends ProfileState {}

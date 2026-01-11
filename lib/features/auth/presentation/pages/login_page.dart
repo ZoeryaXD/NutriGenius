@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nutrigenius/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:nutrigenius/features/auth/presentation/bloc/auth_event.dart';
-import 'package:nutrigenius/features/auth/presentation/bloc/auth_state.dart';
-import 'package:nutrigenius/features/auth/presentation/pages/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
+import '../widgets/auth_text_field.dart';
+import '../widgets/auth_button_field.dart';
+import '../widgets/auth_dialogs.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,228 +21,152 @@ class _LoginPageState extends State<LoginPage> {
   final _passController = TextEditingController();
   bool _isObscure = true;
 
-  void _showForgotPasswordDialog() {
-    final theme = Theme.of(context);
-    final resetEmailController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: theme.colorScheme.surface,
-            title: const Text(
-              "Lupa Password",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Masukkan email Anda untuk menerima link reset password.",
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: resetEmailController,
-                  decoration: InputDecoration(
-                    hintText: "Email Anda",
-                    filled: true,
-                    fillColor:
-                        theme.brightness == Brightness.dark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Batal", style: TextStyle(color: theme.hintColor)),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  context.read<AuthBloc>().add(
-                    ForgotPasswordRequested(resetEmailController.text),
-                  );
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text("Kirim"),
-              ),
-            ],
-          ),
-    );
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) async {
-          if (state is AuthSuccess) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('email', _emailController.text.trim());
-            if (state.isOnboarded) {
-              Navigator.pushReplacementNamed(context, '/dashboard');
-            } else {
-              Navigator.pushReplacementNamed(context, '/firstpage');
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        Navigator.pushReplacementNamed(context, '/');
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) async {
+            if (state is AuthSuccess) {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('email', _emailController.text.trim());
+              if (state.isOnboarded) {
+                Navigator.pushReplacementNamed(context, '/dashboard');
+              } else {
+                Navigator.pushReplacementNamed(context, '/firstpage');
+              }
+            } else if (state is AuthFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                ),
+              );
             }
-          } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              Icon(Icons.spa_rounded, size: 100, color: primaryColor),
-              const SizedBox(height: 10),
-              Text(
-                "NutriGenius",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                  letterSpacing: -1,
-                ),
-              ),
-              Text(
-                "Cara Genius Hidup Sehat",
-                style: TextStyle(fontSize: 16, color: theme.hintColor),
-              ),
-              const SizedBox(height: 50),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  labelText: "Email",
-                  fillColor: theme.colorScheme.surface,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passController,
-                obscureText: _isObscure,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  labelText: "Password",
-                  fillColor: theme.colorScheme.surface,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isObscure ? Icons.visibility_off : Icons.visibility,
+          },
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  SizedBox(height: screenHeight * 0.08),
+                  Icon(Icons.spa_rounded, size: 80, color: colorScheme.primary),
+                  const SizedBox(height: 24),
+                  Text(
+                    "NutriGenius",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : colorScheme.primary,
                     ),
-                    onPressed: () => setState(() => _isObscure = !_isObscure),
                   ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _showForgotPasswordDialog,
-                  child: Text(
-                    "Lupa Password?",
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  Text(
+                    "Cara Genius Hidup Sehat",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDark ? Colors.white70 : Colors.black54,
                     ),
-                    elevation: 2,
                   ),
-                  onPressed: () {
-                    context.read<AuthBloc>().add(
-                      LoginRequested(
-                        _emailController.text,
-                        _passController.text,
+                  SizedBox(height: screenHeight * 0.06),
+                  AuthTextField(
+                    controller: _emailController,
+                    label: "Email",
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 16),
+                  AuthTextField(
+                    controller: _passController,
+                    label: "Password",
+                    icon: Icons.lock_outline,
+                    isObscure: _isObscure,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isObscure ? Icons.visibility_off : Icons.visibility,
+                        color: isDark ? Colors.white70 : colorScheme.primary,
                       ),
-                    );
-                  },
-                  child: BlocBuilder<AuthBloc, AuthState>(
+                      onPressed: () => setState(() => _isObscure = !_isObscure),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => AuthDialogs.showForgotPassword(context),
+                      child: Text(
+                        "Lupa Password?",
+                        style: TextStyle(
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
-                      return state is AuthLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            "LOGIN",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                      return AuthButton(
+                        text: "LOGIN",
+                        isLoading: state is AuthLoading,
+                        onPressed: () {
+                          context.read<AuthBloc>().add(
+                            LoginRequested(
+                              _emailController.text,
+                              _passController.text,
                             ),
                           );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-              const Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: Text("ATAU"),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Belum punya akun? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterPage(),
-                        ),
+                        },
                       );
                     },
-                    child: Text(
-                      "Daftar Sekarang",
-                      style: TextStyle(
-                        color: primaryColor,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Belum punya akun? ",
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterPage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Daftar Sekarang",
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

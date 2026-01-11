@@ -1,170 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nutrigenius/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../injection_container.dart';
+import 'package:nutrigenius/core/theme/theme_cubit.dart';
+import 'package:nutrigenius/features/profile/presentation/pages/about_page.dart';
+import 'package:nutrigenius/features/profile/presentation/pages/change_password_page.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 import '../../../auth/presentation/pages/login_page.dart';
-import 'about_page.dart';
-import '../widgets/profile_menu_item.dart';
-import '../widgets/profile_switch_tile.dart';
-import 'change_password_page.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-
-  @override
-  _SettingsPageState createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  bool _notifMakan = true;
-  bool _notifGula = true;
-  bool _darkMode = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final pref = await SharedPreferences.getInstance();
-    setState(() {
-      _notifMakan = pref.getBool('notifMakan') ?? true;
-      _notifGula = pref.getBool('notifGula') ?? true;
-      _darkMode = pref.getBool('darkMode') ?? false;
-    });
-  }
-
-  Future<void> _saveSetting(String key, bool value) async {
-    final pref = await SharedPreferences.getInstance();
-    await pref.setBool(key, value);
-  }
-
-  void _settingsListener(BuildContext context, ProfileState state) {
-    if (state.status == ProfileStatus.initial && state.profile == null) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (r) => false,
-      );
-    }
-    if (state.status == ProfileStatus.error && state.message != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.message!), backgroundColor: Colors.red),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           "Pengaturan",
           style: TextStyle(
-            color: isDark ? Colors.white : theme.primaryColor,
+            color: isDark ? Colors.white : colorScheme.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        leading: BackButton(color: isDark ? Colors.white : theme.primaryColor),
+        surfaceTintColor: Colors.transparent,
       ),
       body: BlocListener<ProfileBloc, ProfileState>(
-        listener: _settingsListener,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              children: [
-                _sectionHeader("AKUN", theme),
-                ProfileMenuItem(
-                  icon: Icons.lock_outline,
-                  label: "Ganti Password",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ChangePasswordPage(),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(height: 32),
-                _sectionHeader("NOTIFIKASI", theme),
-                ProfileSwitchTile(
-                  icon: Icons.access_time,
-                  title: "Ingatkan Makan",
-                  value: _notifMakan,
-                  onChanged: (v) {
-                    setState(() => _notifMakan = v);
-                    _saveSetting('notifMakan', v);
-                  },
-                ),
-                ProfileSwitchTile(
-                  icon: Icons.security,
-                  title: "Peringatan Gula Tinggi",
-                  value: _notifGula,
-                  onChanged: (v) {
-                    setState(() => _notifGula = v);
-                    _saveSetting('notifGula', v);
-                  },
-                ),
-                const Divider(height: 32),
-                _sectionHeader("TAMPILAN", theme),
-                ProfileSwitchTile(
-                  icon: Icons.dark_mode_outlined,
-                  title: "Mode Gelap",
-                  value: _darkMode,
-                  onChanged: (v) => _onDarkModeChanged(v),
-                ),
-                const Divider(height: 32),
-                _sectionHeader("TENTANG", theme),
-                ProfileMenuItem(
-                  icon: Icons.info_outline,
-                  label: "Tentang NutriGenius",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AboutPage()),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-                ProfileMenuItem(
-                  icon: Icons.delete_forever,
-                  label: "Hapus Akun Saya",
-                  isDestructive: true,
-                  onTap: () => _showDeleteConfirmDialog(context),
-                ),
-                const SizedBox(height: 24),
-                const Center(
-                  child: Text(
-                    "Versi 1.0.0 (Beta)",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+        listener: (context, state) {
+          if (state is LogoutSuccess) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => LoginPage()),
+              (r) => false,
+            );
+          }
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            _sectionHeader("AKUN", colorScheme),
+            _buildListTile(
+              context,
+              Icons.lock_outline_rounded,
+              "Ganti Password",
+              () {
+                final state = context.read<ProfileBloc>().state;
+                String currentEmail = "";
+                if (state is ProfileLoaded) currentEmail = state.profile.email;
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (_) => BlocProvider.value(
+                          value: context.read<ProfileBloc>(),
+                          child: ChangePasswordPage(currentEmail: currentEmail),
+                        ),
                   ),
-                ),
-              ],
+                );
+              },
+              colorScheme,
             ),
-          ),
+            const Divider(height: 32),
+
+            _sectionHeader("TAMPILAN", colorScheme),
+
+            BlocBuilder<ThemeCubit, ThemeMode>(
+              builder: (context, themeMode) {
+                return _buildSwitchTile(
+                  Icons.dark_mode_outlined,
+                  "Mode Gelap",
+                  themeMode == ThemeMode.dark,
+                  (v) => context.read<ThemeCubit>().toggleTheme(v),
+                  colorScheme,
+                );
+              },
+            ),
+
+            const Divider(height: 32),
+            _sectionHeader("TENTANG", colorScheme),
+            _buildListTile(
+              context,
+              Icons.info_outline_rounded,
+              "Tentang NutriGenius",
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AboutPage()),
+              ),
+              colorScheme,
+            ),
+
+            const SizedBox(height: 50),
+            _buildDeleteButton(context),
+
+            const SizedBox(height: 24),
+            const Center(
+              child: Text(
+                "Versi 1.0.0 (Beta)",
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _onDarkModeChanged(bool value) async {
-    final pref = sl<SharedPreferences>();
-    await pref.setBool('darkMode', value);
-    themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
-    setState(() => _darkMode = value);
+  Widget _buildDeleteButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Colors.redAccent),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        onPressed: () => _showDeleteConfirmDialog(context),
+        child: const Text(
+          "Hapus Akun Saya",
+          style: TextStyle(
+            color: Colors.redAccent,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
   }
 
   void _showDeleteConfirmDialog(BuildContext context) {
@@ -173,7 +139,9 @@ class _SettingsPageState extends State<SettingsPage> {
       builder:
           (ctx) => AlertDialog(
             title: const Text("Hapus Akun?"),
-            content: const Text("Semua data Anda akan hilang secara permanen."),
+            content: const Text(
+              "Seluruh data kesehatan dan riwayat scan Anda akan dihapus permanen dari sistem.",
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -183,29 +151,81 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  context.read<ProfileBloc>().add(LogoutRequested());
+                  context.read<ProfileBloc>().add(DeleteAccountRequested());
                 },
-                child: const Text(
-                  "Hapus",
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: const Text("Ya, Hapus"),
               ),
             ],
           ),
     );
   }
 
-  Widget _sectionHeader(String title, ThemeData theme) {
+  Widget _sectionHeader(String title, ColorScheme colorScheme) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
         style: TextStyle(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w800,
+          color: colorScheme.primary,
+          fontWeight: FontWeight.bold,
           fontSize: 12,
           letterSpacing: 1.1,
         ),
+      ),
+    );
+  }
+
+  Widget _buildListTile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+    ColorScheme colorScheme,
+  ) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: colorScheme.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: colorScheme.primary, size: 20),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildSwitchTile(
+    IconData icon,
+    String title,
+    bool value,
+    Function(bool) onChanged,
+    ColorScheme colorScheme,
+  ) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: colorScheme.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: colorScheme.primary, size: 20),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      trailing: Switch.adaptive(
+        value: value,
+        activeColor: colorScheme.primary,
+        onChanged: onChanged,
       ),
     );
   }

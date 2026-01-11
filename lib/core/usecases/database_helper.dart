@@ -24,7 +24,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 2, onCreate: _createDB);
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -43,42 +43,38 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
-    CREATE TABLE history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      food_name TEXT NOT NULL,
-      calories REAL NOT NULL,
-      protein REAL,
-      carbs REAL,
-      fat REAL,
-      sugar REAL,
-      created_at TEXT NOT NULL, 
-      image_path TEXT
-    )
-    ''');
+  CREATE TABLE journal_details (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    food_name TEXT NOT NULL,
+    calories REAL NOT NULL,
+    protein REAL,     
+    carbs REAL,       
+    fat REAL,         
+    sugar REAL,       
+    image_path TEXT,
+    created_at TEXT NOT NULL,
+    is_synced INTEGER DEFAULT 0
+  )
+''');
   }
 
   Future<List<Map<String, dynamic>>> getHistory() async {
     final db = await database;
-    try {
-      return await db.query('history', orderBy: 'created_at DESC');
-    } catch (e) {
-      print("Gagal query SQLite: $e");
-      return [];
-    }
+    return await db.query('journal_details', orderBy: 'created_at DESC');
   }
 
   Future<int> insertFood(Map<String, dynamic> row) async {
     final db = await database;
-    return await db.insert('history', row);
+    return await db.insert('journal_details', row);
   }
 
   Future<int> deleteFood(int id) async {
     final db = await database;
-    return await db.delete('history', where: 'id = ?', whereArgs: [id]);
+    return await db.delete('journal_details', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<void> clearAllHistory() async {
+  Future<void> clearHistory() async {
     final db = await database;
-    await db.delete('history');
+    await db.delete('journal_details'); 
   }
 }

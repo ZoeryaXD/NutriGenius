@@ -9,21 +9,12 @@ import '../widgets/weekly_report_card.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
-
   @override
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
 class _HistoryPageState extends State<HistoryPage> {
   String? userEmail;
-  String _selectedFilter = "Semua";
-  final List<String> _mealTypes = [
-    "Semua",
-    "Sarapan",
-    "Makan Siang",
-    "Makan Malam",
-    "Cemilan",
-  ];
 
   @override
   void initState() {
@@ -33,10 +24,8 @@ class _HistoryPageState extends State<HistoryPage> {
 
   void _loadInitialData() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userEmail = prefs.getString('email');
-    });
-    if (userEmail != null) {
+    userEmail = prefs.getString('email');
+    if (userEmail != null && mounted) {
       context.read<HistoryBloc>().add(LoadHistoryEvent(userEmail!));
     }
   }
@@ -44,238 +33,177 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<HistoryBloc, HistoryState>(
-          builder: (context, state) {
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        title: Text(
+          "Riwayat Makan",
+          style: TextStyle(
+            color: isDark ? Colors.white : colorScheme.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh_rounded, color: colorScheme.primary),
+            onPressed: () {
+              if (userEmail != null) {
+                context.read<HistoryBloc>().add(LoadHistoryEvent(userEmail!));
+              }
+            },
+          ),
+        ],
+      ),
+      body: BlocBuilder<HistoryBloc, HistoryState>(
+        builder: (context, state) {
+          if (state is HistoryLoading) {
+            return Center(
+              child: CircularProgressIndicator(color: colorScheme.primary),
+            );
+          }
+          if (state is HistoryLoaded) {
+            if (state.histories.isEmpty)
+              return _buildEmptyState(colorScheme, isDark);
             return RefreshIndicator(
               onRefresh: () async {
-                if (userEmail != null) {
+                if (userEmail != null)
                   context.read<HistoryBloc>().add(LoadHistoryEvent(userEmail!));
-                }
               },
-              color: theme.colorScheme.primary,
-              child: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    floating: true,
-                    backgroundColor: theme.scaffoldBackgroundColor,
-                    elevation: 0,
-                    centerTitle: false,
-                    title: Text(
-                      "Riwayat",
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 24,
-                      ),
-                    ),
-                  ),
-                  if (state is HistoryLoaded)
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      sliver:
-                          isLandscape
-                              ? _buildLandscapeLayout(state, theme)
-                              : _buildPortraitLayout(state, theme),
-                    ),
-                  if (state is HistoryLoading)
-                    const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                ],
-              ),
+              color: colorScheme.primary,
+              child:
+                  isLandscape
+                      ? _buildLandscape(state, colorScheme, isDark)
+                      : _buildPortrait(state, colorScheme, isDark),
             );
-          },
-        ),
+          }
+          return const SizedBox();
+        },
       ),
     );
   }
 
-  Widget _buildPortraitLayout(HistoryLoaded state, ThemeData theme) {
-    final filteredHistories =
-        _selectedFilter == "Semua"
-            ? state.histories
-            : state.histories
-                .where((h) => h.mealType == _selectedFilter)
-                .toList();
-
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        WeeklyReportCard(
-          weeklyCalories: state.weeklyCalories,
-          totalCalories: state.totalCaloriesThisWeek,
-          dailyAverage: state.dailyAverage,
-        ),
-        const SizedBox(height: 24),
-        _buildFilterSection(theme),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "Aktivitas Terbaru",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            if (_selectedFilter != "Semua")
-              Text(
-                "${filteredHistories.length} ditemukan",
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _buildList(filteredHistories),
-      ]),
-    );
-  }
-
-  Widget _buildLandscapeLayout(HistoryLoaded state, ThemeData theme) {
-    final filteredHistories =
-        _selectedFilter == "Semua"
-            ? state.histories
-            : state.histories
-                .where((h) => h.mealType == _selectedFilter)
-                .toList();
-
-    return SliverToBoxAdapter(
-      child: Row(
+  Widget _buildPortrait(HistoryLoaded state, ColorScheme cs, bool isDark) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 4,
-            child: Column(
-              children: [
-                WeeklyReportCard(
-                  weeklyCalories: state.weeklyCalories,
-                  totalCalories: state.totalCaloriesThisWeek,
-                  dailyAverage: state.dailyAverage,
-                ),
-                const SizedBox(height: 16),
-                _buildFilterSection(theme),
-              ],
-            ),
+          WeeklyReportCard(
+            weeklyCalories: state.weeklyCalories,
+            totalCalories: state.totalCaloriesThisWeek,
+            dailyAverage: state.dailyAverage,
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            flex: 6,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Aktivitas Terbaru",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 12),
-                _buildList(filteredHistories),
-              ],
-            ),
-          ),
+          const SizedBox(height: 32),
+          _buildHeader("Riwayat Scan", cs, isDark),
+          const SizedBox(height: 16),
+          _buildList(state),
         ],
       ),
     );
   }
 
-  Widget _buildFilterSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildLandscape(HistoryLoaded state, ColorScheme cs, bool isDark) {
+    return Row(
       children: [
-        const Text(
-          "Filter Kategori",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey,
+        Expanded(
+          flex: 4,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: WeeklyReportCard(
+              weeklyCalories: state.weeklyCalories,
+              totalCalories: state.totalCaloriesThisWeek,
+              dailyAverage: state.dailyAverage,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children:
-                _mealTypes.map((type) {
-                  bool isSelected = _selectedFilter == type;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(type),
-                      selected: isSelected,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          _selectedFilter = type;
-                        });
-                      },
-                      selectedColor: theme.colorScheme.primary,
-                      backgroundColor: theme.colorScheme.surface,
-                      labelStyle: TextStyle(
-                        color:
-                            isSelected
-                                ? Colors.white
-                                : theme.colorScheme.primary,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color:
-                              isSelected
-                                  ? theme.colorScheme.primary
-                                  : Colors.grey.withOpacity(0.3),
-                        ),
-                      ),
-                      showCheckmark: false,
-                    ),
-                  );
-                }).toList(),
+        VerticalDivider(
+          width: 1,
+          color: isDark ? Colors.white10 : Colors.black12,
+        ),
+        Expanded(
+          flex: 5,
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              _buildHeader("Riwayat Scan", cs, isDark),
+              const SizedBox(height: 16),
+              _buildList(state),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildList(List histories) {
-    if (histories.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(
-                Icons.no_meals_rounded,
-                size: 64,
-                color: Colors.grey.withOpacity(0.3),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Tidak ada riwayat untuk kategori ini",
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
+  Widget _buildHeader(String title, ColorScheme cs, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: cs.primary,
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
-      );
-    }
-    return ListView.separated(
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildList(HistoryLoaded state) {
+    return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: histories.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 10),
+      itemCount: state.histories.length,
       itemBuilder:
           (context, index) => HistoryListItem(
-            item: histories[index],
+            item: state.histories[index],
             userEmail: userEmail ?? '',
           ),
+    );
+  }
+
+  Widget _buildEmptyState(ColorScheme cs, bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.history_toggle_off_rounded,
+            size: 80,
+            color: cs.primary.withOpacity(0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Belum ada riwayat",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

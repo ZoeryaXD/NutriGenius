@@ -9,28 +9,20 @@ abstract class HistoryLocalDataSource {
 
 class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
   final DatabaseHelper databaseHelper;
+
   HistoryLocalDataSourceImpl({required this.databaseHelper});
 
   @override
   Future<List<HistoryModel>> getLastHistory() async {
-    try {
-      final result = await databaseHelper.getHistory();
-      return result.map((e) => HistoryModel.fromMap(e)).toList();
-    } catch (e) {
-      print("Error SQLite di LocalDS: $e");
-      return [];
-    }
+    final result = await databaseHelper.getHistory();
+    return result.map((e) => HistoryModel.fromMap(e)).toList();
   }
 
   @override
   Future<void> cacheHistory(List<HistoryModel> historyList) async {
-    try {
-      await databaseHelper.clearAllHistory();
-      for (var item in historyList) {
-        await databaseHelper.insertFood(item.toMap());
-      }
-    } catch (e) {
-      print("Gagal simpan cache: $e");
+    await databaseHelper.clearHistory();
+    for (var item in historyList) {
+      await databaseHelper.insertFood(item.toMap());
     }
   }
 

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:nutrigenius/features/firstpage/presentation/bloc/firstpage_event.dart';
+import 'package:intl/intl.dart';
 import '../bloc/firstpage_bloc.dart';
+import '../bloc/firstpage_event.dart';
 
 class FirstPage extends StatefulWidget {
   final PageController pageController;
   const FirstPage({super.key, required this.pageController});
 
   @override
-  _FirstPageState createState() => _FirstPageState();
+  State<FirstPage> createState() => _FirstPageState();
 }
 
 class _FirstPageState extends State<FirstPage> {
@@ -31,9 +32,11 @@ class _FirstPageState extends State<FirstPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,41 +46,33 @@ class _FirstPageState extends State<FirstPage> {
             "Halo! Yuk Kenalan Dulu",
             "Data ini membantu kami menghitung kebutuhan tubuhmu.",
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 32),
+
           _buildLabel(context, "Jenis Kelamin:"),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: _gender == null ? theme.colorScheme.surface : primaryColor,
-              borderRadius: BorderRadius.circular(12),
-              border:
-                  _gender == null
-                      ? Border.all(color: theme.dividerColor)
-                      : null,
+              color:
+                  isDark
+                      ? colorScheme.surface
+                      : colorScheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _gender,
                 isExpanded: true,
-                dropdownColor:
-                    theme.brightness == Brightness.dark
-                        ? const Color(0xFF161D16)
-                        : Colors.white,
+                dropdownColor: isDark ? const Color(0xFF161D16) : Colors.white,
                 hint: Text(
                   "Pilih Jenis Kelamin",
-                  style: TextStyle(color: theme.hintColor),
+                  style: TextStyle(
+                    color: isDark ? Colors.white54 : colorScheme.primary,
+                  ),
                 ),
                 icon: Icon(
-                  Icons.arrow_drop_down,
-                  color: _gender == null ? primaryColor : Colors.white,
-                ),
-                style: TextStyle(
-                  color:
-                      _gender == null
-                          ? theme.textTheme.bodyLarge?.color
-                          : Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  Icons.keyboard_arrow_down_rounded,
+                  color: colorScheme.primary,
                 ),
                 items:
                     ['Laki-Laki', 'Perempuan'].map((String value) {
@@ -87,17 +82,14 @@ class _FirstPageState extends State<FirstPage> {
                           children: [
                             Icon(
                               value == 'Laki-Laki' ? Icons.male : Icons.female,
-                              color:
-                                  _gender == value
-                                      ? primaryColor
-                                      : theme.iconTheme.color,
+                              color: colorScheme.primary,
                               size: 20,
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 12),
                             Text(
                               value,
                               style: TextStyle(
-                                color: theme.textTheme.bodyLarge?.color,
+                                color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
                           ],
@@ -108,122 +100,107 @@ class _FirstPageState extends State<FirstPage> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+
+          const SizedBox(height: 24),
+
           Row(
             children: [
               Expanded(
                 child: _buildInputGroup(
                   context,
-                  "Berat Badan:",
+                  "Berat (kg):",
                   _weightCtrl,
                   "kg",
                 ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 16),
               Expanded(
                 child: _buildInputGroup(
                   context,
-                  "Tinggi Badan:",
+                  "Tinggi (cm):",
                   _heightCtrl,
                   "cm",
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+
+          const SizedBox(height: 24),
+
           _buildLabel(context, "Tanggal Lahir:"),
           GestureDetector(
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: DateTime(2000),
-                firstDate: DateTime(1950),
-                lastDate: DateTime.now(),
-              );
-              if (picked != null) setState(() => _birthDate = picked);
-            },
+            onTap: _pickDate,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor),
+                color:
+                    isDark
+                        ? colorScheme.surface
+                        : colorScheme.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today, color: primaryColor, size: 20),
+                  Icon(
+                    Icons.calendar_month_rounded,
+                    color: colorScheme.primary,
+                    size: 22,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     _birthDate == null
                         ? "Pilih Tanggal Lahir"
-                        : "${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                        : DateFormat('dd MMMM yyyy').format(_birthDate!),
+                    style: TextStyle(
                       fontSize: 16,
+                      color:
+                          _birthDate == null
+                              ? Colors.grey
+                              : (isDark ? Colors.white : Colors.black87),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
-          _buildLabel(context, "Usia:"),
+
+          const SizedBox(height: 24),
+
+          _buildLabel(context, "Usia Terdeteksi:"),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+              color: colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               _birthDate == null ? "- Tahun" : "$_age Tahun",
               style: TextStyle(
-                color: primaryColor,
+                color: colorScheme.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
           ),
-          const SizedBox(height: 40),
+
+          const SizedBox(height: 48),
+
           SizedBox(
             width: double.infinity,
-            height: 55,
+            height: 54,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
+                backgroundColor: colorScheme.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              onPressed: () {
-                if (_weightCtrl.text.isEmpty ||
-                    _heightCtrl.text.isEmpty ||
-                    _birthDate == null ||
-                    _gender == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Harap lengkapi semua data dulu ya!"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-                context.read<FirstPageBloc>().add(
-                  UpdateStep1Data(
-                    _gender!,
-                    double.parse(_weightCtrl.text),
-                    double.parse(_heightCtrl.text),
-                    _birthDate!,
-                  ),
-                );
-                widget.pageController.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.ease,
-                );
-              },
+              onPressed: _onContinue,
               child: const Text(
-                "Lanjut",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                "Lanjut ke Langkah 2",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -232,12 +209,49 @@ class _FirstPageState extends State<FirstPage> {
     );
   }
 
+  void _onContinue() {
+    if (_weightCtrl.text.isEmpty ||
+        _heightCtrl.text.isEmpty ||
+        _birthDate == null ||
+        _gender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Harap lengkapi semua data ya!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    context.read<FirstPageBloc>().add(
+      UpdateStep1Data(
+        _gender!,
+        double.parse(_weightCtrl.text),
+        double.parse(_heightCtrl.text),
+        _birthDate!,
+      ),
+    );
+    widget.pageController.nextPage(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) setState(() => _birthDate = picked);
+  }
+
   Widget _buildLabel(BuildContext context, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -248,28 +262,26 @@ class _FirstPageState extends State<FirstPage> {
     TextEditingController ctrl,
     String suffix,
   ) {
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel(context, label),
-        Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.dividerColor),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TextField(
-            controller: ctrl,
-            onChanged: (val) => setState(() {}),
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: "0",
-              suffixText: suffix,
-              suffixStyle: TextStyle(color: theme.hintColor),
+        TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.number,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor:
+                isDark ? Theme.of(context).colorScheme.surface : Colors.white,
+            suffixText: suffix,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              ),
             ),
           ),
         ),
@@ -278,37 +290,26 @@ class _FirstPageState extends State<FirstPage> {
   }
 
   Widget _buildHeader(BuildContext context, String title, String subtitle) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () => Navigator.pushReplacementNamed(context, '/'),
-          child: Row(
-            children: [
-              Icon(Icons.arrow_back, color: primaryColor),
-              const SizedBox(width: 8),
-              Text(
-                "Langkah 1 dari 3",
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+        Text(
+          "Langkah 1 dari 3",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
         Text(
           title,
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: primaryColor,
-          ),
+          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Text(subtitle, style: const TextStyle(fontSize: 14)),
+        Text(
+          subtitle,
+          style: const TextStyle(color: Colors.grey, fontSize: 15),
+        ),
       ],
     );
   }

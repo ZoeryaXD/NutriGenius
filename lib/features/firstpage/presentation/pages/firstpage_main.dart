@@ -11,7 +11,7 @@ class FirstPageMain extends StatefulWidget {
   const FirstPageMain({super.key});
 
   @override
-  _FirstPageMainState createState() => _FirstPageMainState();
+  State<FirstPageMain> createState() => _FirstPageMainState();
 }
 
 class _FirstPageMainState extends State<FirstPageMain> {
@@ -34,7 +34,8 @@ class _FirstPageMainState extends State<FirstPageMain> {
         body: SafeArea(
           child: PageView(
             controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(),
+            physics:
+                const NeverScrollableScrollPhysics(), // User harus tekan tombol 'Lanjut'
             children: [
               FirstPage(pageController: _pageController),
               SecondPage(pageController: _pageController),

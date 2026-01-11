@@ -1,107 +1,168 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'dart:math';
+import 'notification_detail_page.dart';
 
-class NotificationPage extends StatelessWidget {
+class NotificationItem {
+  final String title;
+  final String body;
+  final IconData icon;
+  final Color color;
+  final String category;
+  bool isRead;
+  final DateTime timestamp;
+
+  NotificationItem({
+    required this.title,
+    required this.body,
+    required this.icon,
+    required this.color,
+    required this.category,
+    this.isRead = false,
+    required this.timestamp,
+  });
+}
+
+List<NotificationItem> _fakeDatabase = [];
+bool _hasInitialized = false;
+
+class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
 
   @override
+  State<NotificationPage> createState() => _NotificationPageState();
+}
+
+class _NotificationPageState extends State<NotificationPage> {
+  List<NotificationItem> _notifications = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    if (mounted) setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    if (!_hasInitialized) {
+      final now = DateTime.now();
+      List<NotificationItem> generatedList = [
+        NotificationItem(
+          title: "Waktunya Minum Air! 💧",
+          body:
+              "Sudah minum gelas ke-4 hari ini? Tetap terhidrasi agar metabolisme lancar.",
+          icon: Icons.local_drink_rounded,
+          color: Colors.blueAccent,
+          category: 'reminder',
+          timestamp: now.subtract(const Duration(minutes: 15)),
+        ),
+        NotificationItem(
+          title: "Lengkapi Profil Anda 👤",
+          body:
+              "Silahkan lengkapi informasi profil untuk pengalaman yang lebih personal.",
+          icon: Icons.person_search_rounded,
+          color: Colors.purple,
+          category: 'system',
+          timestamp: now.subtract(const Duration(days: 1)),
+        ),
+      ];
+
+      final quotes = [
+        "Tubuhmu adalah aset terbaikmu.",
+        "Rasa sakit hari ini adalah kekuatan esok.",
+        "Jangan berhenti saat lelah.",
+      ];
+      generatedList.add(
+        NotificationItem(
+          title: "Motivasi Hari Ini ✨",
+          body: quotes[Random().nextInt(quotes.length)],
+          icon: Icons.emoji_events_rounded,
+          color: Colors.amber[700]!,
+          category: 'motivation',
+          timestamp: now.subtract(const Duration(hours: 4)),
+        ),
+      );
+
+      generatedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      _fakeDatabase = generatedList;
+      _hasInitialized = true;
+    }
+
+    if (mounted) {
+      setState(() {
+        _notifications = _fakeDatabase;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _onNotificationTap(NotificationItem item) {
+    setState(() => item.isRead = true);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationDetailPage(item: item),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Warna teks judul
-    final Color primaryGreen = const Color(0xFF2E7D32);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      // Menggunakan SafeArea agar tidak tertutup status bar
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+        child: RefreshIndicator(
+          onRefresh: _loadNotifications,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- Header ---
-              Text(
-                "Notifikasi",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: primaryGreen,
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Notifikasi",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    if (_notifications.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.delete_sweep_outlined),
+                        onPressed: () {
+                          setState(() {
+                            _fakeDatabase.clear();
+                            _notifications.clear();
+                          });
+                        },
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // --- Bagian: Hari Ini ---
-              const Text(
-                "Hari ini",
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-
-              _buildNotificationCard(
-                icon: Icons.warning_amber_rounded,
-                iconColor: Colors.red,
-                iconBgColor: Colors.red.withOpacity(0.1),
-                title: "Peringatan Gula Tinggi!",
-                body: "Makanan yang kamu scan mengandung gula berlebih (25g).",
-                borderColor: Colors.red,
-                showDot: true,
-                dotColor: Colors.red,
-              ),
-
-              _buildNotificationCard(
-                icon: Icons.lunch_dining,
-                iconColor: Colors.orange,
-                iconBgColor: Colors.orange.withOpacity(0.1),
-                title: "Waktunya Makan Siang",
-                body: "Sudah jam 12:30, jangan lupa catat asupanmu.",
-                borderColor: Colors.orange,
-                showDot: true,
-                dotColor: Colors.orange,
-              ),
-
-              _buildNotificationCard(
-                icon: Icons.water_drop,
-                iconColor: Colors.blue,
-                iconBgColor: Colors.blue.withOpacity(0.1),
-                title: "Tips Hidrasi",
-                body: "Cuaca panas, jangan lupa minum 2 liter air.",
-                borderColor: Colors.blue,
-                showDot: true,
-                dotColor: Colors.blue,
-              ),
-
-              const SizedBox(height: 24),
-
-              // --- Bagian: Kemarin ---
-              const Text(
-                "Kemarin",
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-
-              _buildNotificationCard(
-                icon: Icons.emoji_events,
-                iconColor: Colors.green,
-                iconBgColor: Colors.green.withOpacity(0.1),
-                title: "Target Protein Tercapai 🎉",
-                body: "Kerja bagus! Asupan proteinmu sudah optimal.",
-                isOld: true, // Style khusus untuk notifikasi lama
-              ),
-
-              _buildNotificationCard(
-                icon: Icons.bar_chart,
-                iconColor: Colors.purple,
-                iconBgColor: Colors.purple.withOpacity(0.1),
-                title: "Laporan Mingguan",
-                body: "Lihat grafik kemajuan berat badanmu minggu ini.",
-                isOld: true,
-              ),
-
-              _buildNotificationCard(
-                icon: Icons.menu_book,
-                iconColor: Colors.teal,
-                iconBgColor: Colors.teal.withOpacity(0.1),
-                title: "Resep Baru",
-                body: "Coba resep 'Salad Quinoa' untuk makan malam.",
-                isOld: true,
+              Expanded(
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _notifications.isEmpty
+                        ? _buildEmptyState(theme)
+                        : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          itemCount: _notifications.length,
+                          itemBuilder:
+                              (context, index) => _buildNotificationCard(
+                                _notifications[index],
+                                theme,
+                              ),
+                        ),
               ),
             ],
           ),
@@ -110,78 +171,108 @@ class NotificationPage extends StatelessWidget {
     );
   }
 
-  // --- Widget Reusable untuk Item Notifikasi ---
-  Widget _buildNotificationCard({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBgColor,
-    required String title,
-    required String body,
-    Color? borderColor, // Opsional: Hanya untuk 'Hari ini'
-    bool showDot = false, // Opsional: Indikator merah/biru di kanan
-    Color? dotColor,
-    bool isOld = false, // Jika true, background abu & tanpa border
-  }) {
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.notifications_off_rounded,
+            size: 80,
+            color: theme.hintColor.withOpacity(0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Tidak ada notifikasi baru",
+            style: TextStyle(color: theme.hintColor, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationCard(NotificationItem item, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isOld ? Colors.grey[100] : Colors.white, // Beda background
+        color: item.isRead ? Colors.transparent : colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: isOld
-            ? null // Tidak ada border untuk 'Kemarin'
-            : Border.all(color: borderColor ?? Colors.transparent, width: 1),
+        border: Border.all(
+          color:
+              item.isRead
+                  ? colorScheme.outlineVariant.withOpacity(0.5)
+                  : item.color.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon Bulat
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: iconColor, size: 24),
-          ),
-          const SizedBox(width: 16),
-
-          // Teks Judul & Isi
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.green[900], // Warna hijau gelap mendekati hitam
-                  ),
+      child: InkWell(
+        onTap: () => _onNotificationTap(item),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: item.color.withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  body,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    height: 1.4, // Spasi antar baris agar nyaman dibaca
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Dot Indikator (Jika ada)
-          if (showDot && dotColor != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4, left: 8),
-              child: CircleAvatar(
-                radius: 4,
-                backgroundColor: dotColor,
+                child: Icon(item.icon, color: item.color, size: 24),
               ),
-            ),
-        ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: TextStyle(
+                        fontWeight:
+                            item.isRead ? FontWeight.w500 : FontWeight.bold,
+                        fontSize: 15,
+                        color:
+                            item.isRead
+                                ? theme.hintColor
+                                : (isDark ? Colors.white : Colors.black87),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.hintColor,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      DateFormat('HH:mm').format(item.timestamp),
+                      style: TextStyle(color: theme.hintColor, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              if (!item.isRead)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

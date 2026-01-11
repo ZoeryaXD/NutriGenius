@@ -10,8 +10,8 @@ class ThirdPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocConsumer<FirstPageBloc, FirstPageState>(
       listener: (context, state) {
@@ -21,15 +21,9 @@ class ThirdPage extends StatelessWidget {
             '/dashboard',
             (route) => false,
           );
-        } else if (state.status == FirstPageStatus.failure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
         }
       },
       builder: (context, state) {
-        bool isLoading = state.status == FirstPageStatus.calculating;
-
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -39,100 +33,101 @@ class ThirdPage extends StatelessWidget {
                 child: Text(
                   "Langkah 3 dari 3",
                   style: TextStyle(
-                    color: primaryColor,
+                    color: colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
-              Text(
+              const SizedBox(height: 32),
+              const Text(
                 "Target Nutrisi Kamu",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                ),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 40),
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: primaryColor.withOpacity(0.2),
-                    width: 12,
+
+              // CIRCLE PROGRESS TARGET
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 220,
+                    height: 220,
+                    child: CircularProgressIndicator(
+                      value: 1.0,
+                      strokeWidth: 12,
+                      color: colorScheme.primary.withOpacity(0.1),
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  SizedBox(
+                    width: 220,
+                    height: 220,
+                    child: CircularProgressIndicator(
+                      value: 0.75, // Visual saja
+                      strokeWidth: 12,
+                      color: colorScheme.primary,
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  Column(
                     children: [
                       Icon(
                         Icons.local_fire_department_rounded,
-                        color: primaryColor,
+                        color: colorScheme.primary,
                         size: 48,
                       ),
-                      const SizedBox(height: 8),
                       Text(
-                        "${state.tdee.toInt()} Kkal",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: primaryColor,
+                        "${state.tdee.toInt()}",
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       const Text(
-                        "Target Harian",
+                        "kkal / hari",
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 40),
-              _buildDetailSection(context, state),
-              const SizedBox(height: 40),
+
+              const SizedBox(height: 48),
+
+              _buildInfoCard(context, isDark, state),
+
+              const SizedBox(height: 48),
               SizedBox(
                 width: double.infinity,
-                height: 55,
+                height: 56,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    elevation: 4,
                   ),
                   onPressed:
-                      isLoading
+                      state.status == FirstPageStatus.calculating
                           ? null
                           : () {
                             final email =
                                 FirebaseAuth.instance.currentUser?.email;
-                            if (email != null) {
+                            if (email != null)
                               context.read<FirstPageBloc>().add(
                                 SubmitProfile(email),
                               );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Sesi login berakhir, silakan login ulang.",
-                                  ),
-                                ),
-                              );
-                            }
                           },
                   child:
-                      isLoading
+                      state.status == FirstPageStatus.calculating
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                            "Masuk Dashboard",
+                            "MASUK KE DASHBOARD",
                             style: TextStyle(
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -146,54 +141,54 @@ class ThirdPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailSection(BuildContext context, FirstPageState state) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Rincian Energi:",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        _buildInfoTile(
-          context,
-          "BMR (Energi Dasar)",
-          "${state.bmr.toInt()} kkal",
-          primaryColor,
-        ),
-        _buildInfoTile(
-          context,
-          "Aktivitas Harian",
-          "+${(state.tdee - state.bmr).toInt()} kkal",
-          primaryColor,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoTile(
+  Widget _buildInfoCard(
     BuildContext context,
-    String label,
-    String value,
-    Color color,
+    bool isDark,
+    FirstPageState state,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
         children: [
-          Text(label, style: const TextStyle(fontSize: 15)),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+          _buildRow(
+            "Energi Dasar (BMR)",
+            "${state.bmr.toInt()} kkal",
+            colorScheme,
+          ),
+          const Divider(height: 32),
+          _buildRow(
+            "Tambahan Aktivitas",
+            "+${(state.tdee - state.bmr).toInt()} kkal",
+            colorScheme,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRow(String label, String value, ColorScheme colorScheme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.primary,
+          ),
+        ),
+      ],
     );
   }
 }
