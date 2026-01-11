@@ -8,4 +8,8 @@ abstract class ProfileRepository {
   Future<void> deletePhoto();
   Future<void> deleteAccount();
   Future<void> logout();
+
+  Future<List<ActivityLevel>> getActivityLevels();
+  Future<List<HealthCondition>> getHealthConditions();
+  Future<void> sendPasswordResetEmail(String email);
 }

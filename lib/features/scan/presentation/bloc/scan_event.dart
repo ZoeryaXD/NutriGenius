@@ -10,11 +10,12 @@ abstract class ScanEvent extends Equatable {
 class AnalyzeImageEvent extends ScanEvent {
   final String imagePath;
   final String email;
+  final ScanSource source;
 
-  const AnalyzeImageEvent({required this.imagePath, required this.email});
+  const AnalyzeImageEvent({required this.imagePath, required this.email, required this.source,});
 
   @override
-  List<Object> get props => [imagePath, email];
+  List<Object> get props => [imagePath, email, source];
 }
 
 class SaveResultEvent extends ScanEvent {

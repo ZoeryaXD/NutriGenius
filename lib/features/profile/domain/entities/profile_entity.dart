@@ -25,19 +25,51 @@ class ProfileEntity extends Equatable {
     required this.activityId,
   });
 
-  String get healthLabel {
-    if (healthId == 2) return "Pasien Diabetes";
-    if (healthId == 3) return "Obesitas";
-    return "Normal / Sehat";
-  }
-
   @override
   List<Object?> get props => [
     email,
     fullName,
     profilePicture,
+    gender,
+    birthDate,
     weight,
     height,
+    age,
+    healthId,
     activityId,
   ];
+}
+
+class ActivityLevel extends Equatable {
+  final int id;
+  final String levelName;
+  final double multiplier;
+  final String description;
+
+  const ActivityLevel({
+    required this.id,
+    required this.levelName,
+    required this.multiplier,
+    required this.description,
+  });
+
+  @override
+  List<Object?> get props => [id, levelName, multiplier, description];
+}
+
+class HealthCondition extends Equatable {
+  final int id;
+  final String conditionName;
+  final double sugarLimit;
+  final String description;
+
+  const HealthCondition({
+    required this.id,
+    required this.conditionName,
+    required this.sugarLimit,
+    required this.description,
+  });
+
+  @override
+  List<Object?> get props => [id, conditionName, sugarLimit, description];
 }

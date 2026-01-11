@@ -10,6 +10,9 @@ abstract class ProfileRemoteDataSource {
   Future<String> uploadPhoto(String email, File file);
   Future<void> deletePhoto(String email);
   Future<void> deleteAccount(String email);
+
+  Future<List<ActivityLevelModel>> getActivityLevels();
+  Future<List<HealthConditionModel>> getHealthConditions();
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -84,5 +87,33 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
     final streamedResponse = await client.send(request);
     if (streamedResponse.statusCode != 200) throw Exception("Gagal hapus akun");
+  }
+
+  @override
+  Future<List<ActivityLevelModel>> getActivityLevels() async {
+    final url = Uri.parse('${ApiClient.baseUrl}/firstpage/activities');
+    final response = await client.get(url, headers: ApiClient.headers);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      final List<dynamic> data = jsonResponse['data'];
+      return data.map((json) => ActivityLevelModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Gagal load activity levels');
+    }
+  }
+
+  @override
+  Future<List<HealthConditionModel>> getHealthConditions() async {
+    final url = Uri.parse('${ApiClient.baseUrl}/firstpage/health-conditions');
+    final response = await client.get(url, headers: ApiClient.headers);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      final List<dynamic> data = jsonResponse['data'];
+      return data.map((json) => HealthConditionModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Gagal load health conditions');
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
@@ -9,9 +11,32 @@ import '../../../scan/presentation/pages/camera_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../scan/presentation/bloc/scan_bloc.dart';
+import 'package:nutrigenius/features/scan/domain/entities/scan_result.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+  class _DashboardPageState extends State<DashboardPage> {
+  late Timer _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTimer = Timer.periodic(Duration(seconds: 5), (_) {
+      if (mounted) {
+        context.read<DashboardBloc>().add(RefreshDashboard());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer.cancel();
+    super.dispose();
+  }
+
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<DashboardBloc>()..add(LoadDashboard()),
@@ -65,14 +90,17 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildDashboardContent(BuildContext context, DashboardEntity data) {
-    return SingleChildScrollView(
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<DashboardBloc>().add(RefreshDashboard());
+        // Wait a bit for the refresh to complete
+        await Future.delayed(Duration(milliseconds: 500));
+      }, color: Colors.green,
+      child: SingleChildScrollView(
       padding: EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ==============================
-          // 1. LOGO & APP NAME
-          // ==============================
           Row(
             children: [
               Image.asset(
@@ -97,15 +125,11 @@ class DashboardPage extends StatelessWidget {
 
           SizedBox(height: 24),
 
-          // ==============================
-          // 2. SAPAAN & NAMA USER
-          // ==============================
           Text(
             _getGreeting(),
             style: TextStyle(color: Colors.green[700], fontSize: 16),
           ),
           Text(
-            // Tampilkan nama dari backend, atau default jika kosong
             (data.displayName.isNotEmpty) ? data.displayName : "Nutri User",
             style: TextStyle(
               color: Colors.green[800],
@@ -116,9 +140,6 @@ class DashboardPage extends StatelessWidget {
 
           SizedBox(height: 24),
 
-          // ==============================
-          // 3. HERO CARD (PROGRESS HARIAN)
-          // ==============================
           Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -160,7 +181,6 @@ class DashboardPage extends StatelessWidget {
                   ],
                 ),
 
-                // CIRCULAR PROGRESS
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -198,9 +218,6 @@ class DashboardPage extends StatelessWidget {
 
           SizedBox(height: 24),
 
-          // ==============================
-          // 4. MAKRO NUTRISI
-          // ==============================
           Text(
             "Makro Nutrisi (Harian)",
             style: TextStyle(
@@ -234,9 +251,6 @@ class DashboardPage extends StatelessWidget {
 
           SizedBox(height: 24),
 
-          // ==============================
-          // 5. TOMBOL SCAN
-          // ==============================
           Text(
             "Scan Makananmu",
             style: TextStyle(
@@ -285,6 +299,7 @@ class DashboardPage extends StatelessWidget {
           SizedBox(height: 40),
         ],
       ),
+      ),
     );
   }
 
@@ -301,14 +316,14 @@ class DashboardPage extends StatelessWidget {
     }
   }
 
-  void _showScanOptions(BuildContext context) {
+  void _showScanOptions(BuildContext rootContext) {
     showModalBottomSheet(
-      context: context,
+      context: rootContext,
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return Container(
           padding: EdgeInsets.all(24),
           child: Column(
@@ -336,20 +351,24 @@ class DashboardPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildOptionBtn(context, Icons.camera_alt, "Kamera", () {
-                    Navigator.pop(context);
+                  _buildOptionBtn(sheetContext, Icons.camera_alt, "Kamera", () {
+                    Navigator.pop(sheetContext);
                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                const CameraPage(),
-                      ),
+                      rootContext,
+                      MaterialPageRoute(builder: (_) => const CameraPage()),
                     );
                   }),
-                  _buildOptionBtn(context, Icons.photo_library, "Galeri", () {
-                    _handleScan(context, ImageSource.gallery);
-                  }),
+                  _buildOptionBtn(
+                    sheetContext,
+                    Icons.photo_library,
+                    "Galeri",
+                    () {
+                      _handleScanFromGallery(
+                        rootContext: rootContext,
+                        sheetContext: sheetContext,
+                      );
+                    },
+                  ),
                 ],
               ),
               SizedBox(height: 20),
@@ -424,34 +443,32 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Future<void> _handleScan(BuildContext context, ImageSource source) async {
-    try {
-      Navigator.pop(context);
+  Future<void> _handleScanFromGallery({
+    required BuildContext rootContext,
+    required BuildContext sheetContext,
+  }) async {
+    Navigator.pop(sheetContext);
 
-      final picker = ImagePicker();
-      final image = await picker.pickImage(source: source);
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
 
-      if (image != null) {
-        final prefs = await SharedPreferences.getInstance();
-        final email = prefs.getString('email');
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('email');
 
-        if (email == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Sesi habis, silakan login ulang")),
-          );
-          return;
-        }
-
-        print("📸 Dashboard: Mengirim foto dengan email: $email");
-
-        context.read<ScanBloc>().add(
-          AnalyzeImageEvent(imagePath: image.path, email: email),
-        );
-
-        Navigator.pushNamed(context, '/scan');
-      }
-    } catch (e) {
-      print("Error saat scan dashboard: $e");
+    if (email == null) {
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        const SnackBar(content: Text("Sesi habis, silakan login ulang")),
+      );
+      return;
     }
+
+    print("📸 Dashboard: Mengirim foto galeri dengan email: $email");
+
+    rootContext.read<ScanBloc>().add(
+      AnalyzeImageEvent(imagePath: image.path, email: email,  source: ScanSource.gallery,),
+    );
+
+    Navigator.pushNamed(rootContext, '/scan');
   }
 }

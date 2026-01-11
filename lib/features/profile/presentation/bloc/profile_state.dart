@@ -8,7 +8,17 @@ class ProfileLoading extends ProfileState {}
 
 class ProfileLoaded extends ProfileState {
   final ProfileEntity profile;
-  ProfileLoaded(this.profile);
+
+  final List<ActivityLevel> activityLevels;
+  final List<HealthCondition> healthConditions;
+
+  ProfileLoaded(
+    this.profile, {
+    this.activityLevels = const [],
+    this.healthConditions = const [],
+  });
+
+  List<Object> get props => [profile, activityLevels, healthConditions];
 }
 
 class ProfileError extends ProfileState {

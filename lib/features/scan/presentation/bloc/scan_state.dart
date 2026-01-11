@@ -9,15 +9,19 @@ abstract class ScanState extends Equatable {
 
 class ScanInitial extends ScanState {}
 
-class ScanLoading extends ScanState {}
+class ScanLoading extends ScanState {
+  final ScanSource source;
+  const ScanLoading({required this.source});
+}
 
 class ScanSuccess extends ScanState {
   final ScanResult result;
+  final ScanSource source;
 
-  const ScanSuccess(this.result);
+  const ScanSuccess({required this.result, required this.source});
 
   @override
-  List<Object> get props => [result];
+  List<Object> get props => [result, source];
 }
 
 class ScanFailure extends ScanState {
@@ -29,5 +33,4 @@ class ScanFailure extends ScanState {
   List<Object> get props => [message];
 }
 
-// 👇 State Baru: Tanda bahwa data sukses disimpan ke Database
 class ScanSaved extends ScanState {}

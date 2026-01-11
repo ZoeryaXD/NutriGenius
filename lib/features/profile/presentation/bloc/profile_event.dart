@@ -4,6 +4,7 @@ import '../../domain/entities/profile_entity.dart';
 abstract class ProfileEvent {}
 
 class LoadProfile extends ProfileEvent {}
+class LoadMasterData extends ProfileEvent {}
 
 class UpdateProfileData extends ProfileEvent {
   final ProfileEntity updatedProfile;
@@ -13,6 +14,13 @@ class UpdateProfileData extends ProfileEvent {
 class UploadProfilePhoto extends ProfileEvent {
   final File photo;
   UploadProfilePhoto(this.photo);
+}
+
+class ChangePasswordRequested extends ProfileEvent {
+  final String email;
+  ChangePasswordRequested(this.email);
+
+  List<Object> get props => [email];
 }
 
 class DeleteProfilePhoto extends ProfileEvent {}

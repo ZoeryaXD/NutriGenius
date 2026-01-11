@@ -27,149 +27,171 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   late String _gender;
   late DateTime _birthDate;
-  late int _activityId;
-  late int _healthId;
+
+  int? _activityId;
+  int? _healthId;
 
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
+    context.read<ProfileBloc>().add(LoadMasterData());
+
     final d = widget.currentData;
     _nameCtrl = TextEditingController(text: d.fullName);
-    _emailCtrl = TextEditingController(text: d.email); // Read Only
+    _emailCtrl = TextEditingController(text: d.email);
     _weightCtrl = TextEditingController(text: d.weight.toString());
     _heightCtrl = TextEditingController(text: d.height.toString());
 
     _gender = d.gender;
     _birthDate = d.birthDate;
-    _activityId = d.activityId;
-    _healthId = d.healthId;
+
+    _activityId = d.activityId > 0 ? d.activityId : 1;
+    _healthId = d.healthId > 0 ? d.healthId : 1;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Edit Profil", style: TextStyle(color: Colors.green[800])),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: BackButton(color: Colors.green[800]),
-        actions: [
-          TextButton(
-            onPressed: _saveProfile,
-            child: Text(
-              "SIMPAN",
-              style: TextStyle(
-                color: Colors.green[800],
-                fontWeight: FontWeight.bold,
-              ),
+    return BlocBuilder<ProfileBloc, ProfileState>(
+      builder: (context, state) {
+        List<ActivityLevel> activityList = [];
+        List<HealthCondition> healthList = [];
+
+        if (state is ProfileLoaded) {
+          activityList = state.activityLevels;
+          healthList = state.healthConditions;
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              "Edit Profil",
+              style: TextStyle(color: Colors.green[800]),
             ),
-          ),
-        ],
-      ),
-      body: BlocListener<ProfileBloc, ProfileState>(
-        listener: (context, state) {
-          if (state is ProfileActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: BackButton(color: Colors.green[800]),
+            actions: [
+              TextButton(
+                onPressed: _saveProfile,
+                child: Text(
+                  "SIMPAN",
+                  style: TextStyle(
+                    color: Colors.green[800],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            );
-            Navigator.pop(context);
-          }
-        },
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(child: _buildPhotoSection()),
-                SizedBox(height: 30),
+            ],
+          ),
+          body: BlocListener<ProfileBloc, ProfileState>(
+            listener: (context, state) {
+              if (state is ProfileActionSuccess) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                Navigator.pop(context);
+              }
+            },
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(child: _buildPhotoSection()),
+                    SizedBox(height: 30),
 
-                Text("Informasi Akun", style: TextStyle(color: Colors.grey)),
-                SizedBox(height: 10),
-                _buildTextField("Nama Lengkap", _nameCtrl),
-                SizedBox(height: 10),
-                _buildTextField(
-                  "Email (Tidak dapat diubah)",
-                  _emailCtrl,
-                  readOnly: true,
-                ),
-
-                SizedBox(height: 30),
-                Text(
-                  "Data Fisik (Untuk Hitungan Kalori)",
-                  style: TextStyle(color: Colors.grey),
-                ),
-                SizedBox(height: 10),
-
-                _buildDropdown(
-                  "Jenis Kelamin",
-                  _gender,
-                  ["Laki-laki", "Perempuan"],
-                  (val) {
-                    setState(() => _gender = val!);
-                  },
-                ),
-
-                SizedBox(height: 10),
-                InkWell(
-                  onTap: _pickDate,
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(12),
+                    Text(
+                      "Informasi Akun",
+                      style: TextStyle(color: Colors.grey),
                     ),
-                    child: Row(
+                    SizedBox(height: 10),
+                    _buildTextField("Nama Lengkap", _nameCtrl),
+                    SizedBox(height: 10),
+                    _buildTextField(
+                      "Email (Tidak dapat diubah)",
+                      _emailCtrl,
+                      readOnly: true,
+                    ),
+
+                    SizedBox(height: 30),
+                    Text(
+                      "Data Fisik (Untuk Hitungan Kalori)",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    SizedBox(height: 10),
+
+                    _buildDropdown(
+                      "Jenis Kelamin",
+                      _gender,
+                      ["Laki-laki", "Perempuan"],
+                      (val) {
+                        setState(() => _gender = val!);
+                      },
+                    ),
+
+                    SizedBox(height: 10),
+                    InkWell(
+                      onTap: _pickDate,
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: Colors.grey),
+                            SizedBox(width: 10),
+                            Text(
+                              DateFormat('dd/MM/yyyy').format(_birthDate),
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 10),
+                    Row(
                       children: [
-                        Icon(Icons.calendar_today, color: Colors.grey),
+                        Expanded(
+                          child: _buildTextField(
+                            "Berat (kg)",
+                            _weightCtrl,
+                            isNumber: true,
+                          ),
+                        ),
                         SizedBox(width: 10),
-                        Text(
-                          DateFormat('dd/MM/yyyy').format(_birthDate),
-                          style: TextStyle(fontSize: 16),
+                        Expanded(
+                          child: _buildTextField(
+                            "Tinggi (cm)",
+                            _heightCtrl,
+                            isNumber: true,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
 
-                SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        "Berat (kg)",
-                        _weightCtrl,
-                        isNumber: true,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: _buildTextField(
-                        "Tinggi (cm)",
-                        _heightCtrl,
-                        isNumber: true,
-                      ),
-                    ),
+                    SizedBox(height: 10),
+
+                    _buildDynamicHealthDropdown(healthList),
+
+                    SizedBox(height: 10),
+                    _buildDynamicActivityDropdown(activityList),
                   ],
                 ),
-
-                SizedBox(height: 10),
-
-                _buildHealthDropdown(),
-
-                SizedBox(height: 10),
-                _buildActivityDropdown(),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -267,26 +289,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (picked != null) setState(() => _birthDate = picked);
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      final updatedProfile = ProfileEntity(
-        fullName: _nameCtrl.text,
-        email: widget.currentData.email,
-        gender: _gender,
-        birthDate: _birthDate,
-        weight: double.parse(_weightCtrl.text),
-        height: double.parse(_heightCtrl.text),
-        healthId: _healthId,
-        activityId: _activityId,
-
-        age: 0,
-        profilePicture: widget.currentData.profilePicture,
-      );
-
-      context.read<ProfileBloc>().add(UpdateProfileData(updatedProfile));
-    }
-  }
-
   Widget _buildTextField(
     String label,
     TextEditingController ctrl, {
@@ -323,12 +325,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildHealthDropdown() {
-    final items = [
-      {'id': 1, 'label': 'Normal / Sehat'},
-      {'id': 2, 'label': 'Pasien Diabetes'},
-      {'id': 3, 'label': 'Obesitas'},
-    ];
+  Widget _buildDynamicHealthDropdown(List<HealthCondition> items) {
+    if (items.isEmpty) return LinearProgressIndicator();
+
     return DropdownButtonFormField<int>(
       value: _healthId,
       decoration: InputDecoration(
@@ -338,23 +337,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
       items:
           items
               .map(
-                (e) => DropdownMenuItem(
-                  value: e['id'] as int,
-                  child: Text(e['label'] as String),
-                ),
+                (e) =>
+                    DropdownMenuItem(value: e.id, child: Text(e.conditionName)),
               )
               .toList(),
       onChanged: (v) => setState(() => _healthId = v!),
+      validator: (v) => v == null ? "Pilih kondisi" : null,
     );
   }
 
-  Widget _buildActivityDropdown() {
-    final items = [
-      {'id': 1, 'label': 'Sedentary (Duduk)'},
-      {'id': 2, 'label': 'Light Active (1-3x)'},
-      {'id': 3, 'label': 'Active (3-5x)'},
-      {'id': 4, 'label': 'Very Active (6-7x)'},
-    ];
+  Widget _buildDynamicActivityDropdown(List<ActivityLevel> items) {
+    if (items.isEmpty) return LinearProgressIndicator();
+
     return DropdownButtonFormField<int>(
       value: _activityId,
       decoration: InputDecoration(
@@ -365,12 +359,42 @@ class _EditProfilePageState extends State<EditProfilePage> {
           items
               .map(
                 (e) => DropdownMenuItem(
-                  value: e['id'] as int,
-                  child: Text(e['label'] as String),
+                  value: e.id,
+                  child: Text(
+                    e.levelName.length > 30
+                        ? e.levelName.substring(0, 30) + "..."
+                        : e.levelName,
+                  ),
                 ),
               )
               .toList(),
       onChanged: (v) => setState(() => _activityId = v!),
+      validator: (v) => v == null ? "Pilih aktivitas" : null,
     );
+  }
+
+  void _saveProfile() {
+    if (_formKey.currentState!.validate()) {
+      // Parse angka dengan aman (ganti koma jadi titik)
+      double weight =
+          double.tryParse(_weightCtrl.text.replaceAll(',', '.')) ?? 0.0;
+      double height =
+          double.tryParse(_heightCtrl.text.replaceAll(',', '.')) ?? 0.0;
+
+      final updatedProfile = ProfileEntity(
+        fullName: _nameCtrl.text,
+        email: widget.currentData.email,
+        gender: _gender,
+        birthDate: _birthDate,
+        weight: weight,
+        height: height,
+        healthId: _healthId ?? 1,
+        activityId: _activityId ?? 1,
+        age: 0,
+        profilePicture: widget.currentData.profilePicture,
+      );
+
+      context.read<ProfileBloc>().add(UpdateProfileData(updatedProfile));
+    }
   }
 }

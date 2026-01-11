@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+enum ScanSource { camera, gallery }
+
 class ScanResult extends Equatable {
   final int id;
   final String foodName;
@@ -27,15 +29,15 @@ class ScanResult extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        foodName,
-        calories,
-        protein,
-        carbs,
-        fat,
-        sugar,
-        imagePath,
-        aiSuggestion,
-        date,
-      ];
+    id,
+    foodName,
+    calories,
+    protein,
+    carbs,
+    fat,
+    sugar,
+    imagePath,
+    aiSuggestion,
+    date,
+  ];
 }

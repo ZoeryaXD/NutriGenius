@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nutrigenius/features/profile/presentation/pages/about_page.dart';
+import 'package:nutrigenius/features/profile/presentation/pages/change_password_page.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -11,8 +13,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _notifMakan = true;
-  bool _notifGula = true;
   bool _darkMode = false;
 
   @override
@@ -45,22 +45,24 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: EdgeInsets.all(20),
           children: [
             _sectionHeader("AKUN"),
-            _buildListTile(Icons.lock_outline, "Ganti Password", () {}),
-            Divider(),
+            _buildListTile(Icons.lock_outline, "Ganti Password", () {
+              final state = context.read<ProfileBloc>().state;
+              String currentEmail = "";
+              
+              if (state is ProfileLoaded) {
+                currentEmail = state.profile.email;
+              }
 
-            _sectionHeader("NOTIFIKASI"),
-            _buildSwitchTile(
-              Icons.access_time,
-              "Ingatkan Makan",
-              _notifMakan,
-              (v) => setState(() => _notifMakan = v),
-            ),
-            _buildSwitchTile(
-              Icons.security,
-              "Peringatan Gula Tinggi",
-              _notifGula,
-              (v) => setState(() => _notifGula = v),
-            ),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<ProfileBloc>(),
+                    child: ChangePasswordPage(currentEmail: currentEmail),
+                  ),
+                ),
+              );
+            }),
             Divider(),
 
             _sectionHeader("TAMPILAN"),
@@ -68,18 +70,20 @@ class _SettingsPageState extends State<SettingsPage> {
               Icons.dark_mode_outlined,
               "Mode Gelap",
               _darkMode,
-              (v) => setState(() => _darkMode = v),
+              (v) {setState(() => _darkMode = v);
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Mode Gelap: ${v ? 'On' : 'Off'}")),
+                );
+              }
             ),
-            _buildListTile(Icons.language, "Bahasa / Language", () {}),
-            Divider(),
 
             _sectionHeader("TENTANG"),
-            _buildListTile(Icons.info_outline, "Tentang NutriGenius", () {}),
-            _buildListTile(
-              Icons.privacy_tip_outlined,
-              "Kebijakan Privasi",
-              () {},
-            ),
+            _buildListTile(Icons.info_outline, "Tentang NutriGenius", () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AboutPage()),
+                );
+            }),
 
             SizedBox(height: 40),
 
