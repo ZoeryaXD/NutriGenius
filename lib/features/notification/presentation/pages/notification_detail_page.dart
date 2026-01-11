@@ -10,27 +10,20 @@ class NotificationDetailPage extends StatelessWidget {
 
   const NotificationDetailPage({super.key, required this.item});
 
-  // --- LOGIKA: Apakah Tombol Perlu Muncul? ---
   bool get _shouldShowButton {
-    // 1. Motivasi -> TIDAK ADA tombol
     if (item.category == 'motivation') return false;
 
-    // 2. System (Tips vs Profil/Laporan)
     if (item.category == 'system') {
       final titleLower = item.title.toLowerCase();
-      // Kalau judulnya mengandung 'tips', sembunyikan tombol
       if (titleLower.contains('tips')) return false; 
-      // Kalau Profil/Laporan, tampilkan tombol
       return true; 
     }
 
-    // 3. Reminder (Makan/Minum) -> SELALU ADA tombol
     return true; 
   }
 
   @override
   Widget build(BuildContext context) {
-    // Format tanggal: 12 Jan 2026, 08:30
     final String formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(item.timestamp);
 
     return Scaffold(
@@ -52,9 +45,8 @@ class NotificationDetailPage extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // --- Icon Besar ---
             Hero(
-              tag: item.id, // Efek animasi transisi icon
+              tag: item.id, 
               child: Container(
                 width: 100,
                 height: 100,
@@ -67,7 +59,6 @@ class NotificationDetailPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // --- Kategori Label ---
             Chip(
               label: Text(
                 _getCategoryLabel(item.category),
@@ -78,7 +69,6 @@ class NotificationDetailPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // --- Judul ---
             Text(
               item.title,
               textAlign: TextAlign.center,
@@ -90,7 +80,6 @@ class NotificationDetailPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // --- Tanggal ---
             Text(
               formattedDate,
               style: TextStyle(color: Colors.grey[500], fontSize: 14),
@@ -98,7 +87,6 @@ class NotificationDetailPage extends StatelessWidget {
             
             const Divider(height: 40, thickness: 1),
             
-            // --- Isi Pesan (Body) ---
             Text(
               item.body,
               style: const TextStyle(
@@ -110,7 +98,6 @@ class NotificationDetailPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // --- TOMBOL AKSI (Kondisional) ---
             if (_shouldShowButton)
               SizedBox(
                 width: double.infinity,
@@ -140,7 +127,6 @@ class NotificationDetailPage extends StatelessWidget {
     );
   }
 
-  // Helper untuk Label Kategori Bahasa Indonesia
   String _getCategoryLabel(String category) {
     switch (category) {
       case 'reminder': return 'PENGINGAT';
@@ -150,26 +136,21 @@ class NotificationDetailPage extends StatelessWidget {
     }
   }
 
-  // --- LOGIKA NAVIGASI AKSI ---
   void _handleNavigation(BuildContext context) {
     final String titleLower = item.title.toLowerCase();
 
-    // 1. Notifikasi Profil -> Ke Edit Profile
     if (titleLower.contains('profil') || titleLower.contains('lengkap')) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const ProfilePage()), 
       );
     } 
-    // 2. Notifikasi Makan/Sarapan -> Ke Scanner Kamera
     else if (titleLower.contains('makan') || titleLower.contains('sarapan')) {
       Navigator.pushNamed(context, '/scan');
     }
-    // 3. Notifikasi Laporan -> Ke History
     else if (titleLower.contains('laporan')) {
       Navigator.pushNamed(context, '/history');
     }
-    // 4. Notifikasi Minum/Lainnya -> Ke Dashboard
     else {
       Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
     }

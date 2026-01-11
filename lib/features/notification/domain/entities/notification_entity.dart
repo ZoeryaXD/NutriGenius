@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NotificationEntity {
-  final String id; // TAMBAHAN: ID Unik
+  final String id; 
   final String title;
   final String body;
   final IconData icon;
@@ -11,7 +11,7 @@ class NotificationEntity {
   final DateTime timestamp;
 
   NotificationEntity({
-    required this.id, // Wajib diisi
+    required this.id, 
     required this.title,
     required this.body,
     required this.icon,

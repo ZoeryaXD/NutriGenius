@@ -24,9 +24,7 @@ class _NotificationPageState extends State<NotificationPage> {
     _loadData();
   }
 
-  // Reload data untuk memastikan tampilan sesuai status terbaru
   Future<void> _loadData() async {
-    // Jangan set isLoading true jika hanya refresh ringan, biar ga kedip
     if (_notifications.isEmpty) setState(() => _isLoading = true);
     
     try {
@@ -42,41 +40,32 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  // 1. Logika Klik (Tandai Terbaca)
   void _onNotificationTap(NotificationEntity item) async {
     if (!item.isRead) {
-      // Update UI langsung biar cepat
       setState(() {
         item.isRead = true;
       });
-      // Simpan ke memori HP
       await _dataSource.markAsRead(item.id);
     }
 
-    // Pindah halaman
     if (mounted) {
-      // Gunakan await supaya saat kembali, kita bisa refresh (opsional)
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => NotificationDetailPage(item: item),
         ),
       );
-      // Refresh saat kembali (jaga-jaga)
       _loadData(); 
     }
   }
 
-  // 2. Logika Hapus Satu (Swipe)
   void _deleteItem(int index) async {
     final item = _notifications[index];
-    
-    // Hapus dari UI
+  
     setState(() {
       _notifications.removeAt(index);
     });
 
-    // Simpan ke memori HP
     await _dataSource.deleteItem(item.id);
     
     if (mounted) {
@@ -86,11 +75,9 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  // 3. Logika Hapus Semua
   void _deleteAll() async {
     if (_notifications.isEmpty) return;
 
-    // Tampilkan Dialog Konfirmasi
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -107,15 +94,12 @@ class _NotificationPageState extends State<NotificationPage> {
     );
 
     if (confirm == true) {
-      // Ambil semua ID
       List<String> idsToRemove = _notifications.map((e) => e.id).toList();
       
-      // Update UI
       setState(() {
         _notifications.clear();
       });
 
-      // Simpan ke memori HP
       await _dataSource.deleteAll(idsToRemove);
     }
   }
@@ -135,9 +119,8 @@ class _NotificationPageState extends State<NotificationPage> {
             color: primaryGreen,
           ),
         ),
-        centerTitle: false, // Biar judul di kiri
+        centerTitle: false, 
         actions: [
-          // Tombol Hapus Semua
           if (_notifications.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep, color: Colors.grey),
@@ -169,10 +152,9 @@ class _NotificationPageState extends State<NotificationPage> {
                       itemBuilder: (context, index) {
                         final item = _notifications[index];
                         
-                        // Fitur Geser untuk Hapus (Dismissible)
                         return Dismissible(
-                          key: Key(item.id), // Gunakan ID unik
-                          direction: DismissDirection.endToStart, // Geser dari kanan ke kiri
+                          key: Key(item.id), 
+                          direction: DismissDirection.endToStart, 
                           background: Container(
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 20),

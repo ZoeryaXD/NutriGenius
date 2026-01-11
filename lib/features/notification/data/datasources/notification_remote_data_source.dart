@@ -17,24 +17,14 @@ class NotificationRemoteDataSource {
 
     final now = DateTime.now();
     
-    // --- PERUBAHAN PENTING DI SINI ---
-    // Kita buat penanda tanggal hari ini (Format: YYYY-B-H)
-    // Contoh: "2026-1-12"
     final String todayStr = "${now.year}-${now.month}-${now.day}";
     
     List<NotificationEntity> rawData = [];
     final random = Random();
 
-    // ==========================================================
-    // NOTIFIKASI HARIAN (ID + TANGGAL)
-    // ==========================================================
-    // Dengan menambahkan '_$todayStr', notifikasi ini dianggap baru setiap hari.
-    // Jadi kalau dihapus hari ini, besok tetap akan muncul lagi.
-
-    // A. Pengingat Makan
     if (now.hour >= 6 && now.hour < 10) {
       rawData.add(NotificationEntity(
-        id: 'reminder_breakfast_$todayStr', // ID UNIK PER HARI
+        id: 'reminder_breakfast_$todayStr', 
         title: "Waktunya Sarapan! 🍳",
         body: "Awali harimu dengan energi. Jangan lupa catat sarapanmu ya!",
         icon: Icons.wb_sunny,
@@ -44,7 +34,7 @@ class NotificationRemoteDataSource {
       ));
     } else if (now.hour >= 11 && now.hour < 14) {
       rawData.add(NotificationEntity(
-        id: 'reminder_lunch_$todayStr', // ID UNIK PER HARI
+        id: 'reminder_lunch_$todayStr', 
         title: "Waktunya Makan Siang 🥗",
         body: "Ingat komposisi piring sehat: Karbohidrat, Protein, dan Serat.",
         icon: Icons.lunch_dining,
@@ -54,7 +44,7 @@ class NotificationRemoteDataSource {
       ));
     } else if (now.hour >= 17 && now.hour < 21) {
       rawData.add(NotificationEntity(
-        id: 'reminder_dinner_$todayStr', // ID UNIK PER HARI
+        id: 'reminder_dinner_$todayStr',
         title: "Waktunya Makan Malam 🍽️",
         body: "Hindari makan terlalu larut agar kualitas tidurmu tetap terjaga.",
         icon: Icons.nightlight_round,
@@ -64,7 +54,6 @@ class NotificationRemoteDataSource {
       ));
     }
 
-    // B. Pengingat Minum (Setiap hari ID baru)
     rawData.add(NotificationEntity(
       id: 'reminder_water_$todayStr',
       title: "Sudah Minum Air? 💧",
@@ -75,7 +64,6 @@ class NotificationRemoteDataSource {
       timestamp: now.subtract(const Duration(minutes: 45)),
     ));
 
-    // C. Motivasi Harian
     rawData.add(NotificationEntity(
       id: 'motivation_$todayStr', 
       title: "Motivasi Hari Ini ✨",
@@ -86,7 +74,6 @@ class NotificationRemoteDataSource {
       timestamp: now.subtract(const Duration(hours: 2)),
     ));
 
-    // D. Tips Harian
     rawData.add(NotificationEntity(
       id: 'tips_$todayStr',
       title: "Tips Tidur 😴",
@@ -97,12 +84,8 @@ class NotificationRemoteDataSource {
       timestamp: now.subtract(const Duration(hours: 4)),
     ));
 
-    // E. Profil (Sistem)
-    // Untuk profil, mungkin kita TIDAK pakai tanggal.
-    // Kenapa? Karena kalau user hapus, berarti dia memang gamau diganggu soal profil.
-    // Tapi kalau Mas mau dia muncul lagi besok, tambahkan + todayStr juga.
     rawData.add(NotificationEntity(
-      id: 'system_profile_$todayStr', // Besok muncul lagi kalau belum lengkap
+      id: 'system_profile_$todayStr', 
       title: "Lengkapi Profil Anda 👤",
       body: "Pastikan data berat dan tinggi badanmu terbaru.",
       icon: Icons.person_search,
@@ -110,20 +93,16 @@ class NotificationRemoteDataSource {
       category: 'system',
       timestamp: now.subtract(const Duration(days: 1)),
     ));
-
-    // ==========================================================
-    // LOGIKA FILTER
-    // ==========================================================
     
     List<NotificationEntity> finalData = [];
 
     for (var item in rawData) {
       if (deletedList.contains(item.id)) {
-        continue; // Skip kalau sudah dihapus
+        continue; 
       }
 
       if (readList.contains(item.id)) {
-        item.isRead = true; // Tandai terbaca kalau ada di memory
+        item.isRead = true; 
       }
 
       finalData.add(item);

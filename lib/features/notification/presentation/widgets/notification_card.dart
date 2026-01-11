@@ -13,9 +13,7 @@ class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Logika warna: abu-abu jika sudah dibaca, putih jika belum
     final bgColor = item.isRead ? Colors.grey[50] : Colors.white;
-    // Border: transparan jika sudah dibaca
     final borderColor = item.isRead ? Colors.transparent : item.color.withOpacity(0.3);
 
     return Container(
@@ -38,13 +36,12 @@ class NotificationCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: onTap, // Aksi saat diklik
+          onTap: onTap, 
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- Icon Bulat ---
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -59,7 +56,6 @@ class NotificationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
 
-                // --- Teks Konten ---
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +81,6 @@ class NotificationCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
 
-                      // --- Jam (Timestamp) ---
                       Row(
                         children: [
                           Icon(Icons.access_time, size: 10, color: Colors.grey[400]),
@@ -100,7 +95,6 @@ class NotificationCard extends StatelessWidget {
                   ),
                 ),
 
-                // --- Titik Merah (Indikator Belum Dibaca) ---
                 if (!item.isRead)
                   const Padding(
                     padding: EdgeInsets.only(top: 4, left: 8),

@@ -4,7 +4,7 @@ import '../../domain/entities/notification_entity.dart';
 class NotificationModel extends NotificationEntity {
   
   NotificationModel({
-    required super.id, // ID wajib ada
+    required super.id, 
     required super.title,
     required super.body,
     required super.icon,
@@ -14,15 +14,12 @@ class NotificationModel extends NotificationEntity {
     required super.timestamp,
   });
 
-  // Factory Method: Pura-pura siap menerima JSON dari Backend
-  // (Ini poin plus saat presentasi: "Kode ini sudah support JSON parsing")
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
       id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: json['title'] ?? 'Notifikasi Baru',
       body: json['body'] ?? '',
       
-      // Logika pemetaan Icon & Warna dari String kategori
       icon: _getIconByCategory(json['category']),
       color: _getColorByCategory(json['category']),
       
@@ -33,8 +30,6 @@ class NotificationModel extends NotificationEntity {
           : DateTime.now(),
     );
   }
-
-  // --- Helper Functions (Supaya rapi) ---
   
   static IconData _getIconByCategory(String? category) {
     switch (category) {
