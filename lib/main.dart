@@ -16,9 +16,13 @@ import 'features/scan/presentation/bloc/scan_bloc.dart';
 import 'features/history/presentation/bloc/history_bloc.dart'; 
 import 'features/firstpage/presentation/pages/firstpage_main.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await initializeDateFormatting('id_ID', null);
+  
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await di.init();

@@ -43,40 +43,34 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
-    CREATE TABLE journal_details (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      food_name TEXT NOT NULL,
-      calories REAL NOT NULL,
-      image_path TEXT,
-      created_at TEXT NOT NULL,
-      is_synced INTEGER DEFAULT 0
-    )
-    ''');
-
-    await db.execute('''
-    CREATE TABLE history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      food_name TEXT NOT NULL,
-      calories REAL NOT NULL,
-      date TEXT NOT NULL, 
-      image_path TEXT
-    )
-    ''');
+  CREATE TABLE journal_details (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    food_name TEXT NOT NULL,
+    calories REAL NOT NULL,
+    protein REAL,     
+    carbs REAL,       
+    fat REAL,         
+    sugar REAL,       
+    image_path TEXT,
+    created_at TEXT NOT NULL,
+    is_synced INTEGER DEFAULT 0
+  )
+''');
   }
 
   Future<List<Map<String, dynamic>>> getHistory() async {
     final db = await database;
-    return await db.query('history', orderBy: 'date DESC');
+    return await db.query('journal_details', orderBy: 'date DESC');
   }
 
   Future<int> insertFood(Map<String, dynamic> row) async {
     final db = await database;
-    return await db.insert('history', row);
+    return await db.insert('journal_details', row);
   }
 
   Future<int> deleteFood(int id) async {
     final db = await database;
-    return await db.delete('history', where: 'id = ?', whereArgs: [id]);
+    return await db.delete('journal_details', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> clearHistory() async {
