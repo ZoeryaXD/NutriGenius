@@ -52,7 +52,8 @@ class DatabaseHelper {
     fat REAL,         
     sugar REAL,       
     image_path TEXT,
-    created_at TEXT NOT NULL,
+    meal_type TEXT,
+    created_at TEXT,
     is_synced INTEGER DEFAULT 0
   )
 ''');
@@ -75,6 +76,6 @@ class DatabaseHelper {
 
   Future<void> clearHistory() async {
     final db = await database;
-    await db.delete('journal_details'); 
+    await db.delete('journal_details');
   }
 }

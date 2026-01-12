@@ -25,24 +25,24 @@ class HistoryRepositoryImpl implements HistoryRepository {
         final remoteData = await remoteDataSource.getHistory(email);
 
         final historyList =
-            remoteData
-                .map(
-                  (item) => HistoryModel(
-                    id: item.id,
-                    foodName: item.foodName,
-                    calories: item.calories,
-                    protein: item.protein,
-                    carbs: item.carbs,
-                    fat: item.fat,
-                    sugar: item.sugar,
-                    imagePath: item.imagePath,
-                    createdAt: item.date,
-                  ),
-                )
-                .toList();
+            remoteData.map((item) {
+              final dynamic data = item;
+
+              return HistoryModel(
+                id: data.id,
+                foodName: data.foodName,
+                calories: (data.calories as num).toDouble(),
+                protein: (data.protein as num?)?.toDouble(),
+                carbs: (data.carbs as num?)?.toDouble(),
+                fat: (data.fat as num?)?.toDouble(),
+                sugar: (data.sugar as num?)?.toDouble(),
+                imagePath: data.imagePath ?? '',
+                mealType: data.mealType ?? data.mealName ?? 'Umum',
+                createdAt: data.createdAt ?? data.date ?? DateTime.now(),
+              );
+            }).toList();
 
         await localDataSource.cacheHistory(historyList);
-
         return Right(historyList);
       } catch (e) {
         return Left(ServerFailure(message: e.toString()));
@@ -61,16 +61,12 @@ class HistoryRepositoryImpl implements HistoryRepository {
   Future<Either<Failure, void>> deleteHistory(int id) async {
     try {
       if (await networkInfo.hasConnection) {
-        // 1. Coba hapus di database remote dulu
         await remoteDataSource.deleteHistory(id);
 
-        // 2. Jika remote sukses, hapus juga di lokal (SQLite/Cache) agar sinkron
-        await localDataSource.deleteHistory(id);
+        await localDataSource.deleteHistoryLocal(id);
 
         return const Right(null);
       } else {
-        // Jika tidak ada internet, biasanya kita larang hapus data
-        // agar tidak terjadi inkonsistensi antara HP dan Server
         return Left(
           ServerFailure(
             message: "Butuh koneksi internet untuk menghapus data.",

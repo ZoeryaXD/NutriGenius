@@ -88,7 +88,7 @@ Future<void> init() async {
   // ==========================
   sl.registerFactory(() => DashboardBloc(repository: sl()));
   sl.registerLazySingleton<DashboardRepository>(
-    () => DashboardRepositoryImpl(client: sl()),
+    () => DashboardRepositoryImpl(client: sl(), databaseHelper: sl()),
   );
   sl.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(client: sl()),

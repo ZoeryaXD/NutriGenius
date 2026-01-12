@@ -11,8 +11,9 @@ class ScanResult extends Equatable {
   final double fat;
   final double sugar;
   final String imagePath;
+  final String mealType;
   final String aiSuggestion;
-  final DateTime date;
+  final DateTime createdAt;
 
   const ScanResult({
     required this.id,
@@ -23,8 +24,9 @@ class ScanResult extends Equatable {
     required this.fat,
     required this.sugar,
     required this.imagePath,
+    required this.mealType,
     required this.aiSuggestion,
-    required this.date,
+    required this.createdAt,
   });
 
   @override
@@ -37,7 +39,8 @@ class ScanResult extends Equatable {
     fat,
     sugar,
     imagePath,
+    mealType,
     aiSuggestion,
-    date,
+    createdAt,
   ];
 }

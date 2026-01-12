@@ -34,19 +34,29 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
 
   @override
   Future<void> deleteHistory(int id) async {
-    // Pastikan endpoint ini sesuai dengan dokumentasi API backend-mu
-    // Misal: /api/scan/history/12
     final uri = Uri.parse('${ApiClient.baseUrl}/scan/history/$id');
     final headers = await _getHeaders();
 
     try {
       final response = await client.delete(uri, headers: headers);
 
-      if (response.statusCode != 200) {
-        // Jika backend kirim pesan error, kita tangkap di sini
+      // DEBUG: Cetak respon asli biar kelihatan kalau dapet HTML
+      print("DEBUG DELETE: Status ${response.statusCode}");
+      print("DEBUG BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return; // Berhasil
+      } else {
+        // CEK: Jika isinya HTML (dimulai dengan <), jangan di-json.decode
+        if (response.body.startsWith('<!DOCTYPE') ||
+            response.body.startsWith('<html')) {
+          throw Exception(
+            'Server Error (HTML): Cek terminal backend atau URL API-mu.',
+          );
+        }
+
         final errorMsg =
-            json.decode(response.body)['message'] ??
-            'Gagal menghapus data di server';
+            json.decode(response.body)['message'] ?? 'Gagal hapus data';
         throw Exception(errorMsg);
       }
     } catch (e) {

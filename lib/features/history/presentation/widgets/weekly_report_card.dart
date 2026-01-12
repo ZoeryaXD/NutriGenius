@@ -18,7 +18,6 @@ class WeeklyReportCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Pengaman: Cari nilai tertinggi agar skala grafik pas
     double maxVal = 0;
     for (var val in weeklyCalories) {
       if (val > maxVal) maxVal = val;

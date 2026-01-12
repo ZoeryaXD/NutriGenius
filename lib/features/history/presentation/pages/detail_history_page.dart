@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../../dashboard/presentation/bloc/dashboard_event.dart';
 import '../../domain/entities/history_entity.dart';
 import '../bloc/history_bloc.dart';
 import '../bloc/history_event.dart';
@@ -27,9 +29,9 @@ class DetailHistoryPage extends StatelessWidget {
     final imageUrl =
         "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${history.imagePath}";
     final date = DateFormat(
-      'EEEE, d MMM yyyy • HH:mm',
+      'EEEE, d MMMM yyyy • HH:mm',
       'id_ID',
-    ).format(history.createdAt);
+    ).format(history.createdAt.toLocal());
 
     return BlocListener<HistoryBloc, HistoryState>(
       listener: (context, state) {
@@ -38,11 +40,7 @@ class DetailHistoryPage extends StatelessWidget {
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
-        if (state is HistoryLoaded) {
-          // Jika state berubah jadi Loaded setelah kita delete, berarti hapus berhasil
-          // Kita tidak perlu pop di sini karena sudah dihandle di tombol hapus,
-          // tapi ini menjaga agar UI sinkron.
-        }
+        if (state is HistoryLoaded) {}
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -275,8 +273,19 @@ class DetailHistoryPage extends StatelessWidget {
                   context.read<HistoryBloc>().add(
                     DeleteHistoryEvent(id: history.id, email: email),
                   );
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (context.mounted) {
+                      context.read<DashboardBloc>().add(RefreshDashboard());
+                    }
+                  });
                   Navigator.pop(ctx);
                   Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Menghapus data..."),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
                 },
                 child: const Text(
                   "Hapus",
