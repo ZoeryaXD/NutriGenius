@@ -14,6 +14,7 @@ class HistoryModel extends HistoryEntity {
   });
 
   factory HistoryModel.fromMap(Map<String, dynamic> map) {
+    String? rawDate = map['created_at'] ?? map['scan_timestamp'];
     return HistoryModel(
       id: map['id'],
       foodName: map['food_name'] ?? 'Unknown',
@@ -23,13 +24,14 @@ class HistoryModel extends HistoryEntity {
       fat: (map['fat'] as num?)?.toDouble(),
       sugar: (map['sugar'] as num?)?.toDouble(),
       imagePath: map['image_path'] ?? '',
-      createdAt: DateTime.parse(map['scan_timestamp']).toLocal(),
+      createdAt:
+          rawDate != null ? DateTime.parse(rawDate).toLocal() : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      // 'id': id,
       'food_name': foodName,
       'calories': calories,
       'protein': protein,
@@ -38,6 +40,7 @@ class HistoryModel extends HistoryEntity {
       'sugar': sugar,
       'image_path': imagePath,
       'scan_timestamp': createdAt.toIso8601String(),
+      'is_synced': 1,
     };
   }
 }
