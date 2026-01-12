@@ -31,12 +31,17 @@ class SettingsPage extends StatelessWidget {
       ),
       body: BlocListener<ProfileBloc, ProfileState>(
         listener: (context, state) {
-          if (state is LogoutSuccess) {
+          if (state is ProfileDeleteAccountSuccess) {
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => LoginPage()),
-              (r) => false,
+              (route) => false,
             );
+          }
+          if (state is ProfileFailure) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         child: ListView(

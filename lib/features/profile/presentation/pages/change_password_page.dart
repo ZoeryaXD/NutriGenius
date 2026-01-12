@@ -34,10 +34,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       appBar: AppBar(title: const Text("Ganti Password")),
       body: BlocListener<ProfileBloc, ProfileState>(
         listener: (context, state) {
-          if (state is ProfileActionSuccess) {
+          if (state is ChangePasswordSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: Text("Cek gmail anda, isikan password terbaru"),
                 backgroundColor: Colors.green,
               ),
             );

@@ -6,6 +6,11 @@ class ProfileInitial extends ProfileState {}
 
 class ProfileLoading extends ProfileState {}
 
+class ProfileFailure extends ProfileState {
+  final String message;
+  ProfileFailure(this.message);
+}
+
 class ProfileLoaded extends ProfileState {
   final ProfileEntity profile;
   final List<ActivityLevel> activityLevels;
@@ -37,3 +42,8 @@ class PhotoUploadSuccess extends ProfileActionSuccess {
 }
 
 class LogoutSuccess extends ProfileState {}
+
+class ProfileDeleteAccountSuccess extends ProfileState {}
+
+class ChangePasswordSuccess extends ProfileState {}
+

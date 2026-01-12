@@ -77,5 +77,27 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       await repository.logout();
       emit(LogoutSuccess());
     });
+
+    on<DeleteAccountRequested>((event, emit) async {
+      emit(ProfileLoading());
+
+      try {
+        await repository.deleteAccount();
+        emit(ProfileDeleteAccountSuccess());
+      } catch (e) {
+        emit(ProfileFailure(e.toString()));
+      }
+    });
+
+    on<ChangePasswordRequested>((event, emit) async {
+      emit(ProfileLoading());
+
+      try {
+        await repository.sendPasswordResetEmail(event.email);
+        emit(ChangePasswordSuccess());
+      } catch (e) {
+        emit(ProfileFailure(e.toString()));
+      }
+    });
   }
 }
