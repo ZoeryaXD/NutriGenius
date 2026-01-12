@@ -23,7 +23,7 @@ class HistoryModel extends HistoryEntity {
       fat: (map['fat'] as num?)?.toDouble(),
       sugar: (map['sugar'] as num?)?.toDouble(),
       imagePath: map['image_path'] ?? '',
-      createdAt: DateTime.parse(map['created_at']).toLocal(),
+      createdAt: DateTime.parse(map['scan_timestamp']).toLocal(),
     );
   }
 
@@ -37,7 +37,7 @@ class HistoryModel extends HistoryEntity {
       'fat': fat,
       'sugar': sugar,
       'image_path': imagePath,
-      'created_at': createdAt.toIso8601String(),
+      'scan_timestamp': createdAt.toIso8601String(),
     };
   }
 }
