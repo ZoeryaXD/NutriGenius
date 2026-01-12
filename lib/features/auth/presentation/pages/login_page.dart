@@ -48,6 +48,14 @@ class _LoginPageState extends State<LoginPage> {
             if (state is AuthSuccess) {
               final prefs = await SharedPreferences.getInstance();
               await prefs.setString('email', _emailController.text.trim());
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Login Berhasil!"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+
               if (state.isOnboarded) {
                 Navigator.pushReplacementNamed(context, '/dashboard');
               } else {
@@ -60,6 +68,8 @@ class _LoginPageState extends State<LoginPage> {
                   backgroundColor: Colors.red,
                 ),
               );
+            } else if (state is AuthResetEmailSent) {
+              AuthDialogs.showResetSuccess(context);
             }
           },
           child: SafeArea(
@@ -86,13 +96,16 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.06),
+
                   AuthTextField(
                     controller: _emailController,
                     label: "Email",
                     icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                   ),
+
                   const SizedBox(height: 16),
+                  
                   AuthTextField(
                     controller: _passController,
                     label: "Password",
