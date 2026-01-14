@@ -4,7 +4,7 @@ import '../models/history_model.dart';
 abstract class HistoryLocalDataSource {
   Future<List<HistoryModel>> getLastHistory();
   Future<void> cacheHistory(List<HistoryModel> historyList);
-  Future<void> deleteHistory(int id);
+  Future<void> deleteHistoryLocal(List<int> ids);
 }
 
 class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
@@ -21,13 +21,20 @@ class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
   @override
   Future<void> cacheHistory(List<HistoryModel> historyList) async {
     await databaseHelper.clearHistory();
-    for (var item in historyList) {
-      await databaseHelper.insertFood(item.toMap());
-    }
+    await Future.wait(
+      historyList.map((item) => databaseHelper.insertFood(item.toMap())),
+    );
   }
 
   @override
-  Future<void> deleteHistory(int id) async {
-    await databaseHelper.deleteFood(id);
+  Future<void> deleteHistoryLocal(List<int> ids) async {
+    for (var id in ids) {
+      await databaseHelper.deleteFood(id);
+    }
+
+    final sisaData = await databaseHelper.getHistory();
+    print(
+      "🕵️ SQLITE DEBUG: Berhasil hapus ${ids.length} data. Sisa: ${sisaData.length}",
+    );
   }
 }

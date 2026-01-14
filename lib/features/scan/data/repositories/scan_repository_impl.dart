@@ -7,10 +7,8 @@ import '../models/scan_result_model.dart';
 
 class ScanRepositoryImpl implements ScanRepository {
   final ScanRemoteDataSource remoteDataSource;
-  
-  ScanRepositoryImpl({
-    required this.remoteDataSource,
-  });
+
+  ScanRepositoryImpl({required this.remoteDataSource});
 
   // ==========================================
   // 1. ANALYZE IMAGE (Preview)
@@ -43,7 +41,10 @@ class ScanRepositoryImpl implements ScanRepository {
   // ==========================================
   // 3. SAVE SCAN (Simpan ke DB) - 👇 TAMBAHAN
   // ==========================================
-  Future<Either<Failure, void>> saveScan(ScanResult result, String email) async {
+  Future<Either<Failure, void>> saveScan(
+    ScanResult result,
+    String email,
+  ) async {
     try {
       final model = ScanResultModel(
         id: 0,
@@ -55,7 +56,8 @@ class ScanRepositoryImpl implements ScanRepository {
         sugar: result.sugar,
         aiSuggestion: result.aiSuggestion,
         imagePath: result.imagePath,
-        date: DateTime.now(),
+        mealType: result.mealType,
+        createdAt: DateTime.now(),
       );
 
       await remoteDataSource.saveScan(model, email);

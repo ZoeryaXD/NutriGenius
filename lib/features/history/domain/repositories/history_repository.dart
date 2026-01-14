@@ -4,5 +4,5 @@ import '../entities/history_entity.dart';
 
 abstract class HistoryRepository {
   Future<Either<Failure, List<HistoryEntity>>> getHistory(String email);
-  Future<Either<Failure, void>> deleteHistory(int id);
+  Future<Either<Failure, void>> deleteHistory(List<int> ids);
 }

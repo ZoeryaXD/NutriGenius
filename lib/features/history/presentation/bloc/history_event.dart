@@ -16,11 +16,7 @@ class LoadHistoryEvent extends HistoryEvent {
 }
 
 class DeleteHistoryEvent extends HistoryEvent {
-  final int id;
+  final List<int> ids;
   final String email;
-
-  const DeleteHistoryEvent({required this.id, required this.email});
-
-  @override
-  List<Object> get props => [id, email];
+  const DeleteHistoryEvent({required this.ids, required this.email});
 }

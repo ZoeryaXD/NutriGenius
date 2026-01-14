@@ -22,13 +22,11 @@ class HistoryListItem extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    // Menghasilkan URL gambar dari server
     final imageUrl =
         "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${item.imagePath}";
 
-    // Memastikan jam menggunakan waktu lokal dan format Indonesia
     final timeStr = DateFormat(
-      'HH:mm',
+      'EEEE, d MMM yyyy',
       'id_ID',
     ).format(item.createdAt.toLocal());
 
@@ -66,7 +64,6 @@ class HistoryListItem extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                // FOTO MAKANAN
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
@@ -89,7 +86,6 @@ class HistoryListItem extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
 
-                // INFO TEXT
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +131,6 @@ class HistoryListItem extends StatelessWidget {
                   ),
                 ),
 
-                // ICON PANAH
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(

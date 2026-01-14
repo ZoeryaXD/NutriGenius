@@ -6,12 +6,11 @@ import '../../../scan/data/models/scan_result_model.dart';
 
 abstract class HistoryRemoteDataSource {
   Future<List<ScanResultModel>> getHistory(String email);
-  Future<void> deleteHistory(int id);
+  Future<void> deleteHistory(List<int> ids);
 }
 
 class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
   final http.Client client;
-
   HistoryRemoteDataSourceImpl({required this.client});
 
   @override
@@ -33,20 +32,25 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
   }
 
   @override
-  Future<void> deleteHistory(int id) async {
-    // Pastikan endpoint ini sesuai dengan dokumentasi API backend-mu
-    // Misal: /api/scan/history/12
-    final uri = Uri.parse('${ApiClient.baseUrl}/scan/history/$id');
+  Future<void> deleteHistory(List<int> ids) async {
+    final uri = Uri.parse('${ApiClient.baseUrl}/scan/history');
     final headers = await _getHeaders();
 
     try {
-      final response = await client.delete(uri, headers: headers);
+      final response = await client.delete(
+        uri,
+        headers: headers,
+        body: json.encode({"ids": ids}),
+      );
 
-      if (response.statusCode != 200) {
-        // Jika backend kirim pesan error, kita tangkap di sini
+      print("DEBUG DELETE MULTIPLE: Status ${response.statusCode}");
+      print("DEBUG BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return;
+      } else {
         final errorMsg =
-            json.decode(response.body)['message'] ??
-            'Gagal menghapus data di server';
+            json.decode(response.body)['message'] ?? 'Gagal hapus data massal';
         throw Exception(errorMsg);
       }
     } catch (e) {

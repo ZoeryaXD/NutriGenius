@@ -11,7 +11,8 @@ class ScanResultModel extends ScanResult {
     required double sugar,
     required String aiSuggestion,
     required String imagePath,
-    required DateTime date,
+    required String mealType,
+    required DateTime createdAt,
   }) : super(
          id: id,
          foodName: foodName,
@@ -22,7 +23,8 @@ class ScanResultModel extends ScanResult {
          sugar: sugar,
          aiSuggestion: aiSuggestion,
          imagePath: imagePath,
-         date: date,
+         mealType: mealType,
+         createdAt: createdAt,
        );
 
   factory ScanResultModel.fromJson(
@@ -66,8 +68,13 @@ class ScanResultModel extends ScanResult {
           json['aiSuggestion'] ??
           "Tidak ada saran dari AI.",
       imagePath: imagePath,
-      date:
-          json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
+      mealType: json['meal_name'] ?? "Umum",
+      createdAt:
+          json['scan_timestamp'] != null
+              ? DateTime.parse(json['scan_timestamp']).toLocal()
+              : (json['date'] != null
+                  ? DateTime.parse(json['date'])
+                  : DateTime.now()),
     );
   }
 
@@ -90,7 +97,23 @@ class ScanResultModel extends ScanResult {
       'sugar': sugar,
       'aiSuggestion': aiSuggestion,
       'imagePath': imagePath,
-      'date': date.toIso8601String(),
+      'mealType': mealType,
+      'date': createdAt.toIso8601String(),
+    };
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'food_name': foodName,
+      'calories': calories,
+      'protein': protein,
+      'carbs': carbs,
+      'fat': fat,
+      'sugar': sugar,
+      'image_path': imagePath,
+      'meal_type': mealType,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

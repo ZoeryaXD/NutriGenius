@@ -136,7 +136,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  // TAMPILAN POTRAIT (SATU KOLOM)
   Widget _buildPortraitLayout(
     ProfileEntity profile,
     List<ActivityLevel> activities,
@@ -160,7 +159,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  // TAMPILAN LANDSCAPE (DUA KOLOM)
   Widget _buildLandscapeLayout(
     ProfileEntity profile,
     List<ActivityLevel> activities,
@@ -208,7 +206,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  // SUB-SECTION: DATA PRIBADI
   Widget _buildPersonalInfoSection(bool isDark, ColorScheme colorScheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,7 +236,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  // SUB-SECTION: DATA FISIK & KESEHATAN
   Widget _buildPhysicalDataSection(
     List<ActivityLevel> activities,
     List<HealthCondition> healths,

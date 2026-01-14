@@ -4,13 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../injection_container.dart';
+import '../../../scan/domain/entities/scan_result.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
 import '../../domain/entities/dashboard_entity.dart';
 import '../../../scan/presentation/pages/camera_page.dart';
 import '../../../scan/presentation/bloc/scan_bloc.dart';
-import 'package:nutrigenius/features/scan/domain/entities/scan_result.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -25,9 +25,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Refresh otomatis setiap 5 detik agar kalau ada yang dihapus di history,
-    // angka kalori di sini langsung update tanpa tarik-tarik layar lagi.
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (mounted) {
         context.read<DashboardBloc>().add(RefreshDashboard());
       }
@@ -47,7 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return BlocProvider(
-      create: (_) => sl<DashboardBloc>()..add(LoadDashboard()),
+      create: (context) => sl<DashboardBloc>()..add(LoadDashboard()),
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
@@ -88,12 +86,13 @@ class _DashboardPageState extends State<DashboardPage> {
       },
       color: colorScheme.primary,
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section (Tanpa Logo Aset)
             Row(
               children: [
                 Icon(Icons.spa_rounded, color: colorScheme.primary, size: 32),
@@ -109,7 +108,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
             const SizedBox(height: 32),
-
             Text(
               _getGreeting(),
               style: const TextStyle(color: Colors.grey, fontSize: 16),
@@ -119,12 +117,8 @@ class _DashboardPageState extends State<DashboardPage> {
               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
-
-            // KARTU UTAMA: KALORI MASUK
             _buildCaloriesCard(data, colorScheme),
-
             const SizedBox(height: 32),
-
             Text(
               "Makro Nutrisi (Harian)",
               style: TextStyle(
@@ -134,7 +128,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 _buildMacroCard(
@@ -165,10 +158,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ],
             ),
-
             const SizedBox(height: 32),
-
-            // TOMBOL SCAN BESAR
             _buildScanButton(context, colorScheme),
             const SizedBox(height: 40),
           ],
@@ -413,7 +403,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Fungsi Scan dari Galeri
   Future<void> _handleScanFromGallery({
     required BuildContext rootContext,
     required BuildContext sheetContext,
@@ -422,11 +411,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
-
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString('email');
     if (email == null) return;
-
     rootContext.read<ScanBloc>().add(
       AnalyzeImageEvent(
         imagePath: image.path,

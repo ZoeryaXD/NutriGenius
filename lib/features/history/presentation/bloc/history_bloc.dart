@@ -28,20 +28,24 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     });
 
     on<DeleteHistoryEvent>((event, emit) async {
-      final result = await deleteHistory(event.id);
-      result.fold(
-        (failure) => emit(HistoryFailure(failure.message)),
-        (_) => add(LoadHistoryEvent(event.email)),
-      );
+      final result = await deleteHistory(event.ids);
+      result.fold((failure) => emit(HistoryFailure(failure.message)), (_) {
+        add(LoadHistoryEvent(event.email));
+      });
     });
   }
 
   Map<String, dynamic> _calculateWeeklyStats(List<HistoryEntity> data) {
     List<double> weeklyChart = [0, 0, 0, 0, 0, 0, 0];
     double total = 0;
+
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final monday = today.subtract(Duration(days: now.weekday - 1));
+    final MondayThisWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfCurrentWeek = DateTime(
+      MondayThisWeek.year,
+      MondayThisWeek.month,
+      MondayThisWeek.day,
+    );
 
     for (var item in data) {
       final itemDate = DateTime(
@@ -49,13 +53,18 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
         item.createdAt.month,
         item.createdAt.day,
       );
-      int diff = itemDate.difference(monday).inDays;
-      if (diff >= 0 && diff <= 6) {
-        weeklyChart[diff] += item.calories;
+
+      int dayIndex = item.createdAt.weekday - 1;
+
+      if (itemDate.isAfter(
+        startOfCurrentWeek.subtract(const Duration(seconds: 1)),
+      )) {
+        weeklyChart[dayIndex] += item.calories;
         total += item.calories;
       }
     }
-    double average = total > 0 ? total / now.weekday : 0;
+
+    double average = total > 0 ? total / 7 : 0;
     return {'weeklyChart': weeklyChart, 'total': total, 'average': average};
   }
 }

@@ -52,7 +52,8 @@ class DatabaseHelper {
     fat REAL,         
     sugar REAL,       
     image_path TEXT,
-    scan_timestamp TEXT NOT NULL,
+    meal_type TEXT,
+    created_at TEXT,
     is_synced INTEGER DEFAULT 0
   )
 ''');
@@ -60,7 +61,7 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getHistory() async {
     final db = await database;
-    return await db.query('journal_details', orderBy: 'scan_timestamp DESC');
+    return await db.query('journal_details', orderBy: 'created_at DESC');
   }
 
   Future<int> insertFood(Map<String, dynamic> row) async {
@@ -75,6 +76,6 @@ class DatabaseHelper {
 
   Future<void> clearHistory() async {
     final db = await database;
-    await db.delete('journal_details'); 
+    await db.delete('journal_details');
   }
 }
