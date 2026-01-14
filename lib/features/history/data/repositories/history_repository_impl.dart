@@ -58,19 +58,15 @@ class HistoryRepositoryImpl implements HistoryRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteHistory(int id) async {
+  Future<Either<Failure, void>> deleteHistory(List<int> ids) async {
     try {
       if (await networkInfo.hasConnection) {
-        await remoteDataSource.deleteHistory(id);
-
-        await localDataSource.deleteHistoryLocal(id);
-
+        await remoteDataSource.deleteHistory(ids);
+        await localDataSource.deleteHistoryLocal(ids);
         return const Right(null);
       } else {
         return Left(
-          ServerFailure(
-            message: "Butuh koneksi internet untuk menghapus data.",
-          ),
+          ServerFailure(message: "Butuh internet untuk menghapus data."),
         );
       }
     } catch (e) {

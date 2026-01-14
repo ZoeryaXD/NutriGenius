@@ -40,6 +40,9 @@ import 'features/firstpage/data/repositories/firstpage_repository_impl.dart';
 import 'features/firstpage/domain/repositories/firstpage_repository.dart';
 import 'features/firstpage/presentation/bloc/firstpage_bloc.dart';
 import 'features/firstpage/domain/usecase/calculate_tdee.dart';
+import 'features/profile/domain/usecases/delete_account_usecase.dart';
+import 'features/profile/domain/usecases/get_profile_usecase.dart';
+import 'features/profile/domain/usecases/logout_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -97,12 +100,31 @@ Future<void> init() async {
   // ==========================
   // ! 5. FITUR PROFILE
   // ==========================
-  sl.registerFactory(() => ProfileBloc(repository: sl()));
-  sl.registerLazySingleton<ProfileRepository>(
-    () => ProfileRepositoryImpl(remoteDataSource: sl()),
-  );
+
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(client: sl()),
+  );
+
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      remoteDataSource: sl(),
+      databaseHelper: sl(),
+      sharedPreferences: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => GetProfileUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteAccountUseCase(sl()));
+
+  sl.registerFactory(
+    () => ProfileBloc(
+      getProfile: sl(),
+      logout: sl(),
+      deleteAccount: sl(),
+      repository: sl(),
+    ),
   );
 
   // ==========================

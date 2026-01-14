@@ -26,7 +26,7 @@ class HistoryListItem extends StatelessWidget {
         "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${item.imagePath}";
 
     final timeStr = DateFormat(
-      'EEEE, d MMM yyyy • HH:mm',
+      'EEEE, d MMM yyyy',
       'id_ID',
     ).format(item.createdAt.toLocal());
 

@@ -29,7 +29,7 @@ class DetailHistoryPage extends StatelessWidget {
     final imageUrl =
         "${ApiClient.baseUrl.replaceAll('/api', '')}/uploads/scans/${history.imagePath}";
     final date = DateFormat(
-      'EEEE, d MMMM yyyy • HH:mm',
+      'EEEE, d MMMM yyyy',
       'id_ID',
     ).format(history.createdAt.toLocal());
 
@@ -271,15 +271,18 @@ class DetailHistoryPage extends StatelessWidget {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
                   context.read<HistoryBloc>().add(
-                    DeleteHistoryEvent(id: history.id, email: email),
+                    DeleteHistoryEvent(ids: [history.id], email: email),
                   );
+
                   Future.delayed(const Duration(milliseconds: 500), () {
                     if (context.mounted) {
                       context.read<DashboardBloc>().add(RefreshDashboard());
                     }
                   });
+
                   Navigator.pop(ctx);
                   Navigator.pop(context);
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text("Menghapus data..."),

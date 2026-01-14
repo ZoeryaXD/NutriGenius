@@ -104,11 +104,23 @@ class WeeklyReportCard extends StatelessWidget {
           sideTitles: SideTitles(
             showTitles: true,
             getTitlesWidget: (v, meta) {
-              const days = ['S', 'S', 'R', 'K', 'J', 'S', 'M'];
+              const days = [
+                'Senin',
+                'Selasa',
+                'Rabu',
+                'Kamis',
+                'Jumat',
+                'Sabtu',
+                'Minggu',
+              ];
+
+              final index = v.toInt();
+              if (index < 0 || index > 6) return const SizedBox();
+
               return SideTitleWidget(
                 axisSide: meta.axisSide,
                 child: Text(
-                  days[v.toInt() % 7],
+                  days[index],
                   style: const TextStyle(color: Colors.grey, fontSize: 10),
                 ),
               );

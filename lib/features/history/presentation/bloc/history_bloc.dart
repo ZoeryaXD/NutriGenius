@@ -28,7 +28,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     });
 
     on<DeleteHistoryEvent>((event, emit) async {
-      final result = await deleteHistory(event.id);
+      final result = await deleteHistory(event.ids);
       result.fold((failure) => emit(HistoryFailure(failure.message)), (_) {
         add(LoadHistoryEvent(event.email));
       });
@@ -40,8 +40,12 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     double total = 0;
 
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+    final MondayThisWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfCurrentWeek = DateTime(
+      MondayThisWeek.year,
+      MondayThisWeek.month,
+      MondayThisWeek.day,
+    );
 
     for (var item in data) {
       final itemDate = DateTime(
@@ -50,16 +54,17 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
         item.createdAt.day,
       );
 
-      int diff = itemDate.difference(sevenDaysAgo).inDays;
+      int dayIndex = item.createdAt.weekday - 1;
 
-      if (diff >= 0 && diff <= 6) {
-        weeklyChart[diff] += item.calories;
+      if (itemDate.isAfter(
+        startOfCurrentWeek.subtract(const Duration(seconds: 1)),
+      )) {
+        weeklyChart[dayIndex] += item.calories;
         total += item.calories;
       }
     }
 
     double average = total > 0 ? total / 7 : 0;
-
     return {'weeklyChart': weeklyChart, 'total': total, 'average': average};
   }
 }

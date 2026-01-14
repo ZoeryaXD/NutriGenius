@@ -37,3 +37,5 @@ class PhotoUploadSuccess extends ProfileActionSuccess {
 }
 
 class LogoutSuccess extends ProfileState {}
+
+class DeleteAccountSuccess extends ProfileState {}

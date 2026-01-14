@@ -6,12 +6,11 @@ import '../../../scan/data/models/scan_result_model.dart';
 
 abstract class HistoryRemoteDataSource {
   Future<List<ScanResultModel>> getHistory(String email);
-  Future<void> deleteHistory(int id);
+  Future<void> deleteHistory(List<int> ids);
 }
 
 class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
   final http.Client client;
-
   HistoryRemoteDataSourceImpl({required this.client});
 
   @override
@@ -33,30 +32,25 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
   }
 
   @override
-  Future<void> deleteHistory(int id) async {
-    final uri = Uri.parse('${ApiClient.baseUrl}/scan/history/$id');
+  Future<void> deleteHistory(List<int> ids) async {
+    final uri = Uri.parse('${ApiClient.baseUrl}/scan/history');
     final headers = await _getHeaders();
 
     try {
-      final response = await client.delete(uri, headers: headers);
+      final response = await client.delete(
+        uri,
+        headers: headers,
+        body: json.encode({"ids": ids}),
+      );
 
-      // DEBUG: Cetak respon asli biar kelihatan kalau dapet HTML
-      print("DEBUG DELETE: Status ${response.statusCode}");
+      print("DEBUG DELETE MULTIPLE: Status ${response.statusCode}");
       print("DEBUG BODY: ${response.body}");
 
       if (response.statusCode == 200) {
-        return; // Berhasil
+        return;
       } else {
-        // CEK: Jika isinya HTML (dimulai dengan <), jangan di-json.decode
-        if (response.body.startsWith('<!DOCTYPE') ||
-            response.body.startsWith('<html')) {
-          throw Exception(
-            'Server Error (HTML): Cek terminal backend atau URL API-mu.',
-          );
-        }
-
         final errorMsg =
-            json.decode(response.body)['message'] ?? 'Gagal hapus data';
+            json.decode(response.body)['message'] ?? 'Gagal hapus data massal';
         throw Exception(errorMsg);
       }
     } catch (e) {
