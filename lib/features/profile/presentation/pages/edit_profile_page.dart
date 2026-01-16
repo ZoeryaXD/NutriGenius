@@ -368,7 +368,44 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   _pickImage(ImageSource.camera);
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text(
+                  "Hapus Foto Profil",
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDeletePhotoDialog();
+                },
+              ),
               const SizedBox(height: 12),
+            ],
+          ),
+    );
+  }
+
+  void _showDeletePhotoDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text("Hapus Foto?"),
+            content: const Text(
+              "Foto profil Anda akan kembali ke tampilan default.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Batal"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.read<ProfileBloc>().add(DeleteProfilePhoto());
+                },
+                child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+              ),
             ],
           ),
     );

@@ -85,6 +85,24 @@ class WeeklyReportCard extends StatelessWidget {
 
   LineChartData _chartData(ColorScheme cs, bool isDark, double maxY) {
     return LineChartData(
+      lineTouchData: LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipColor: (touchedSpot) => cs.primary,
+          tooltipRoundedRadius: 8,
+          getTooltipItems: (List<LineBarSpot> touchedSpots) {
+            return touchedSpots.map((LineBarSpot touchedSpot) {
+              return LineTooltipItem(
+                "${touchedSpot.y.toInt()} kkal",
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              );
+            }).toList();
+          },
+        ),
+      ),
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,

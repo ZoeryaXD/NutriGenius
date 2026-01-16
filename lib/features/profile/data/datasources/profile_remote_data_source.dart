@@ -60,7 +60,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
-      return json['filename']; // Balikan nama file baru
+      return json['filename'];
     } else {
       throw Exception("Gagal upload foto");
     }
